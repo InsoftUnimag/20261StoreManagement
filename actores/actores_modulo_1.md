@@ -1,33 +1,86 @@
-# Actores del módulo 1
+# Actores del Módulo 1 – Gestión de Inventario
 
-### Operario de recepción
-Este actor sera quien reciba el abastecimiento en el centro de distribución. Sus tareas son:
+El Módulo 1 es responsable del control del inventario dentro del Centro de Distribución, desde la recepción de mercancía hasta su preparación para despacho. Este módulo no gestiona transporte ni facturación; interactúa con otros módulos del sistema para completar el flujo operativo.
 
-* Registrar el producto en el sistema (Tipo, Cantidad, Fecha de vencimiento, nombre, etc).
+---
 
-### Supervisor de inventario
-Este actor sera quien se encargue de verificar el estado del producto dentro del centro de distribución. Sus tareas son:
+## Actores Humanos
 
-* Notificar en el sistema daños en el producto (Averia, vencimiento).
+### 1. Jefe de Bodega
 
-### Operario de despacho
-Este actor se encarga de ofrecer información sobre la entrega del producto a la logistica de despacho y transporte. Sus tareas son:
+**Rol:** Administrativo y de control del inventario.
 
-* Informar si el pedido ha sido despachado exitosamente.
+**Responsabilidades:**
 
-### Cliente
-Este actor se encarga de realizar pedidos de distintos productos que ofrece el centro de distibución. Sus tareas son:
+- Crear SKU.
+- Modificar SKU.
+- Consultar inventario global.
+- Reportar avería.
+- Registrar baja definitiva de productos vencidos.
 
-* Refistrarse en el sistema como usuario consumidor.
-* Realizar un pedido (distintos tipos de producto y cantidades).
+---
 
-### Módulo de logística de despacho
-Este actor se encarga de ofrecer una ruta de entrega a los pedidos. Sus tareas son:
+### 2. Operario de Recepción
 
-* Ofrecer rutas de entrega en diferentes municipios.
-* Confirmar una ruta de entrega para uno o varios pedidos (que tengan una ruta en común).
+**Rol:** Operativo – Gestión de entrada de mercancía.
 
-### Módulo de logística de finanzas
-Este actor se encarga de realizar los cobros a los clientes por sus pedidos. Sus tareas son:
+**Responsabilidades:**
 
-* Solicitar información de un pedido (Cliente que recibe, contenido del pedido, precio del pedido).
+- Registrar recepción de mercancía.
+- Verificar cantidad recibida contra el manifiesto de fábrica.
+- Seleccionar SKU existente o crear uno nuevo si no existe.
+- Ingresar lote.
+- Ingresar fecha de vencimiento.
+- Reportar avería detectada durante la recepción.
+
+---
+
+### 3. Cliente
+
+**Rol:** Actor externo que realiza pedidos al Centro de Distribución.
+
+**Responsabilidades:**
+
+- Registrarse en el sistema.
+- Consultar productos disponibles.
+- Realizar pedido.
+- Consultar estado de su pedido.
+
+---
+
+### 4. Operario de Picking
+
+**Rol:** Operativo – Gestión de salida física.
+
+**Responsabilidades:**
+
+- Consultar órdenes de picking pendientes.
+- Confirmar picking.
+- Reportar avería detectada durante la manipulación.
+
+---
+
+## Actores de Sistema
+
+### 5. Módulo 2 – Logística
+
+**Tipo:** Sistema externo.
+
+**Interacciones con el Módulo 1:**
+
+- Consultar pedidos listos para despacho.
+- Confirmar despacho.
+
+El estado de entrega final es gestionado exclusivamente por el Módulo 2.
+
+---
+
+### 6. Módulo 3 – Financiero
+
+**Tipo:** Sistema externo.
+
+**Interacciones con el Módulo 1:**
+
+- Consultar detalle de pedido despachado para facturación.
+
+El Módulo 3 no modifica inventario ni estados de pedido.
