@@ -10,7 +10,7 @@ Como **Sistema financiero**, requiero saber detalles de un pedido para usar los 
  
 **Why this priority**: La solicitud por parte del la logística financiera es cricual su fincionamiento, saber los detalles del pedido se vuelve un dato clave en el flujo de entrega al cliente.
  
-**Independent Test**: Enviar datos del pedido cada vez que se cree uno nuevo (Id_pedido, id_cliente, precio_total, fecha_despacho, dirección_entrega).
+**Independent Test**: Enviar datos del pedido cada vez que se cree uno nuevo (Id_pedido, id_cliente, precio_total, dirección_entrega).
 
  
 **Acceptance Scenarios**:
