@@ -51,7 +51,7 @@ Como **Operario de Picking**, necesito confirmar que recogí físicamente los pr
 - **FR-070**: El sistema DEBE impedir confirmar picking de pedido ya procesado.
 - **FR-071**: El sistema DEBE actualizar estado del pedido a "En Picking" al confirmar exitosamente.
 - **FR-072**: El sistema DEBE permitir confirmar picking con solo las unidades recolectadas
-- **FR-071**: El sistema DEBE registrar MovimientoInventario tipo "Faltante_Picking" 
+- **FR-073**: El sistema DEBE registrar MovimientoInventario tipo "Faltante_Picking"
  
 ### Key Entities
 - **RegistroPicking**: pedido_ref, lote_ref, cantidad_esperada, cantidad_real, operario, fecha.

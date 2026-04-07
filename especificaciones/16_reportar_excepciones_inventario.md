@@ -21,23 +21,23 @@ Como **Supervisor de Inventario**, necesito reportar excepciones sobre lotes exi
    - **And** se registra MovimientoInventario negativo tipo "Avería"
  
 2. **Scenario**: Avería total del lote
-   - **Given** existe un lote con estado "Disponible" y la cantidad afectada es igual al total del lote
+   - **Given** existe un lote con cantidad_restante mayor a cero y la cantidad afectada es igual al total del lote
    - **When** el Supervisor de inventario reporta avería sobre la totalidad del lote
-   - **Then** el lote cambia de estado a "Avería"
-   - **And** el stock del SKU queda en cero para ese lote y queda bloqueado para cualquier asignación futura
+   - **Then** la cantidad_restante del lote llega a cero, considerándose "Agotado"
+   - **And** el stock global del SKU se actualiza y el lote queda inhabilitado para cualquier asignación futura
  
 3. **Scenario**: Lote vencido detectado manualmente
-   - **Given** el Supervisor de inventario detecta un lote con fecha de vencimiento superada y aún en estado "Disponible"
+   - **Given** el Supervisor de inventario detecta un lote con fecha de vencimiento superada y aún con cantidad_restante mayor a cero
    - **When** registra una excepción de tipo "VENCIMIENTO" sobre ese lote
-   - **Then** el lote cambia de estado a "Vencido"
-   - **And** el stock del SKU se descuenta por la cantidad completa del lote
+   - **Then** la cantidad_restante del lote se fuerza a cero (Agotado)
+   - **And** el stock global del SKU se descuenta por la cantidad completa restante del lote
    - **And** se registra un MovimientoInventario negativo de tipo "BAJA_VENCIMIENTO"
-   - **And** el lote queda bloqueado para cualquier asignación futura
+   - **And** el lote queda bloqueado para cualquier asignación futura al no tener unidades
 
 
 4. **Scenario**: Detección automática de lotes vencidos
-   - **Given** el proceso automático diario detecta lotes con fecha_vencimiento menor o igual a la fecha actual
-   - **Then** el sistema cambia su estado a "VENCIDO" automáticamente
+   - **Given** el proceso automático diario detecta lotes con fecha_vencimiento menor o igual a la fecha actual y cantidad_restante > 0
+   - **Then** el sistema extrae su cantidad_restante a cero mediante excepción "Vencimiento", sacándolo de circulación automáticamente
    - **And** genera una alerta consolidada para el Supervisor de Inventario
    - **And** registra los MovimientosInventario de baja correspondientes
  
@@ -87,8 +87,8 @@ Como **Operario de Despacho**, necesito reportar una excepción cuando al ejecut
  - **Then** el stock del lote se descuenta en la cantidad averiada
  - **And** se registra un MovimientoInventario negativo tipo "BAJA_AVERIA"
  - **And** el sistema busca automáticamente existencias en otros lotes y le indica al operario de qué lote específico tomar las unidades faltantes para completar el pedido.
- - **And** si la avería es total, el lote cambia de estado a "Avería" y queda inhabilitado para nuevos pedidos.
- - **And**el Supervisor de Inventario recibe notificación
+ - **And** si la avería es total, la cantidad_restante del lote llega a cero y queda inhabilitado para nuevos pedidos.
+ - **And** el Supervisor de Inventario recibe notificación
  - **And** el Operario de Despacho continúa el proceso de picking con las unidades reasignadas y las no afectadas.
 
 
@@ -96,7 +96,7 @@ Como **Operario de Despacho**, necesito reportar una excepción cuando al ejecut
  - **Given** el Operario de picking está ejecutando el picking de un pedido que esta listo para despacho.
  - **And** detecta que un lote comprometido tiene la fecha de vencimiento superada
  - **When** el Operario de picking reporta la excepción con tipo "Vencimiento" sobre ese lote
- - **Then** el sistema cambia el estado del lote completo a "Vencido" y lo bloquea para cualquier transacción futura.
+ - **Then** el sistema fuerza la cantidad_restante del lote completo a cero y lo bloquea para cualquier transacción futura.
  -**and** el sistema retira automáticamente este lote de todos los pedidos comprometidos que lo tenían asignado en el sistema.
  - **And** el stock del SKU se descuenta por la cantidad del lote
  - **And** se registra un MovimientoInventario negativo por la totalidad del stock vencido tipo "BAJA_VENCIMIENTO"
@@ -119,11 +119,11 @@ Como **Operario de Despacho**, necesito reportar una excepción cuando al ejecut
 
 - **FR-028**: El sistema DEBE registrar un MovimientoInventario negativo por cada excepción confirmada.
 
-- **FR-029**: El sistema DEBE cambiar el estado del lote a "Avería" cuando la excepción abarca la totalidad de sus unidades.
+- **FR-029**: El sistema DEBE garantizar que la cantidad_restante del lote pase a 0 (Agotado) cuando la excepción abarca la totalidad de sus unidades.
 
-- **FR-030**: El sistema DEBE cambiar el estado del lote a "Vencido" al reportar o detectar vencimiento.
+- **FR-030**: El sistema DEBE garantizar que la cantidad_restante pase a 0 (Agotado) al reportar o detectar vencimiento total.
 
-- **FR-031**: El sistema DEBE bloquear lotes en estado "Avería" y "Vencido" para asignación a pedidos.
+- **FR-031**: El sistema DEBE ignorar lotes cuya cantidad_restante sea 0 para nuevas asignaciones FEFO.
 
 - **FR-032**: El sistema DEBE ejecutar un proceso automático diario de detección y baja de lotes vencidos.
 
@@ -136,7 +136,7 @@ Como **Operario de Despacho**, necesito reportar una excepción cuando al ejecut
 ---
 ## Success Criteria *(mandatory)*
 - **SC-013**: El stock del lote refleja el descuento de forma inmediata tras confirmar la excepción.
-- **SC-014**: 100% de lotes vencidos detectados y bloqueados por proceso diario.
-- **SC-015**: 0% de lotes "Avería" o "Vencido" asignables a pedidos.
+- **SC-014**: 100% de lotes vencidos detectados y llevados a cantidad_restante cero por proceso diario.
+- **SC-015**: 0% de lotes sin cantidad asignables a pedidos.
 - **SC-016**: El 100% de las excepciones registradas tienen un MovimientoInventario negativo asociado y están vinculadas a su origen (Recepción, Picking o Inspección).
  

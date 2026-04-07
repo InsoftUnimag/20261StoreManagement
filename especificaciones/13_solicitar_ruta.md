@@ -41,14 +41,13 @@ se notifica un cambio de dirección.
 ---
 ## Requirements *(mandatory)*
 ### Functional Requirements
-- **FR-067**: El sistema DEBE enviar los datos de dirección y peso a logística de trasnporte para que le asignen una ruta.
-- **FR-068**: El sistema DEBE guardar la ruta asignada y la fecha de despacho en el pedido.
--
+- **FR-093**: El sistema DEBE enviar los datos de dirección y peso a logística de trasnporte para que le asignen una ruta.
+- **FR-094**: El sistema DEBE guardar la ruta asignada y la fecha de despacho en el pedido.
  
 ### Key Entities
-- **RegistroPicking**: id_pedido, id_ruta, fecha_despacho, peso_logistico.
+- **SolicitudRuta**: id_pedido, id_ruta, fecha_despacho, peso_logistico.
  
 ---
 ## Success Criteria *(mandatory)*
 - **SC-032**: los pedidos se envian por una cola en donde logística de transporte recibe cada una de las solicitudes.
-- **SC-032**: 100% de los pedidos deben tener una dirección de entrega correcta.
+- **SC-033**: 100% de los pedidos deben tener una dirección de entrega 

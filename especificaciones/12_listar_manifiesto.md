@@ -24,7 +24,7 @@ Como **Operario de Recepción**, es de vital importancia conocer los manifiestos
    - **When** el Operario de Recepción busca los manifiestos del día
    - **Then** el sistema arroja una alerta de que no se encontro un manifiesto
 
-2. **Scenario**: se listan manifiestos viejos o vencidos
+3. **Scenario**: se listan manifiestos viejos o vencidos
    - **Given** existen manifiestos antiguos o vencidos en el sistema
    - **When** el Operario de Recepción busca los manifiestos antiguos filtrandolos por fecha
    - **Then** el sistema lista todos los manifiestos que ha guardado y cumplan con el requisito de la fecha
@@ -36,9 +36,9 @@ Como **Operario de Recepción**, es de vital importancia conocer los manifiestos
 ### Functional Requirements
 - **FR-025**: El sistema DEBE permitir buscar y listar cada manifiesto disponible con su información.
 
-- **FR-066**: El sistema DEBE poder filtrar por fecha los manifiestos.
+- **FR-091**: El sistema DEBE poder filtrar por fecha los manifiestos.
 
-- **FR-067**: El sistema DEBE dejar ver la información detallada de cada manifiesto con su origen y el contenido de los lotes.
+- **FR-092**: El sistema DEBE dejar ver la información detallada de cada manifiesto con su origen y el contenido de los lotes.
 
  
 ### Key Entities
