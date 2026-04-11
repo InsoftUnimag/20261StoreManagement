@@ -1,7 +1,7 @@
 # Plan de Implementación: Integración con Módulos Externos - Backend
 
 **Date**: 2026-04-03  
-**Spec**: 15_integracion_modulo_logistica.md  
+**Spec**: 13_solicitar_ruta.md, 15_ofrecer_datos_pedido.md  
 **Module**: Módulo 1 - Inventario  
 **Layer**: Backend - Infrastructure  
 **Priority**: P1 (Crítico para comunicación inter-módulos)
@@ -10,7 +10,7 @@
 
 ## Summary
 
-Implementación de la capa de integración del Módulo 1 con sistemas externos: (1) Módulo de Usuarios vía HTTP REST (consulta de clientes), (2) Módulo 2 Logística vía RabbitMQ Consumer (señal de ruta asignada), (3) Módulo 3 Financiero vía RabbitMQ Producer (evento pedido creado). Incluye manejo de errores, reintentos, circuit breakers y monitoreo.
+Implementación de la capa de integración del Módulo 1 con sistemas externos: (1) Módulo de Usuarios vía HTTP REST (consulta de clientes), (2) Módulo 2 Logística vía RabbitMQ Producer (solicitar ruta), (3) Módulo 2 Logística vía RabbitMQ Consumer (señal de ruta asignada), y (4) Módulo 3 Financiero vía RabbitMQ Producer (evento pedido creado). Se sigue el patrón de evento ligero (`pedido_id`), obligando a los módulos externos a consultar el detalle completo por REST según el `document_Api.yml`. Incluye manejo de errores, reintentos, circuit breakers y monitoreo.
 
 ---
 
@@ -25,7 +25,7 @@ Implementación de la capa de integración del Módulo 1 con sistemas externos: 
 
 **External Dependencies**:
 - **Módulo de Usuarios**: HTTP REST API (puerto 8081, ruta: `/api/usuarios/clientes/{cedula}`)
-- **Módulo 2 Logística**: RabbitMQ Exchange `logistica.eventos`, Queue `inventario.ruta-asignada`
+- **Módulo 2 Logística**: RabbitMQ Exchange `inventario.pedidos`, Routing Key `ruta.solicitar`. Y Exchange `logistica.eventos`, Queue `inventario.ruta-asignada`.
 - **Módulo 3 Financiero**: RabbitMQ Exchange `inventario.pedidos`, Routing Key `pedido.creado`
 
 ---
@@ -72,9 +72,37 @@ Headers:
 
 ---
 
-### 2. Módulo 2 Logística (RabbitMQ Consumer)
+### 2. Módulo 2 Logística (RabbitMQ Producer - Solicitar Ruta)
 
-**Purpose**: Recibir señal de ruta asignada para comprometer inventario
+**Purpose**: Notificar a Logística que hay un pedido en estado ESPERANDO_RUTA para que asigne vehículo. (Spec 13)
+
+**Protocol**: RabbitMQ (asíncrono, fire-and-forget)
+
+**Exchange**: `inventario.pedidos` (topic exchange)
+
+**Routing Key**: `ruta.solicitar`
+
+**Message Schema** (Payload ultra-ligero):
+```json
+{
+  "pedido_id": "uuid",
+  "numero_pedido": "PED-20260403-001",
+  "estado": "ESPERANDO_RUTA"
+}
+```
+
+*Nota Backend:* Los datos requeridos como pesos, dirección de entrega y cliente se exponen a través del Controller interno definido en el `document_Api.yml` bajo la ruta: `GET /api/v1/external/pedidos/{pedidoId}?modulo=transporte`.
+
+**Producer Logic**:
+1. Crear mensaje al finalizar el `CreatePedidoUseCase`.
+2. Publicar asíncronamente con `@Async`.
+3. Log estructurado: `Ruta solicitada para pedido: {numero_pedido}`.
+
+---
+
+### 3. Módulo 2 Logística (RabbitMQ Consumer - Ruta Asignada)
+
+**Purpose**: Recibir señal de ruta asignada para comprometer inventario.
 
 **Protocol**: RabbitMQ (asíncrono)
 
@@ -89,36 +117,26 @@ Headers:
 {
   "pedido_id": "uuid",
   "ruta_id": "uuid",
-  "fecha_asignacion": "2026-04-03T11:00:00Z",
-  "prioridad": "NORMAL" // opcional
+  "fecha_asignacion": "2026-04-03T11:00:00Z"
 }
 ```
 
 **Consumer Logic**:
-1. Recibir mensaje
-2. Validar schema (pedido_id, ruta_id no vacíos)
-3. Llamar `ComprometerInventarioUseCase(pedido_id, ruta_id)`
+1. Recibir mensaje.
+2. Validar schema (pedido_id, ruta_id no vacíos).
+3. Llamar REST / UseCase: `ComprometerInventarioUseCase(pedido_id, ruta_id)`.
 4. Si éxito: ACK (mensaje confirmado)
-5. Si error (pedido no existe, ya comprometido): ACK + log warning
-6. Si error transitorio (BD caída): NACK con requeue (máx 3 reintentos)
+5. Si error (pedido no existe o ya comprometido): ACK + log warning (idempotencia).
+6. Si error transitorio (BD caída): NACK con requeue.
 
 **Resilience**:
-- **Prefetch**: 10 mensajes (procesamiento concurrente limitado)
-- **Retry**: Máx 3 reintentos con backoff exponencial (1s, 2s, 4s)
-- **DLQ (Dead Letter Queue)**: Después de 3 fallos → `inventario.ruta-asignada.dlq`
-- **Idempotencia**: Verificar si pedido ya está COMPROMETIDO antes de procesar
-
-**Error Handling**:
-- Pedido no existe → ACK + log error (no reintentar)
-- Pedido ya comprometido → ACK + log warning (idempotencia)
-- Stock insuficiente → Compromiso parcial + ACK + log alerta
-- Error de BD → NACK + requeue (hasta 3 veces)
+- **Retry**: Máx 3 reintentos con backoff exponencial.
 
 ---
 
-### 3. Módulo 3 Financiero (RabbitMQ Producer)
+### 4. Módulo 3 Financiero (RabbitMQ Producer)
 
-**Purpose**: Notificar creación de pedido para generación de factura
+**Purpose**: Notificar creación de pedido para generación de factura y liquidación final (Spec 15)
 
 **Protocol**: RabbitMQ (asíncrono, fire-and-forget)
 
@@ -126,26 +144,15 @@ Headers:
 
 **Routing Key**: `pedido.creado`
 
-**Message Schema**:
+**Message Schema** (Payload ultra-ligero para API call posterior):
 ```json
 {
   "pedido_id": "uuid",
   "numero_pedido": "PED-20260403-001",
-  "cliente_cc": "1234567890",
-  "fecha_creacion": "2026-04-03T10:30:00Z",
-  "asesor_id": "uuid",
-  "lineas": [
-    {
-      "sku_id": "uuid",
-      "marca": "Pilsen",
-      "presentacion": "Six-pack",
-      "cantidad": 120,
-      "precio_unitario": 15000 // si está disponible, opcional
-    }
-  ],
-  "total_unidades": 360
+  "evento": "PEDIDO_CREADO"
 }
 ```
+*Nota Backend:* Siguiendo el estándar, el módulo Financiero consumirá los costos, datos del cliente y lista de lotes desde el endpoint REST diseñado en el OpenAPI usando: `GET /api/v1/external/pedidos/{pedidoId}?modulo=financiero` el cual retorna el schema `PedidoFinancieroResponse`.
 
 **Producer Logic**:
 1. Crear mensaje con datos del pedido

@@ -130,11 +130,11 @@ backend/
 - Entidades: `Producto`, `BitacoraProducto`
 - Use Cases: `CrearProductoUseCase`, `ModificarProductoUseCase`, `ConsultarCatalogoUseCase`
 - Endpoints REST: 
-  - `POST /api/productos`
-  - `PUT /api/productos/{skuId}`
-  - `DELETE /api/productos/{skuId}`
-  - `GET /api/productos`
-  - `GET /api/productos/{skuId}/bitacora`
+  - `POST /api/v1/productos`
+  - `PUT /api/v1/productos/{skuId}`
+  - `DELETE /api/v1/productos/{skuId}`
+  - `GET /api/v1/productos`
+  - `GET /api/v1/productos/{skuId}/bitacora`
 
 **Acceptance Criteria**:
 - ✅ Supervisor puede crear/editar SKUs
@@ -244,19 +244,19 @@ backend/
 
 ---
 
-### Phase 7: Integración Inter-Módulos (Spec 15 + Mensajería)
-**Purpose**: Comunicación asíncrona con Módulo 2 y Módulo 3.
+### Phase 7: Integración Inter-Módulos (Specs 13, 15 + Mensajería)
+**Purpose**: Comunicación asíncrona con Módulo 2 y Módulo 3 (REST Híbrido + RabbitMQ).
 
 **Feature Plan**: [`plan_integracion_backend.md`](plan_integracion_backend.md)
 
 **Specs Covered**: 
+- 13_solicitar_ruta.md
 - 15_ofrecer_datos_pedido.md
-- Contratos de mensajería
 
 **Key Deliverables**:
 - Consumidor: `RutaAsignadaConsumer` (escucha cola Módulo 2)
-- Productor: `PedidoCreadoProducer` (publica a cola Módulo 3)
-- Contratos de mensajes documentados
+- Productores: `SolicitarRutaProducer` (publica a cola Módulo 2), `PedidoCreadoProducer` (publica a cola Módulo 3)
+- Contratos de mensajes ultra-ligeros. API `/api/external/pedidos` habilitada para pull de datos.
 
 **Dependencies**: Phase 5 y Phase 6
 
@@ -269,6 +269,7 @@ backend/
 - Paginación en todos los listados
 - Logging estructurado (SLF4J)
 - Documentación OpenAPI/Swagger
+  - Artefacto consolidado: `swagger_modulo1_backend.yaml` (incluye clasificación de endpoints internos/externos)
 - Métricas de performance
 - Variables de entorno externalizadas
 

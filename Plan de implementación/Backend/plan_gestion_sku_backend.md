@@ -122,7 +122,7 @@ Implementación del CRUD de productos (SKU) del catálogo. Este feature es la ba
 
 ## Endpoints / API
 
-### POST /api/productos
+### POST /api/v1/productos
 **Purpose**: Crear nuevo producto (SKU)  
 **Actor**: Supervisor de Inventario  
 **Request Body**:
@@ -151,7 +151,7 @@ Implementación del CRUD de productos (SKU) del catálogo. Este feature es la ba
 - 400 Bad Request: Campos inválidos (validación @Valid)
 - 409 Conflict: Producto duplicado (marca + presentacion existe)
 
-### PUT /api/productos/{skuId}
+### PUT /api/v1/productos/{skuId}
 **Purpose**: Modificar producto existente  
 **Actor**: Supervisor de Inventario  
 **Request Body**:
@@ -178,7 +178,7 @@ Implementación del CRUD de productos (SKU) del catálogo. Este feature es la ba
 - 404 Not Found: Producto no existe
 - 409 Conflict: Nueva combinación duplica producto existente
 
-### DELETE /api/productos/{skuId}
+### DELETE /api/v1/productos/{skuId}
 **Purpose**: Eliminar producto  
 **Actor**: Supervisor de Inventario  
 **Response**: 204 No Content  
@@ -186,7 +186,7 @@ Implementación del CRUD de productos (SKU) del catálogo. Este feature es la ba
 - 404 Not Found: Producto no existe
 - 409 Conflict: Producto tiene lotes activos
 
-### GET /api/productos
+### GET /api/v1/productos
 **Purpose**: Consultar catálogo con disponibilidad  
 **Actor**: Asesor Comercial  
 **Query Params**:
@@ -216,7 +216,7 @@ Implementación del CRUD de productos (SKU) del catálogo. Este feature es la ba
 }
 ```
 
-### GET /api/productos/{skuId}/bitacora
+### GET /api/v1/productos/{skuId}/bitacora
 **Purpose**: Consultar historial de cambios  
 **Actor**: Supervisor de Inventario  
 **Response**: 200 OK
@@ -352,11 +352,11 @@ public interface ProductoJpaRepository extends JpaRepository<ProductoJpaEntity, 
 - `BitacoraResponse.java`
 
 **T018** - Implementar `ProductoController`
-- `POST /api/productos` → delega a CrearProductoUseCase
-- `PUT /api/productos/{skuId}` → delega a ModificarProductoUseCase
-- `DELETE /api/productos/{skuId}` → delega a EliminarProductoUseCase
-- `GET /api/productos` → delega a ConsultarCatalogoUseCase
-- `GET /api/productos/{skuId}/bitacora` → delega a ConsultarBitacoraUseCase
+- `POST /api/v1/productos` → delega a CrearProductoUseCase
+- `PUT /api/v1/productos/{skuId}` → delega a ModificarProductoUseCase
+- `DELETE /api/v1/productos/{skuId}` → delega a EliminarProductoUseCase
+- `GET /api/v1/productos` → delega a ConsultarCatalogoUseCase
+- `GET /api/v1/productos/{skuId}/bitacora` → delega a ConsultarBitacoraUseCase
 
 **T019** - Configurar `GlobalExceptionHandler` para ProductoDuplicadoException, etc.
 - Mapear excepciones a códigos HTTP correctos (409, 404)
@@ -367,7 +367,7 @@ public interface ProductoJpaRepository extends JpaRepository<ProductoJpaEntity, 
 
 ### Phase 6: Polish
 
-**T020** - Implementar paginación en `GET /api/productos`
+**T020** - Implementar paginación en `GET /api/v1/productos`
 - Parámetros: page, size, sort
 - Response: objeto Page con metadata
 
@@ -401,13 +401,13 @@ public interface ProductoJpaRepository extends JpaRepository<ProductoJpaEntity, 
 ### Integration Tests (con Spring)
 
 **ProductoControllerTest.java**:
-- `POST /api/productos` con datos válidos → 201 Created
-- `POST /api/productos` con duplicado → 409 Conflict
-- `POST /api/productos` con campos inválidos → 400 Bad Request
-- `PUT /api/productos/{skuId}` exitoso → 200 OK con bitácora
-- `DELETE /api/productos/{skuId}` con lotes activos → 409 Conflict
-- `GET /api/productos` → 200 OK con lista paginada
-- `GET /api/productos?busqueda=Pilsen` → 200 OK filtrado
+- `POST /api/v1/productos` con datos válidos → 201 Created
+- `POST /api/v1/productos` con duplicado → 409 Conflict
+- `POST /api/v1/productos` con campos inválidos → 400 Bad Request
+- `PUT /api/v1/productos/{skuId}` exitoso → 200 OK con bitácora
+- `DELETE /api/v1/productos/{skuId}` con lotes activos → 409 Conflict
+- `GET /api/v1/productos` → 200 OK con lista paginada
+- `GET /api/v1/productos?busqueda=Pilsen` → 200 OK filtrado
 
 **Cobertura esperada**: 70%
 
@@ -431,7 +431,7 @@ public interface ProductoJpaRepository extends JpaRepository<ProductoJpaEntity, 
 - ✅ Use Cases testeados con Mockito (sin Spring)
 - ✅ Controllers testeados con @SpringBootTest
 - ✅ Migraciones Flyway ejecutan correctamente
-- ✅ Paginación funciona en GET /api/productos
+- ✅ Paginación funciona en GET /api/v1/productos
 
 ---
 
