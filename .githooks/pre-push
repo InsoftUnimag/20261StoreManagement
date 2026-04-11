@@ -2,7 +2,7 @@
 branch=$(git symbolic-ref HEAD | sed 's|refs/heads/||')
 
 if [ "$branch" = "master" ] || [ "$branch" = "develop" ]; then
-  echo "❌ Push directo a '$branch' no permitido. Usa un PR."
+  echo "Push directo a '$branch' no permitido. Usa un PR."
   exit 1
 fi
 exit 0
