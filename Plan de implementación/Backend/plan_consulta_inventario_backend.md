@@ -47,17 +47,17 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 1. Usuario solicita stock de un sku_id específico
 2. Sistema consulta:
    - Información del Producto (marca, presentacion, contenido)
-   - Todos los Lotes con stock_actual > 0, ordenados por fecha_vencimiento ASC (FEFO)
-   - Stock total: SUM(stock_actual)
+   - Todos los Lotes con cantidad > 0, ordenados por fecha_vencimiento ASC (FEFO)
+   - Stock total: SUM(cantidad)
 3. Retorna:
    - Datos del producto
    - Stock total disponible
    - Detalle por lote (codigo, vencimiento, stock)
 
 **Business Logic**:
-- Solo incluir lotes con stock_actual > 0 (ignorar lotes agotados)
+- Solo incluir lotes con cantidad > 0 (ignorar lotes agotados)
 - Ordenar lotes por fecha_vencimiento ASC (FEFO) - FR-061
-- Si producto no tiene lotes → stock_total = 0 (no error)
+- Si producto no tiene lotes → fisico_total = 0 (no error)
 
 **Performance**:
 - Consulta de stock de 1 SKU ≤ 500 ms
@@ -69,8 +69,8 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 
 **Flujo**:
 1. Sistema envía lista de sku_ids
-2. Sistema consulta stock_total para cada sku_id
-3. Retorna mapa: {sku_id: stock_total}
+2. Sistema consulta fisico_total para cada sku_id
+3. Retorna mapa: {sku_id: fisico_total}
 
 **Business Logic**:
 - Batch query eficiente (IN clause o JOIN)
@@ -83,7 +83,7 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 **Flujo**:
 1. Usuario solicita kardex con filtros:
    - sku_id (opcional)
-   - lote_id (opcional)
+   - codigo_lote (opcional)
    - tipo_movimiento (opcional)
    - fecha_desde, fecha_hasta (opcional)
    - page, size (paginación)
@@ -106,7 +106,7 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 **Actor**: Operario, Supervisor
 
 **Flujo**:
-1. Usuario solicita detalle de un lote_id específico
+1. Usuario solicita detalle de un codigo_lote específico
 2. Sistema retorna:
    - Información del lote (codigo, fechas, stock)
    - Información del producto asociado
@@ -115,7 +115,7 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 
 **Business Logic**:
 - Incluir últimos 10 movimientos del lote para contexto
-- Mostrar cantidad_inicial y stock_actual para calcular rotación
+- Mostrar cantidad_inicial y cantidad para calcular rotación
 
 ---
 
@@ -137,26 +137,26 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
     "contenido_ml": 1980,
     "peso_logistico_kg": 2.5
   },
-  "stock_total": 480,
+  "fisico_total": 480,
   "lotes": [
     {
-      "lote_id": "uuid",
+      "codigo_lote": "LOT-2026-001",
       "codigo_lote": "LOT-2025-001",
       "fecha_vencimiento": "2026-06-15",
       "fecha_fabricacion": "2025-12-01",
-      "stock_actual": 240,
+      "cantidad": 240,
       "dias_hasta_vencimiento": 73
     },
     {
-      "lote_id": "uuid",
+      "codigo_lote": "LOT-2026-001",
       "codigo_lote": "LOT-2025-015",
       "fecha_vencimiento": "2026-08-20",
-      "stock_actual": 240,
+      "cantidad": 240,
       "dias_hasta_vencimiento": 139
     }
   ],
   "proximo_vencimiento": {
-    "lote_id": "uuid",
+    "codigo_lote": "LOT-2026-001",
     "fecha_vencimiento": "2026-06-15",
     "dias_restantes": 73
   }
@@ -186,31 +186,31 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
       "sku_id": "uuid1",
       "marca": "Pilsen",
       "presentacion": "Unidad",
-      "stock_total": 1200
+      "fisico_total": 1200
     },
     {
       "sku_id": "uuid2",
       "marca": "Águila",
       "presentacion": "Six-pack",
-      "stock_total": 0
+      "fisico_total": 0
     }
   ]
 }
 ```
 
-### GET /api/v1/inventario/lotes/{lote_id}
+### GET /api/v1/inventario/lotes/{codigo_lote}
 **Purpose**: Consultar detalle completo de un lote específico
 
 **Response 200 OK**:
 ```json
 {
   "lote": {
-    "lote_id": "uuid",
+    "codigo_lote": "LOT-2026-001",
     "codigo_lote": "LOT-2025-001",
     "fecha_vencimiento": "2026-06-15",
     "fecha_fabricacion": "2025-12-01",
     "cantidad_inicial": 300,
-    "stock_actual": 240,
+    "cantidad": 240,
     "creado_el": "2026-03-15T09:30:00Z"
   },
   "producto": {
@@ -254,7 +254,7 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 
 **Query Params**:
 - `sku_id` (opcional): UUID del producto
-- `lote_id` (opcional): UUID del lote
+- `codigo_lote` (opcional): String del lote
 - `tipo_movimiento` (opcional): Enum (Entrada, Compromiso, Picking, Salida, Baja Avería, Baja Vencimiento, Faltante)
 - `fecha_desde` (opcional): ISO Date (ej: "2026-03-01")
 - `fecha_hasta` (opcional): ISO Date (ej: "2026-03-31")
@@ -271,7 +271,7 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
       "cantidad": 300,
       "fecha_movimiento": "2026-03-15T09:30:00Z",
       "lote": {
-        "lote_id": "uuid",
+        "codigo_lote": "LOT-2026-001",
         "codigo_lote": "LOT-2025-001"
       },
       "producto": {
@@ -288,7 +288,7 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
       "cantidad": -60,
       "fecha_movimiento": "2026-03-20T14:00:00Z",
       "lote": {
-        "lote_id": "uuid",
+        "codigo_lote": "LOT-2026-001",
         "codigo_lote": "LOT-2025-001"
       },
       "producto": {
@@ -340,35 +340,35 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 **T001: Implementar ConsultarStockPorSkuUseCase**
 - Path: `application/usecases/ConsultarStockPorSkuUseCase.java`
 - Input: sku_id
-- Output: StockDisponibleDTO (sku info, stock_total, lista de lotes con FEFO)
+- Output: StockDisponibleDTO (sku info, fisico_total, lista de lotes con FEFO)
 - Lógica:
   1. Buscar Producto por sku_id (404 si no existe)
-  2. Buscar Lotes con stock_actual > 0, ordenados por fecha_vencimiento ASC
-  3. Calcular stock_total = SUM(stock_actual)
+  2. Buscar Lotes con cantidad > 0, ordenados por fecha_vencimiento ASC
+  3. Calcular fisico_total = SUM(cantidad)
   4. Calcular dias_hasta_vencimiento para cada lote
   5. Identificar proximo_vencimiento (primer lote en lista FEFO)
 
 **T002: Implementar ConsultarStockMultipleSkusUseCase**
 - Path: `application/usecases/ConsultarStockMultipleSkusUseCase.java`
 - Input: List<UUID> skuIds, boolean includeZeroStock
-- Output: List<StockResumenDTO> (sku_id, marca, presentacion, stock_total)
+- Output: List<StockResumenDTO> (sku_id, marca, presentacion, fisico_total)
 - Lógica:
-  1. Query eficiente con JOIN: Producto + SUM(Lote.stock_actual) GROUP BY sku_id
-  2. Si includeZeroStock = false: filtrar solo stock_total > 0
+  1. Query eficiente con JOIN: Producto + SUM(Lote.cantidad) GROUP BY sku_id
+  2. Si includeZeroStock = false: filtrar solo fisico_total > 0
   3. Retornar lista ordenada por marca, presentacion
 
 **T003: Implementar ConsultarDetalleLoteUseCase**
 - Path: `application/usecases/ConsultarDetalleLoteUseCase.java`
-- Input: lote_id
+- Input: codigo_lote
 - Output: LoteDetalleDTO (lote, producto, recepcion, movimientos_recientes)
 - Lógica:
   1. Buscar Lote (404 si no existe)
   2. JOIN con Producto, Recepcion
-  3. Buscar MovimientoInventario por lote_id (últimos 10, ordenados por fecha DESC)
+  3. Buscar MovimientoInventario por codigo_lote (últimos 10, ordenados por fecha DESC)
 
 **T004: Implementar ConsultarMovimientosInventarioUseCase**
 - Path: `application/usecases/ConsultarMovimientosInventarioUseCase.java`
-- Input: FiltrosKardexDTO (sku_id, lote_id, tipo, fecha_desde, fecha_hasta, pageable)
+- Input: FiltrosKardexDTO (sku_id, codigo_lote, tipo, fecha_desde, fecha_hasta, pageable)
 - Output: Page<MovimientoInventarioDTO>
 - Lógica:
   1. Construir query dinámica con filtros (usar Specification pattern)
@@ -382,11 +382,11 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 - Output: ResumenInventarioDTO (totales, alertas, movimientos_hoy)
 - Lógica:
   1. COUNT(DISTINCT Producto) con lotes activos
-  2. COUNT(Lote) WHERE stock_actual > 0
-  3. SUM(Lote.stock_actual)
+  2. COUNT(Lote) WHERE cantidad > 0
+  3. SUM(Lote.cantidad)
   4. Alertas:
      - Lotes con fecha_vencimiento <= hoy + 30 dias
-     - SKUs con stock_total < umbral (ej: 50 unidades)
+     - SKUs con fisico_total < umbral (ej: 50 unidades)
      - ExcepcionInventario con estado = ABIERTA
   5. Movimientos_hoy: COUNT MovimientoInventario WHERE fecha >= hoy 00:00
 
@@ -395,7 +395,7 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 **T006: Crear query FEFO optimizada en LoteRepository**
 - Método:
   ```java
-  @Query("SELECT l FROM LoteEntity l WHERE l.skuId = :skuId AND l.stockActual > 0 ORDER BY l.fechaVencimiento ASC, l.creadoEl ASC")
+  @Query("SELECT l FROM LoteEntity l WHERE l.skuId = :skuId AND l.cantidad > 0 ORDER BY l.fechaVencimiento ASC, l.creadoEl ASC")
   List<LoteEntity> findAvailableBySkuOrderByFEFO(@Param("skuId") UUID skuId);
   ```
 - Usar índice existente: `idx_lotes_sku_vencimiento`
@@ -403,18 +403,18 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 **T007: Crear query batch stock en LoteRepository**
 - Método:
   ```java
-  @Query("SELECT l.skuId as skuId, SUM(l.stockActual) as stockTotal " +
-         "FROM LoteEntity l WHERE l.skuId IN :skuIds AND l.stockActual > 0 " +
+  @Query("SELECT l.skuId as skuId, SUM(l.cantidad) as fisicoTotal " +
+         "FROM LoteEntity l WHERE l.skuId IN :skuIds AND l.cantidad > 0 " +
          "GROUP BY l.skuId")
   List<StockProjection> findStockBySkuIds(@Param("skuIds") List<UUID> skuIds);
   ```
-- Interface projection: `StockProjection` (skuId, stockTotal)
+- Interface projection: `StockProjection` (skuId, fisicoTotal)
 
 **T008: Crear Specification para filtros dinámicos de kardex**
 - Path: `infrastructure/persistence/specifications/MovimientoInventarioSpecification.java`
 - Métodos estáticos:
   - `bySkuId(UUID skuId)`
-  - `byLoteId(UUID loteId)`
+  - `bycodigoLote(UUID codigoLote)`
   - `byTipoMovimiento(TipoMovimiento tipo)`
   - `byFechaRange(LocalDate desde, LocalDate hasta)`
 - Composición con `Specification.where(spec1).and(spec2)...`
@@ -425,7 +425,7 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 - Path: `infrastructure/web/controllers/InventarioConsultaController.java`
 - GET /api/v1/inventario/stock/{sku_id} → ConsultarStockPorSkuUseCase
 - GET /api/v1/inventario/stock (batch) → ConsultarStockMultipleSkusUseCase
-- GET /api/v1/inventario/lotes/{lote_id} → ConsultarDetalleLoteUseCase
+- GET /api/v1/inventario/lotes/{codigo_lote} → ConsultarDetalleLoteUseCase
 - GET /api/v1/inventario/movimientos → ConsultarMovimientosInventarioUseCase
 - GET /api/v1/inventario/resumen → ConsultarResumenInventarioUseCase
 - Validaciones:
@@ -436,9 +436,9 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 ### Phase 4: DTOs & Mappers
 
 **T010: Crear DTOs de respuesta**
-- StockDisponibleDTO (sku, stock_total, lotes[], proximo_vencimiento)
-- LoteStockDTO (lote_id, codigo_lote, fecha_vencimiento, stock_actual, dias_hasta_vencimiento)
-- StockResumenDTO (sku_id, marca, presentacion, stock_total)
+- StockDisponibleDTO (sku, fisico_total, lotes[], proximo_vencimiento)
+- LoteStockDTO (codigo_lote, fecha_vencimiento, cantidad, dias_hasta_vencimiento)
+- StockResumenDTO (sku_id, marca, presentacion, fisico_total)
 - LoteDetalleDTO (lote, producto, recepcion, movimientos_recientes[])
 - MovimientoInventarioDTO (movimiento, lote, producto, operario, pedido, excepcion)
 - ResumenInventarioDTO (totales, alertas, movimientos_hoy)
@@ -453,7 +453,7 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 **T012: Unit tests - Use Cases**
 - Test ConsultarStockPorSkuUseCase:
   - Happy path: SKU con 2 lotes retorna lista ordenada FEFO
-  - Edge case: SKU sin lotes retorna stock_total = 0
+  - Edge case: SKU sin lotes retorna fisico_total = 0
   - Error case: SKU inexistente lanza NotFoundException
 - Test ConsultarStockMultipleSkusUseCase:
   - Happy path: Batch de 10 SKUs retorna stock de todos
@@ -519,8 +519,8 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 
 5. **Índices críticos**:
    - `idx_lotes_sku_vencimiento` ON lotes(sku_id, fecha_vencimiento) // FEFO
-   - `idx_lotes_stock` ON lotes(sku_id, stock_actual) WHERE stock_actual > 0
-   - `idx_movimientos_lote` ON movimientos_inventario(lote_id)
+   - `idx_lotes_stock` ON lotes(sku_id, cantidad) WHERE cantidad > 0
+   - `idx_movimientos_lote` ON movimientos_inventario(codigo_lote)
    - `idx_movimientos_fecha` ON movimientos_inventario(fecha_movimiento)
 
 6. **Specification pattern para filtros dinámicos**: Kardex tiene muchas combinaciones de filtros. Usar Spring Data JPA Specification para construir queries dinámicas sin SQL nativo.

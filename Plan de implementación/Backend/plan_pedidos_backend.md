@@ -104,7 +104,7 @@ Esperando Ruta → Comprometido → En Picking → Despachado
 **Atributos**:
 - `compromiso_id`: UUID (PK, autogenerado)
 - `producto_pedido_id`: UUID (FK → ProductoPedido)
-- `lote_id`: UUID (FK → Lote)
+- `codigo_lote`: String (FK → Lote)
 - `cantidad_comprometida`: Integer
 - `fecha_compromiso`: DateTime
 
@@ -114,7 +114,7 @@ Esperando Ruta → Comprometido → En Picking → Despachado
 **Business Rules**:
 - LoteComprometido solo se crea cuando estado = Comprometido (ruta asignada) - FR-058
 - Lotes se seleccionan con FEFO (First Expired First Out) - FR-061
-- Al comprometer: Lote.stock_actual se reduce, se crea MovimientoInventario tipo Compromiso
+- Al comprometer: Lote.cantidad se reduce, se crea MovimientoInventario tipo Compromiso
 
 ---
 
@@ -168,7 +168,7 @@ Esperando Ruta → Comprometido → En Picking → Despachado
 **Business Logic**:
 - **Generar numero_pedido**: "PED-YYYYMMDD-NNN" (ej: "PED-20260403-001")
   - Secuencial por día (consultar último número del día + 1)
-- **Validación de stock SIN comprometer**: Consultar SUM(Lote.stock_actual) por sku_id
+- **Validación de stock SIN comprometer**: Consultar SUM(Lote.cantidad) por sku_id
   - Si stock < cantidad_solicitada → rechazo inmediato - FR-055
 - **Pedido queda en Esperando Ruta**: Sin lotes comprometidos - FR-057
 - **Mensaje asíncrono a Módulo 3**: Fire-and-forget, no bloquea respuesta al usuario
@@ -192,11 +192,11 @@ Esperando Ruta → Comprometido → En Picking → Despachado
    - Pedido existe y estado = Esperando Ruta
 3. Sistema ejecuta transacción atómica:
    a. Para cada ProductoPedido:
-      - Buscar lotes con stock_actual > 0, ordenados por fecha_vencimiento ASC (FEFO)
+      - Buscar lotes con cantidad > 0, ordenados por fecha_vencimiento ASC (FEFO)
       - Comprometer lotes hasta cubrir cantidad_solicitada (o lo máximo disponible)
       - Para cada lote comprometido:
         * Crear LoteComprometido
-        * Reducir Lote.stock_actual
+        * Reducir Lote.cantidad
         * Crear MovimientoInventario tipo Compromiso
       - Actualizar ProductoPedido.cantidad_confirmada
    b. Actualizar Pedido.estado = Comprometido
@@ -217,13 +217,13 @@ Esperando Ruta → Comprometido → En Picking → Despachado
 ```
 Para cada ProductoPedido:
   cantidad_pendiente = cantidad_solicitada
-  lotes_disponibles = SELECT lote WHERE sku_id = X AND stock_actual > 0 ORDER BY fecha_vencimiento ASC
+  lotes_disponibles = SELECT lote WHERE sku_id = X AND cantidad > 0 ORDER BY fecha_vencimiento ASC
   
   Para cada lote en lotes_disponibles:
-    cantidad_a_comprometer = MIN(cantidad_pendiente, lote.stock_actual)
+    cantidad_a_comprometer = MIN(cantidad_pendiente, lote.cantidad)
     
-    Crear LoteComprometido(lote_id, cantidad_a_comprometer)
-    lote.stock_actual -= cantidad_a_comprometer
+    Crear LoteComprometido(codigo_lote, cantidad_a_comprometer)
+    lote.cantidad -= cantidad_a_comprometer
     Crear MovimientoInventario(tipo: Compromiso, cantidad: -cantidad_a_comprometer)
     
     cantidad_pendiente -= cantidad_a_comprometer
@@ -436,13 +436,13 @@ Para cada ProductoPedido:
       "cantidad_confirmada": 120,
       "lotes_comprometidos": [
         {
-          "lote_id": "uuid",
+          "codigo_lote": "LOT-2026-001",
           "codigo_lote": "LOT-2025-001",
           "fecha_vencimiento": "2026-06-15",
           "cantidad_comprometida": 80
         },
         {
-          "lote_id": "uuid",
+          "codigo_lote": "LOT-2026-001",
           "codigo_lote": "LOT-2025-020",
           "fecha_vencimiento": "2026-07-20",
           "cantidad_comprometida": 40
@@ -570,7 +570,7 @@ Para cada ProductoPedido:
 - Lógica:
   1. Validar cliente (llamar ConsultarClienteUseCase)
   2. Validar SKUs existen (ProductoRepository)
-  3. Validar stock disponible SIN comprometer (LoteRepository: SUM(stock_actual) por sku)
+  3. Validar stock disponible SIN comprometer (LoteRepository: SUM(cantidad) por sku)
   4. Transacción:
      - Generar numero_pedido (PED-YYYYMMDD-NNN secuencial)
      - Crear Pedido (estado: ESPERANDO_RUTA)
@@ -587,7 +587,7 @@ Para cada ProductoPedido:
   2. Transacción atómica:
      - Para cada ProductoPedido: aplicar algoritmo FEFO
      - Crear LoteComprometidos
-     - Reducir Lote.stock_actual
+     - Reducir Lote.cantidad
      - Crear MovimientoInventario tipo COMPROMISO
      - Actualizar ProductoPedido.cantidad_confirmada
      - Actualizar Pedido.estado = COMPROMETIDO, ruta_id, fecha_compromiso
@@ -690,7 +690,7 @@ Para cada ProductoPedido:
 - Tablas:
   - `pedidos` (PK: pedido_id, UNIQUE: numero_pedido, FK: cliente_cc lógica, asesor_id)
   - `productos_pedido` (PK: producto_pedido_id, FK: pedido_id, sku_id)
-  - `lotes_comprometidos` (PK: compromiso_id, FK: producto_pedido_id, lote_id)
+  - `lotes_comprometidos` (PK: compromiso_id, FK: producto_pedido_id, codigo_lote)
 - Índices:
   - `idx_pedidos_numero` ON pedidos(numero_pedido)
   - `idx_pedidos_cliente` ON pedidos(cliente_cc)
@@ -839,6 +839,6 @@ Para cada ProductoPedido:
 
 8. **Atomicidad del compromiso**: ComprometerInventarioUseCase debe ser transaccional. Si falla algún paso (reducir stock, crear movimiento), rollback completo. Pedido vuelve a ESPERANDO_RUTA para reintento.
 
-9. **Performance del FEFO**: Query `SELECT lote WHERE sku_id = X AND stock_actual > 0 ORDER BY fecha_vencimiento ASC` debe usar índice `idx_lotes_sku_vencimiento`. Cargar TODOS los lotes del SKU en memoria (raramente más de 10-20 lotes por SKU).
+9. **Performance del FEFO**: Query `SELECT lote WHERE sku_id = X AND cantidad > 0 ORDER BY fecha_vencimiento ASC` debe usar índice `idx_lotes_sku_vencimiento`. Cargar TODOS los lotes del SKU en memoria (raramente más de 10-20 lotes por SKU).
 
 10. **Testing de integración crítico**: Mock Módulo Usuarios con WireMock. Simular timeouts, 5xx, circuit breaker. Test E2E del flujo completo: crear → asignar ruta → verificar compromiso FEFO.

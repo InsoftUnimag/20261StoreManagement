@@ -73,23 +73,23 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
 **Propósito**: Unidad de trazabilidad con fecha de vencimiento para FEFO.
 
 **Atributos**:
-- `lote_id`: UUID (PK, autogenerado)
+- `codigo_lote`: String (PK, Código de fábrica)
 - `sku_id`: UUID (FK → Producto, inmutable)
-- `codigo_lote`: String (del proveedor, ej: "LOT-2025-001")
-- `fecha_vencimiento`: Date (inmutable, crítico para FEFO)
-- `fecha_fabricacion`: Date (opcional)
+- `cantidad`: Integer (Unidades físicas actuales)
+- `fecha_vencimiento`: Date (Mandatorio para control FEFO)
+- `fecha_expedicion`: Date
+- `disponible`: Boolean
+- `flag_urgencia_fefo`: Boolean (Activo si vencimiento cercano)
+- `costo_unitario_producto`: Decimal (Costo en pesos colombianos)
 - `recepcion_id`: UUID (FK → Recepcion)
-- `cantidad_inicial`: Integer (inmutable)
-- `stock_actual`: Integer (mutable, decrece con pedidos)
-- `creado_el`: DateTime
 
 **Constraints**:
 - UNIQUE(sku_id, codigo_lote, fecha_vencimiento) - evita duplicados
-- stock_actual ≥ 0
+- cantidad ≥ 0
 - fecha_vencimiento >= fecha_fabricacion
 
 **Business Rules**:
-- Lotes con stock_actual = 0 NO se eliminan (auditoría) - FR-026
+- Lotes con cantidad = 0 NO se eliminan (auditoría) - FR-026
 - Lotes NO se comprometen al crear pedido, solo cuando Módulo 2 asigna ruta (FR-057, FR-058)
 - FEFO (First Expired First Out) para selección de lotes - FR-061
 
@@ -98,7 +98,7 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
 
 **Atributos**:
 - `movimiento_id`: UUID (PK, autogenerado)
-- `lote_id`: UUID (FK → Lote)
+- `codigo_lote`: String (FK → Lote)
 - `tipo_movimiento`: Enum (Entrada, Compromiso, Picking, Salida, Baja Avería, Baja Vencimiento, Faltante)
 - `cantidad`: Integer (positivo o negativo según tipo)
 - `fecha_movimiento`: DateTime
@@ -108,7 +108,7 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
 - `observaciones`: Text (opcional)
 
 **Business Rules**:
-- Cada cambio en stock_actual de Lote genera un MovimientoInventario
+- Cada cambio en cantidad de Lote genera un MovimientoInventario
 - Tipos de movimiento:
   - **Entrada**: Recepción de mercancía (+)
   - **Compromiso**: Reserva de lote cuando Módulo 2 asigna ruta (-)
@@ -124,7 +124,7 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
 **Atributos**:
 - `excepcion_id`: UUID (PK, autogenerado)
 - `tipo_excepcion`: Enum (Avería, Vencimiento, Diferencia, Faltante)
-- `lote_id`: UUID (FK → Lote, puede ser null)
+- `codigo_lote`: String (FK → Lote, puede ser null)
 - `sku_id`: UUID (FK → Producto, siempre presente)
 - `cantidad_afectada`: Integer
 - `fecha_registro`: DateTime
@@ -159,7 +159,7 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
    b. Para cada línea:
       - Crear Lote (o actualizar si ya existe)
       - Crear MovimientoInventario tipo Entrada
-      - Incrementar Lote.stock_actual
+      - Incrementar Lote.cantidad
       - Actualizar DetalleManifiesto.cantidad_recibida
    c. Si cantidad_recibida ≠ cantidad_esperada → crear ExcepcionInventario tipo Diferencia
    d. Actualizar Manifiesto.estado (Parcial/Total según líneas completadas)
@@ -196,19 +196,19 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
 1. Usuario detecta anomalía (avería, vencimiento, faltante)
 2. Ingresa:
    - tipo_excepcion
-   - sku_id (y opcionalmente lote_id)
+   - sku_id (y opcionalmente codigo_lote)
    - cantidad_afectada
    - descripcion (obligatorio)
    - evidencia_url (opcional)
 3. Sistema valida:
    - sku_id existe
-   - Si lote_id presente → existe y stock_actual >= cantidad_afectada
+   - Si codigo_lote presente → existe y cantidad >= cantidad_afectada
    - descripcion no vacía
 4. Sistema ejecuta transacción:
    a. Crear ExcepcionInventario (estado: Abierta)
    b. Si tipo requiere baja de stock (Avería, Vencimiento, Faltante):
       - Crear MovimientoInventario tipo correspondiente
-      - Decrementar Lote.stock_actual
+      - Decrementar Lote.cantidad
 5. Retorna confirmación con excepcion_id
 
 **Business Logic**:
@@ -263,10 +263,10 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
   "fecha_recepcion": "2026-04-03T10:30:00Z",
   "lotes_creados": [
     {
-      "lote_id": "uuid",
+      "codigo_lote": "LOT-2026-001",
       "sku_id": "uuid",
       "codigo_lote": "LOT-2025-001",
-      "stock_actual": 240
+      "cantidad": 240
     }
   ],
   "excepciones_generadas": [ // si hubo diferencias
@@ -342,7 +342,7 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
 {
   "tipo_excepcion": "Avería", // Avería | Vencimiento | Diferencia | Faltante
   "sku_id": "uuid",
-  "lote_id": "uuid", // opcional
+  "codigo_lote": "LOT-2026-001", // opcional
   "cantidad_afectada": 12,
   "descripcion": "Cajas dañadas por humedad durante transporte",
   "evidencia_url": "https://storage/foto123.jpg", // opcional
@@ -367,7 +367,7 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
 
 **Validations**:
 - 400 Bad Request: descripcion vacía, cantidad ≤ 0
-- 404 Not Found: sku_id o lote_id no existen
+- 404 Not Found: sku_id o codigo_lote no existen
 - 409 Conflict: Stock insuficiente en lote para dar de baja
 
 ### GET /api/v1/excepciones
@@ -392,7 +392,7 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
         "marca": "Pilsen",
         "presentacion": "Unidad"
       },
-      "lote_id": "uuid",
+      "codigo_lote": "LOT-2026-001",
       "cantidad_afectada": 12,
       "fecha_registro": "2026-04-03T11:15:00Z",
       "operario_nombre": "Juan Pérez",
@@ -422,10 +422,10 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
     "contenido_ml": 330
   },
   "lote": {
-    "lote_id": "uuid",
+    "codigo_lote": "LOT-2026-001",
     "codigo_lote": "LOT-2025-001",
     "fecha_vencimiento": "2026-12-31",
-    "stock_actual": 228 // después de la baja
+    "cantidad": 228 // después de la baja
   },
   "cantidad_afectada": 12,
   "descripcion": "Cajas dañadas por humedad durante transporte",
@@ -489,21 +489,21 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
 
 **T004: Crear entidad Lote (domain)**
 - Path: `domain/entities/Lote.java`
-- Atributos: lote_id, sku_id, codigo_lote, fecha_vencimiento, fecha_fabricacion, recepcion_id, cantidad_inicial, stock_actual, creado_el
+- Atributos: codigo_lote, sku_id, cantidad, fecha_vencimiento, fecha_expedicion, disponible, flag_urgencia_fefo, costo_unitario_producto, recepcion_id
 - Validaciones:
-  - stock_actual >= 0
+  - cantidad >= 0
   - fecha_vencimiento >= fecha_fabricacion
   - sku_id, fecha_vencimiento, cantidad_inicial son inmutables
 - Método: `reducirStock(int cantidad)` con validación
 
 **T005: Crear entidad MovimientoInventario (domain)**
 - Path: `domain/entities/MovimientoInventario.java`
-- Atributos: movimiento_id, lote_id, tipo_movimiento, cantidad, fecha_movimiento, pedido_id, excepcion_id, operario_id, observaciones
+- Atributos: movimiento_id, codigo_lote, tipo_movimiento, cantidad, fecha_movimiento, pedido_id, excepcion_id, operario_id, observaciones
 - Enum TipoMovimiento: ENTRADA, COMPROMISO, PICKING, SALIDA, BAJA_AVERIA, BAJA_VENCIMIENTO, FALTANTE
 
 **T006: Crear entidad ExcepcionInventario (domain)**
 - Path: `domain/entities/ExcepcionInventario.java`
-- Atributos: excepcion_id, tipo_excepcion, lote_id, sku_id, cantidad_afectada, fecha_registro, operario_id, descripcion, evidencia_url, estado
+- Atributos: excepcion_id, tipo_excepcion, codigo_lote, sku_id, cantidad_afectada, fecha_registro, operario_id, descripcion, evidencia_url, estado
 - Enum TipoExcepcion: AVERIA, VENCIMIENTO, DIFERENCIA, FALTANTE
 - Enum EstadoExcepcion: ABIERTA, EN_INVESTIGACION, CERRADA
 - Validación: descripcion no puede estar vacía
@@ -534,13 +534,13 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
   - `Optional<Lote> findById(UUID id)`
   - `Optional<Lote> findBySkuAndCodigoAndVencimiento(UUID skuId, String codigoLote, LocalDate fechaVencimiento)`
   - `List<Lote> findBySkuIdOrderByFechaVencimientoAsc(UUID skuId)` // FEFO
-  - `List<Lote> findBySkuIdWithStock(UUID skuId)` // stock_actual > 0
-  - `void update(Lote lote)` // para actualizar stock_actual
+  - `List<Lote> findBySkuIdWithStock(UUID skuId)` // cantidad > 0
+  - `void update(Lote lote)` // para actualizar cantidad
 
 **T011: Crear MovimientoInventarioRepository (domain/repositories)**
 - Métodos:
   - `UUID save(MovimientoInventario movimiento)`
-  - `List<MovimientoInventario> findByLoteId(UUID loteId)` // kardex de un lote
+  - `List<MovimientoInventario> findBycodigoLote(UUID codigoLote)` // kardex de un lote
   - `List<MovimientoInventario> findByPedidoId(UUID pedidoId)` // movimientos de un pedido
 
 **T012: Crear ExcepcionInventarioRepository (domain/repositories)**
@@ -562,7 +562,7 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
   3. Crear Recepcion
   4. Para cada línea:
      - Buscar si lote ya existe (sku + codigo + vencimiento)
-     - Si existe: incrementar stock_actual
+     - Si existe: incrementar cantidad
      - Si no: crear nuevo Lote
      - Crear MovimientoInventario tipo ENTRADA
      - Si manifiesto_id presente: actualizar DetalleManifiesto.cantidad_recibida
@@ -591,16 +591,16 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
 
 **T016: Implementar RegistrarExcepcionUseCase**
 - Path: `application/usecases/RegistrarExcepcionUseCase.java`
-- Input DTO: `RegistrarExcepcionCommand` (tipo, sku_id, lote_id, cantidad, descripcion, evidencia_url, operario_id)
+- Input DTO: `RegistrarExcepcionCommand` (tipo, sku_id, codigo_lote, cantidad, descripcion, evidencia_url, operario_id)
 - Output DTO: `ExcepcionResult` (excepcion_id, movimiento_generado_id)
 - Lógica:
   1. Validar sku_id existe (ProductoRepository)
-  2. Si lote_id presente: validar existe y stock_actual >= cantidad_afectada
+  2. Si codigo_lote presente: validar existe y cantidad >= cantidad_afectada
   3. Iniciar transacción
   4. Crear ExcepcionInventario (estado: ABIERTA)
   5. Si tipo IN [AVERIA, VENCIMIENTO, FALTANTE]:
      - Crear MovimientoInventario (tipo correspondiente)
-     - Reducir Lote.stock_actual
+     - Reducir Lote.cantidad
   6. Commit transacción
 
 **T017: Implementar ConsultarExcepcionesUseCase**
@@ -629,13 +629,13 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
   - `manifiestos` (PK: manifiesto_id, UNIQUE: numero_manifiesto)
   - `detalles_manifiesto` (PK: detalle_id, FK: manifiesto_id, sku_id)
   - `recepciones` (PK: recepcion_id, FK: manifiesto_id, operario_id)
-  - `lotes` (PK: lote_id, FK: sku_id, recepcion_id, UNIQUE(sku_id, codigo_lote, fecha_vencimiento))
-  - `movimientos_inventario` (PK: movimiento_id, FK: lote_id, pedido_id, excepcion_id, operario_id)
-  - `excepciones_inventario` (PK: excepcion_id, FK: lote_id, sku_id, operario_id)
+  - `lotes` (PK: codigo_lote, FK: sku_id, recepcion_id, UNIQUE(sku_id, codigo_lote, fecha_vencimiento))
+  - `movimientos_inventario` (PK: movimiento_id, FK: codigo_lote, pedido_id, excepcion_id, operario_id)
+  - `excepciones_inventario` (PK: excepcion_id, FK: codigo_lote, sku_id, operario_id)
 - Índices:
   - `idx_lotes_sku_vencimiento` ON lotes(sku_id, fecha_vencimiento) // FEFO
-  - `idx_lotes_stock` ON lotes(sku_id, stock_actual) WHERE stock_actual > 0
-  - `idx_movimientos_lote` ON movimientos_inventario(lote_id)
+  - `idx_lotes_stock` ON lotes(sku_id, cantidad) WHERE cantidad > 0
+  - `idx_movimientos_lote` ON movimientos_inventario(codigo_lote)
   - `idx_excepciones_estado` ON excepciones_inventario(estado)
 
 **T021: Implementar JPA entities (infrastructure/persistence)**
@@ -653,7 +653,7 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
 - JpaRecepcionRepository
 - JpaLoteRepository con query FEFO:
   ```java
-  @Query("SELECT l FROM LoteEntity l WHERE l.skuId = :skuId AND l.stockActual > 0 ORDER BY l.fechaVencimiento ASC")
+  @Query("SELECT l FROM LoteEntity l WHERE l.skuId = :skuId AND l.cantidad > 0 ORDER BY l.fechaVencimiento ASC")
   List<LoteEntity> findAvailableBySkuOrderByFEFO(@Param("skuId") UUID skuId);
   ```
 - JpaMovimientoInventarioRepository
@@ -753,7 +753,7 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
 
 **FR-021**: Recepción es atómica: Lote + MovimientoInventario + stock actualizado en una sola transacción. Si falla algún paso, rollback completo.
 
-**FR-026**: Lotes con stock_actual = 0 NO se eliminan de la base de datos (auditoría).
+**FR-026**: Lotes con cantidad = 0 NO se eliminan de la base de datos (auditoría).
 
 **FR-094**: Operarios pueden registrar excepciones tipo Avería con descripción obligatoria.
 
@@ -769,7 +769,7 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
 
 1. **Atomicidad es crítica**: Usar @Transactional(propagation = REQUIRED) en RegistrarRecepcionUseCase y RegistrarExcepcionUseCase. Configurar rollbackFor = Exception.class.
 
-2. **UNIQUE constraint en Lotes**: La combinación (sku_id, codigo_lote, fecha_vencimiento) debe ser única. Si se recibe el mismo lote en recepciones diferentes, incrementar stock_actual del lote existente, NO crear duplicado.
+2. **UNIQUE constraint en Lotes**: La combinación (sku_id, codigo_lote, fecha_vencimiento) debe ser única. Si se recibe el mismo lote en recepciones diferentes, incrementar cantidad del lote existente, NO crear duplicado.
 
 3. **Validación de fecha_vencimiento**: Debe ser fecha futura (> hoy). Validar en domain entity y en controller.
 
@@ -777,7 +777,7 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
 
 5. **Manifiestos son read-only en Módulo 1**: Solo se actualiza el estado y la cantidad_recibida en DetalleManifiesto. La creación de manifiestos es responsabilidad de otro sistema.
 
-6. **MovimientoInventario como auditoría**: Cada cambio en stock_actual debe generar un registro en MovimientoInventario. Es el kardex completo del almacén.
+6. **MovimientoInventario como auditoría**: Cada cambio en cantidad debe generar un registro en MovimientoInventario. Es el kardex completo del almacén.
 
 7. **FEFO preparado**: Aunque el algoritmo FEFO se usa principalmente en pedidos (otro plan), el query `findBySkuIdOrderByFechaVencimientoAsc` ya está disponible en LoteRepository.
 
@@ -785,6 +785,6 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
    - Automáticas: Tipo Diferencia (creadas por RegistrarRecepcionUseCase)
    - Manuales: Tipo Avería, Vencimiento, Faltante (creadas por RegistrarExcepcionUseCase)
 
-9. **Performance**: Usar índices en lotes(sku_id, fecha_vencimiento) y lotes(sku_id, stock_actual) para queries FEFO rápidas.
+9. **Performance**: Usar índices en lotes(sku_id, fecha_vencimiento) y lotes(sku_id, cantidad) para queries FEFO rápidas.
 
 10. **Testing de rollback**: Es crítico probar que si falla cualquier paso de la recepción, toda la transacción hace rollback. Simular fallo de base de datos en medio de la transacción.

@@ -83,8 +83,8 @@ disponible y habilitar la atención de pedidos.
 ---
 ## Requirements *(mandatory)*
 ### Functional Requirements
-- **FR-012**: El sistema DEBE registrar recepción con SKU, código_lote, cantidad, fecha_expedicion, costo_COP, estado_lote, flag_urgencia_fefo y fecha_vencimiento.
-- **FR-013**: El sistema DEBE requerir los campos (SKU, código_lote, cantidad, fecha_expedicion, costo_COP, estado_lote, flag_urgencia_fefo y fecha_vencimiento) como obligatorios.
+- **FR-012**: El sistema DEBE registrar recepción con SKU, código_lote, cantidad, fecha_expedicion, costo_COP, disponible, flag_urgencia_fefo y fecha_vencimiento.
+- **FR-013**: El sistema DEBE requerir los campos (SKU, código_lote, cantidad, fecha_expedicion, costo_COP, disponible, flag_urgencia_fefo y fecha_vencimiento) como obligatorios.
 - **FR-014**: El sistema DEBE validar fecha vencimiento sea posterior a la fecha actual.
 - **FR-015**: El sistema DEBE crear Lote con estado "Disponible" al confirmar la recepción.
 - **FR-016**: El sistema DEBE incrementar el stock del SKU en la cantidad recibida (include: Actualizar stock disponible).
@@ -100,7 +100,7 @@ disponible y habilitar la atención de pedidos.
 
 ### Key Entities
 - **Recepción**: número, fecha, operario, manifiesto_ref.
-- **Lote**: código_lote, SKU_ref, fecha_vencimiento, cantidad, estado_lote, flag_urgencia_fefo, fecha_expedicion, costo_COP. 
+- **Lote**: código_lote, SKU_ref, fecha_vencimiento, cantidad, disponible, flag_urgencia_fefo, fecha_expedicion, costo_COP. 
 - **MovimientoInventario**: tipo, cantidad, lote_ref, recepción_ref, fecha.
 - **Manifiesto**: documento de planta con SKUs, lotes y cantidades esperadas.
  

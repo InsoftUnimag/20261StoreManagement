@@ -70,7 +70,7 @@ Nuevos estados y transiciones:
 
 ### MovimientoInventario (extensión)
 Nuevo tipo de movimiento:
-- **Salida**: Despacho de mercancía (reduce stock_actual)
+- **Salida**: Despacho de mercancía (reduce cantidad)
 
 ---
 
@@ -109,7 +109,7 @@ Nuevo tipo de movimiento:
 3. Sistema ejecuta transacción:
    a. Crear RegistroPicking (operario_id, fecha_picking)
    b. Actualizar Pedido.estado = En Picking
-   c. NO modificar Lote.stock_actual (ya estaba comprometido) - FR-068
+   c. NO modificar Lote.cantidad (ya estaba comprometido) - FR-068
    d. NO crear MovimientoInventario (el movimiento fue el Compromiso)
 4. Sistema retorna confirmación
 
@@ -164,17 +164,17 @@ Nuevo tipo de movimiento:
 3. Sistema ejecuta transacción atómica:
    a. Buscar LoteComprometidos del pedido
    b. Para cada LoteComprometido:
-      - Reducir Lote.stock_actual (cantidad_comprometida)
+      - Reducir Lote.cantidad (cantidad_comprometida)
       - Crear MovimientoInventario tipo SALIDA (cantidad negativa)
    c. Crear RegistroDespacho
    d. Actualizar Pedido.estado = Despachado
 4. Sistema retorna confirmación
 
 **Business Logic**:
-- **Despacho reduce stock**: Lote.stock_actual -= cantidad_comprometida - FR-071
+- **Despacho reduce stock**: Lote.cantidad -= cantidad_comprometida - FR-071
 - **Kardex completo**: Cada lote genera MovimientoInventario tipo SALIDA - FR-071
 - **Atomicidad crítica**: Si falla reducción de stock o creación de movimiento, rollback completo
-- Validar que Lote.stock_actual >= cantidad_comprometida (no debería fallar si compromiso fue correcto, pero validar por seguridad)
+- Validar que Lote.cantidad >= cantidad_comprometida (no debería fallar si compromiso fue correcto, pero validar por seguridad)
 
 **Validations**:
 - Pedido no existe → 404
@@ -235,13 +235,13 @@ Nuevo tipo de movimiento:
           "cantidad": 120,
           "lotes_comprometidos": [
             {
-              "lote_id": "uuid",
+              "codigo_lote": "LOT-2026-001",
               "codigo_lote": "LOT-2025-001",
               "cantidad": 80,
               "ubicacion": "Pasillo A-05" // opcional, fuera de alcance
             },
             {
-              "lote_id": "uuid",
+              "codigo_lote": "LOT-2026-001",
               "codigo_lote": "LOT-2025-020",
               "cantidad": 40,
               "ubicacion": "Pasillo B-12"
@@ -365,13 +365,13 @@ Nuevo tipo de movimiento:
   "movimientos_generados": [
     {
       "movimiento_id": "uuid",
-      "lote_id": "uuid",
+      "codigo_lote": "LOT-2026-001",
       "tipo": "Salida",
       "cantidad": -80
     },
     {
       "movimiento_id": "uuid",
-      "lote_id": "uuid",
+      "codigo_lote": "LOT-2026-001",
       "tipo": "Salida",
       "cantidad": -40
     }
@@ -391,7 +391,7 @@ Nuevo tipo de movimiento:
 - 400: pedido_id, operario_id o transportista vacíos
 - 404: Pedido no encontrado
 - 409: Pedido no en estado En Picking
-- 500: Stock inconsistente (Lote.stock_actual < cantidad_comprometida)
+- 500: Stock inconsistente (Lote.cantidad < cantidad_comprometida)
 
 ### GET /api/v1/picking/{pedido_id}/detalle
 **Purpose**: Consultar detalle de registro de picking
@@ -437,7 +437,7 @@ Nuevo tipo de movimiento:
     {
       "movimiento_id": "uuid",
       "lote": {
-        "lote_id": "uuid",
+        "codigo_lote": "LOT-2026-001",
         "codigo_lote": "LOT-2025-001"
       },
       "cantidad": -80
@@ -510,7 +510,7 @@ Nuevo tipo de movimiento:
   3. Transacción:
      - Crear RegistroPicking
      - Actualizar Pedido.estado = EN_PICKING
-     - NO modificar Lote.stock_actual - FR-068
+     - NO modificar Lote.cantidad - FR-068
   4. Retornar DTO
 
 **T010: Implementar ConsultarPedidosParaDespachoUseCase**
@@ -535,8 +535,8 @@ Nuevo tipo de movimiento:
   4. Transacción atómica:
      - Para cada LoteComprometido:
        * Buscar Lote
-       * Validar stock_actual >= cantidad_comprometida (500 si no)
-       * Reducir Lote.stock_actual
+       * Validar cantidad >= cantidad_comprometida (500 si no)
+       * Reducir Lote.cantidad
        * Crear MovimientoInventario tipo SALIDA (cantidad negativa, referencia a pedido_id)
      - Crear RegistroDespacho
      - Actualizar Pedido.estado = DESPACHADO
@@ -602,21 +602,21 @@ Nuevo tipo de movimiento:
 **T020: Unit tests - Use Cases**
 - Test ConfirmarPickingUseCase:
   - Happy path: Picking confirmado, estado cambia a EN_PICKING
-  - Edge case: Stock_actual NO cambia (verificar)
+  - Edge case: cantidad NO cambia (verificar)
   - Error case: Pedido no en COMPROMETIDO lanza EstadoInvalidoException
 - Test ConfirmarDespachoUseCase:
   - Happy path: Despacho reduce stock, crea movimientos, cambia estado a DESPACHADO
   - Edge case: Múltiples lotes comprometidos (3 lotes) → todos reducen stock correctamente
-  - Error case: Stock inconsistente (stock_actual < cantidad_comprometida) → rollback
+  - Error case: Stock inconsistente (cantidad < cantidad_comprometida) → rollback
 
 **T021: Integration tests - Controllers**
 - Test POST /api/v1/picking/confirmar:
   - Confirmar picking retorna 200
-  - Verificar en DB: estado = EN_PICKING, Lote.stock_actual NO cambió
+  - Verificar en DB: estado = EN_PICKING, Lote.cantidad NO cambió
   - Pedido ya en EN_PICKING retorna 409
 - Test POST /api/v1/despacho/confirmar:
   - Confirmar despacho retorna 200 con movimientos
-  - Verificar en DB: estado = DESPACHADO, Lote.stock_actual reducido, MovimientoInventario creado
+  - Verificar en DB: estado = DESPACHADO, Lote.cantidad reducido, MovimientoInventario creado
   - Pedido ya en DESPACHADO retorna 409
 
 **T022: Integration tests - Transaction Atomicity**
@@ -667,7 +667,7 @@ Nuevo tipo de movimiento:
 
 5. **Alerta de tiempo**: En consulta de despacho, calcular tiempo_desde_picking y marcar alerta si > 5 min - SC-035. Frontend debe mostrar warning visual.
 
-6. **Validación de stock en despacho**: Aunque no debería fallar (stock ya comprometido), validar stock_actual >= cantidad_comprometida por seguridad. Si falla, log error crítico (indica bug en compromiso) y retornar 500.
+6. **Validación de stock en despacho**: Aunque no debería fallar (stock ya comprometido), validar cantidad >= cantidad_comprometida por seguridad. Si falla, log error crítico (indica bug en compromiso) y retornar 500.
 
 7. **ONE-TO-ONE constraints**: Un pedido tiene exactamente 1 RegistroPicking y 1 RegistroDespacho. Usar UNIQUE(pedido_id) en tablas para enforcar.
 
