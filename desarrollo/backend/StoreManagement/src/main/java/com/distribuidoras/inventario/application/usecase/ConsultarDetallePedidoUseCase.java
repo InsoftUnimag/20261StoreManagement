@@ -1,18 +1,30 @@
 package com.distribuidoras.inventario.application.usecase;
 
-import com.distribuidoras.inventario.domain.model.*;
-import com.distribuidoras.inventario.domain.model.enums.EstadoPedido;
-import com.distribuidoras.inventario.domain.repository.*;
-import com.distribuidoras.inventario.infrastructure.web.dto.*;
+
+import com.distribuidoras.inventario.domain.model.LoteComprometido;
+import com.distribuidoras.inventario.domain.model.Pedido;
+import com.distribuidoras.inventario.domain.model.Producto;
+import com.distribuidoras.inventario.domain.model.ProductoPedido;
+import com.distribuidoras.inventario.domain.repository.ClienteServicePort;
+import com.distribuidoras.inventario.domain.repository.LoteComprometidoRepository;
+import com.distribuidoras.inventario.domain.repository.LoteRepository;
+import com.distribuidoras.inventario.domain.repository.PedidoRepository;
+import com.distribuidoras.inventario.domain.repository.ProductoPedidoRepository;
+import com.distribuidoras.inventario.domain.repository.ProductoRepository;
+import com.distribuidoras.inventario.infrastructure.web.dto.ClienteInfoDTO;
+import com.distribuidoras.inventario.infrastructure.web.dto.LineaPedidoResponseDTO;
+import com.distribuidoras.inventario.infrastructure.web.dto.LoteComprometidoDTO;
+import com.distribuidoras.inventario.infrastructure.web.dto.PedidoResponseDTO;
+import com.distribuidoras.inventario.infrastructure.web.dto.ProductoInfoDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Use Case: Consultar Detalle de Pedido.

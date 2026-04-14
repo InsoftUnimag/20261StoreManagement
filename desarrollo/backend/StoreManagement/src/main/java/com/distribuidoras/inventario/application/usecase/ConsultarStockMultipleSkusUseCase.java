@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * Use Case: Consultar stock de múltiples SKUs (batch query).
@@ -57,7 +56,6 @@ public class ConsultarStockMultipleSkusUseCase {
         List<StockResumenDTO> stocks = skuIds.stream()
                 .filter(productos::containsKey) // Solo productos existentes
                 .map(skuId -> {
-                    Producto producto = productos.get(skuId);
                     List<Lote> lotes = lotesPorSku.getOrDefault(skuId, List.of());
                     Integer stockTotal = lotes.stream()
                             .mapToInt(Lote::getCantidad)

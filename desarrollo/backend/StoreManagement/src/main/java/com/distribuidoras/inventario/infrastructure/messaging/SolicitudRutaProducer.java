@@ -1,7 +1,6 @@
 package com.distribuidoras.inventario.infrastructure.messaging;
 
 import com.distribuidoras.inventario.domain.model.Pedido;
-import com.distribuidoras.inventario.domain.model.Producto;
 import com.distribuidoras.inventario.domain.repository.PedidoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoPedidoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoRepository;
@@ -12,7 +11,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 

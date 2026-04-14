@@ -1,7 +1,6 @@
 package com.distribuidoras.inventario.infrastructure.persistence.adapter;
 
 import com.distribuidoras.inventario.domain.model.MovimientoInventario;
-import com.distribuidoras.inventario.domain.model.Lote;
 import com.distribuidoras.inventario.domain.model.enums.TipoMovimiento;
 import com.distribuidoras.inventario.domain.repository.LoteRepository;
 import com.distribuidoras.inventario.domain.repository.MovimientoInventarioRepository;

@@ -1,7 +1,6 @@
 package com.distribuidoras.inventario.domain.repository;
 
 import com.distribuidoras.inventario.domain.model.Manifiesto;
-import com.distribuidoras.inventario.domain.model.enums.EstadoManifiesto;
 
 import java.util.List;
 import java.util.Optional;

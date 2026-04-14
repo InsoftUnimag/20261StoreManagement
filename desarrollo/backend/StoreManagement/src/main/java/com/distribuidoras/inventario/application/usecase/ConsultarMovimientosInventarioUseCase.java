@@ -1,6 +1,5 @@
 package com.distribuidoras.inventario.application.usecase;
 
-import com.distribuidoras.inventario.application.usecase.mapper.InventarioMapper;
 import com.distribuidoras.inventario.domain.model.Lote;
 import com.distribuidoras.inventario.domain.model.MovimientoInventario;
 import com.distribuidoras.inventario.domain.model.Producto;
@@ -90,7 +89,7 @@ public class ConsultarMovimientosInventarioUseCase {
                 filtros.fechaHasta().atTime(LocalTime.MAX) : null;
 
         // If skuId is provided, we need to get lot codes first
-        List<String> codigosLote = null;
+        List<String> codigosLote = List.of();
         if (filtros.skuId() != null) {
             List<Lote> lotes = loteRepository.findBySkuIdOrderByFechaVencimientoAsc(filtros.skuId());
             codigosLote = lotes.stream()

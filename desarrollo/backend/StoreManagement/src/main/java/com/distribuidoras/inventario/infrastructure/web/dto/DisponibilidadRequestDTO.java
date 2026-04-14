@@ -1,7 +1,6 @@
 package com.distribuidoras.inventario.infrastructure.web.dto;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Request DTO for checking availability of a pedido.

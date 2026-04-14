@@ -1,7 +1,5 @@
 package com.distribuidoras.inventario.infrastructure.web.dto;
 
-import com.distribuidoras.inventario.infrastructure.web.dto.PaginacionDTO;
-import com.distribuidoras.inventario.infrastructure.web.dto.PedidoResumenDTO;
 
 import java.util.List;
 

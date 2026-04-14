@@ -33,7 +33,6 @@ class RecepcionControllerTest {
     @DisplayName("POST /api/v1/recepciones exitoso → 201")
     void registrarRecepcion_exitoso() throws Exception {
         UUID recId = UUID.randomUUID();
-        UUID loteId = UUID.randomUUID();
         UUID skuId = UUID.randomUUID();
 
         when(registrarRecepcionUseCase.ejecutar(any())).thenReturn(

@@ -1,7 +1,6 @@
 package com.distribuidoras.inventario.application.usecase.mapper;
 
 import com.distribuidoras.inventario.domain.model.Lote;
-import com.distribuidoras.inventario.domain.model.MovimientoInventario;
 import com.distribuidoras.inventario.domain.model.Producto;
 import com.distribuidoras.inventario.infrastructure.web.dto.*;
 

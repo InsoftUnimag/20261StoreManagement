@@ -1,8 +1,6 @@
 package com.distribuidoras.inventario.infrastructure.web.dto;
 
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * DTO representing availability check result for a pedido (order).

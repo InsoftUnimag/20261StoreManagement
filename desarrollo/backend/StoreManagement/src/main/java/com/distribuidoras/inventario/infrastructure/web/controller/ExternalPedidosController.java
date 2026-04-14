@@ -1,6 +1,5 @@
 package com.distribuidoras.inventario.infrastructure.web.controller;
 
-import com.distribuidoras.inventario.application.usecase.*;
 import com.distribuidoras.inventario.domain.model.*;
 import com.distribuidoras.inventario.domain.repository.*;
 import com.distribuidoras.inventario.infrastructure.web.dto.*;
@@ -11,9 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * REST Controller for external modules (Transporte/Financiero) to query pedido details.

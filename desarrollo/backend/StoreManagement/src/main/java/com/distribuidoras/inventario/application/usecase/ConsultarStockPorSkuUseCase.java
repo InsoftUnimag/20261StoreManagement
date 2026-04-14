@@ -29,7 +29,6 @@ import java.util.UUID;
 public class ConsultarStockPorSkuUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(ConsultarStockPorSkuUseCase.class);
-    private static final int UMBRAL_CRITICO_DIAS = 7;
 
     private final ProductoRepository productoRepository;
     private final LoteRepository loteRepository;

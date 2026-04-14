@@ -1,7 +1,6 @@
 package com.distribuidoras.inventario.infrastructure.web.dto;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**

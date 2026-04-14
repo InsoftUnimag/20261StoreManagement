@@ -1,18 +1,32 @@
 package com.distribuidoras.inventario.application.usecase;
 
 import com.distribuidoras.inventario.domain.exception.PedidoEstadoInvalidoException;
-import com.distribuidoras.inventario.domain.model.*;
+import com.distribuidoras.inventario.domain.model.ExcepcionInventario;
+import com.distribuidoras.inventario.domain.model.Lote;
+import com.distribuidoras.inventario.domain.model.LoteComprometido;
+import com.distribuidoras.inventario.domain.model.MovimientoInventario;
+import com.distribuidoras.inventario.domain.model.Pedido;
+import com.distribuidoras.inventario.domain.model.ProductoPedido;
 import com.distribuidoras.inventario.domain.model.enums.EstadoPedido;
 import com.distribuidoras.inventario.domain.model.enums.TipoExcepcion;
 import com.distribuidoras.inventario.domain.model.enums.TipoMovimiento;
-import com.distribuidoras.inventario.domain.repository.*;
+import com.distribuidoras.inventario.domain.repository.ExcepcionInventarioRepository;
+import com.distribuidoras.inventario.domain.repository.LoteComprometidoRepository;
+import com.distribuidoras.inventario.domain.repository.LoteRepository;
+import com.distribuidoras.inventario.domain.repository.MovimientoInventarioRepository;
+import com.distribuidoras.inventario.domain.repository.PedidoRepository;
+import com.distribuidoras.inventario.domain.repository.ProductoPedidoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -145,7 +159,6 @@ public class ConfirmarPickingUseCase {
                     .sorted(Comparator.comparing(Lote::getFechaVencimiento))
                     .toList();
 
-            int encontradoAlternativo = 0;
             List<String> lotesSugeridos = new ArrayList<>();
 
             for (Lote lote : lotesAlternativos) {
@@ -159,7 +172,6 @@ public class ConfirmarPickingUseCase {
                 
                 if (!yaComprometido && lote.getCantidad() > 0) {
                     int aTomar = Math.min(faltante, lote.getCantidad());
-                    encontradoAlternativo += aTomar;
                     faltante -= aTomar;
                     lotesSugeridos.add("Lote %s: %d unidades (venc: %s)"
                             .formatted(lote.getCodigoLote(), aTomar, lote.getFechaVencimiento()));

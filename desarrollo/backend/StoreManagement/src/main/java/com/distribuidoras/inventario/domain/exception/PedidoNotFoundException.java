@@ -1,7 +1,5 @@
 package com.distribuidoras.inventario.domain.exception;
 
-import java.util.UUID;
-
 /**
  * Exception thrown when order is not found.
  */

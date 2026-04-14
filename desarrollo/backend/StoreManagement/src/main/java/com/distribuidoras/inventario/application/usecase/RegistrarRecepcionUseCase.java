@@ -1,6 +1,5 @@
 package com.distribuidoras.inventario.application.usecase;
 
-import com.distribuidoras.inventario.domain.exception.LoteDuplicadoException;
 import com.distribuidoras.inventario.domain.exception.ProductoNotFoundException;
 import com.distribuidoras.inventario.domain.model.*;
 import com.distribuidoras.inventario.domain.model.enums.*;

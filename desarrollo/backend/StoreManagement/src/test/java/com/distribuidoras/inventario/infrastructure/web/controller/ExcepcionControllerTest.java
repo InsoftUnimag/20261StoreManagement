@@ -1,8 +1,6 @@
 package com.distribuidoras.inventario.infrastructure.web.controller;
 
 import com.distribuidoras.inventario.application.usecase.*;
-import com.distribuidoras.inventario.domain.exception.ProductoNotFoundException;
-import com.distribuidoras.inventario.domain.exception.StockInsuficienteException;
 import com.distribuidoras.inventario.domain.model.ExcepcionInventario;
 import com.distribuidoras.inventario.domain.model.enums.TipoExcepcion;
 import com.distribuidoras.inventario.infrastructure.config.SecurityConfig;
