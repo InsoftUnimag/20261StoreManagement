@@ -15,5 +15,6 @@ public class OpenApiConfig {
                         .title("StoreManagement API")
                         .description("API REST para gestión de inventario y abastecimiento.")
                         .version("v1.0.0"));
+                        
     }
 }
