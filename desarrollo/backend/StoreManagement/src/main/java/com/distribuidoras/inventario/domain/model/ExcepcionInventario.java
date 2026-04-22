@@ -21,10 +21,10 @@ public class ExcepcionInventario {
     private UUID excepcionId;
     private TipoExcepcion tipoExcepcion;
     private String codigoLote;
-    private UUID skuId;
+    private String skuId;
     private Integer cantidadAfectada;
     private LocalDateTime fechaRegistro;
-    private UUID operarioId;
+    private String operarioId;
     private String descripcion;
     private String evidenciaUrl;
 

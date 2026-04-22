@@ -5,15 +5,17 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import java.util.UUID;
-
+/**
+ * Entidad JPA para stock global por SKU.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
+ */
 @Entity
 @Table(name = "stock_global_sku")
 public class StockGlobalSkuJpaEntity {
 
     @Id
-    @Column(name = "sku_id", nullable = false)
-    private UUID skuId;
+    @Column(name = "sku_id", nullable = false, length = 20)
+    private String skuId;
 
     @Column(name = "disponibles", nullable = false)
     private Integer disponibles;
@@ -26,11 +28,11 @@ public class StockGlobalSkuJpaEntity {
 
     public StockGlobalSkuJpaEntity() {}
 
-    public UUID getSkuId() {
+    public String getSkuId() {
         return skuId;
     }
 
-    public void setSkuId(UUID skuId) {
+    public void setSkuId(String skuId) {
         this.skuId = skuId;
     }
 

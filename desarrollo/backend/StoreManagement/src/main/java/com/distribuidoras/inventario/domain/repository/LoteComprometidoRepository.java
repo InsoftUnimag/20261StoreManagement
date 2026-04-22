@@ -16,4 +16,8 @@ public interface LoteComprometidoRepository {
     Optional<LoteComprometido> findById(UUID compromisoId);
     
     List<LoteComprometido> findByProductoPedidoId(UUID productoPedidoId);
+
+    List<LoteComprometido> findByPedidoId(UUID pedidoId);
+
+    List<LoteComprometido> findByCodigoLote(String codigoLote);
 }

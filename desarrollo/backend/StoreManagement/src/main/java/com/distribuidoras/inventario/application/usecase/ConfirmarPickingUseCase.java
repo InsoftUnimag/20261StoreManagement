@@ -104,7 +104,16 @@ public class ConfirmarPickingUseCase {
         // 3. Obtener líneas del pedido
         List<ProductoPedido> lineasPedido = productoPedidoRepository.findByPedidoId(pedido.getPedidoId());
 
-        // 4. Procesar cada línea con cantidades recolectadas
+        // 4. Obtener lotes comprometidos por cada línea
+        Map<UUID, LoteComprometido> lotesPorProductoPedidoId = new java.util.HashMap<>();
+        for (ProductoPedido linea : lineasPedido) {
+            List<LoteComprometido> lotes = loteComprometidoRepository.findByProductoPedidoId(linea.getProductoPedidoId());
+            if (!lotes.isEmpty()) {
+                lotesPorProductoPedidoId.put(linea.getProductoPedidoId(), lotes.get(0));
+            }
+        }
+
+        // 5. Procesar cada línea con cantidades recolectadas
         List<String> alertas = new ArrayList<>();
         Map<UUID, Integer> cantidadesRecolectadas = command.lineasRecolectadas().stream()
                 .collect(Collectors.toMap(
@@ -116,12 +125,16 @@ public class ConfirmarPickingUseCase {
             Integer cantidadRecolectada = cantidadesRecolectadas.getOrDefault(
                     linea.getProductoPedidoId(), 0);
 
+            // Obtener lote comprometido para esta línea
+            LoteComprometido loteComprometido = lotesPorProductoPedidoId.get(linea.getProductoPedidoId());
+            String codigoLote = loteComprometido != null ? loteComprometido.getCodigoLote() : null;
+
             List<String> alertasLinea = procesarLineaPicking(
-                    pedido, linea, cantidadRecolectada, command.operarioId());
+                    pedido, linea, cantidadRecolectada, command.operarioId(), codigoLote);
             alertas.addAll(alertasLinea);
         }
 
-        // 5. Actualizar pedido a "En Picking" (FR-071)
+        // 6. Actualizar pedido a "En Picking" (FR-071)
         pedido.setEstado(EstadoPedido.EN_PICKING);
         pedidoRepository.update(pedido);
 
@@ -138,13 +151,13 @@ public class ConfirmarPickingUseCase {
      * Si no hay más stock, registra excepción por faltante.
      */
     private List<String> procesarLineaPicking(Pedido pedido, ProductoPedido linea,
-                                               Integer cantidadRecolectada, UUID operarioId) {
+                                               Integer cantidadRecolectada, UUID operarioId, String codigoLote) {
         List<String> alertas = new ArrayList<>();
         int cantidadConfirmada = linea.getCantidadConfirmada();
 
         // Si no se recolectó nada, registrar excepción y continuar
         if (cantidadRecolectada == null || cantidadRecolectada == 0) {
-            registrarExcepcionFaltante(pedido, linea, cantidadConfirmada, operarioId);
+            registrarExcepcionFaltante(pedido, linea, cantidadConfirmada, operarioId, codigoLote);
             alertas.add("Línea %s: 0 unidades recolectadas de %d confirmadas"
                     .formatted(linea.getProductoPedidoId(), cantidadConfirmada));
             return alertas;
@@ -188,14 +201,14 @@ public class ConfirmarPickingUseCase {
 
             // Si aún falta stock después de buscar alternativos, registrar excepción
             if (faltante > 0) {
-                registrarExcepcionFaltante(pedido, linea, faltante, operarioId);
+                registrarExcepcionFaltante(pedido, linea, faltante, operarioId, codigoLote);
                 alertas.add("Línea %s: Faltante de %d unidades - Excepción registrada"
                         .formatted(linea.getProductoPedidoId(), faltante));
             }
         }
 
         // Registrar movimiento de inventario tipo PICKING
-        registrarMovimientoPicking(pedido, linea, cantidadRecolectada, operarioId);
+        registrarMovimientoPicking(pedido, linea, cantidadRecolectada, operarioId, codigoLote);
 
         return alertas;
     }
@@ -204,17 +217,17 @@ public class ConfirmarPickingUseCase {
      * Registra excepción por faltante en picking.
      */
     private void registrarExcepcionFaltante(Pedido pedido, ProductoPedido linea, 
-                                             int cantidadFaltante, UUID operarioId) {
+                                             int cantidadFaltante, UUID operarioId, String codigoLote) {
         ExcepcionInventario excepcion = ExcepcionInventario.builder()
                 .excepcionId(UUID.randomUUID())
                 .tipoExcepcion(TipoExcepcion.FALTANTE)
-                .codigoLote(null)
+                .codigoLote(codigoLote)
                 .skuId(linea.getSkuId())
                 .cantidadAfectada(cantidadFaltante)
                 .fechaRegistro(LocalDateTime.now())
-                .operarioId(operarioId)
-                .descripcion("Faltante en picking para pedido %s, SKU %s: %d unidades no recolectadas"
-                        .formatted(pedido.getNumeroPedido(), linea.getSkuId(), cantidadFaltante))
+                .operarioId(operarioId.toString())
+                .descripcion("Faltante en picking para pedido %s, SKU %s, Lote %s: %d unidades no recolectadas"
+                        .formatted(pedido.getNumeroPedido(), linea.getSkuId(), codigoLote, cantidadFaltante))
                 .evidenciaUrl(null)
                 .build();
 
@@ -225,19 +238,21 @@ public class ConfirmarPickingUseCase {
      * Registra movimiento de inventario tipo PICKING.
      */
     private void registrarMovimientoPicking(Pedido pedido, ProductoPedido linea, 
-                                             int cantidad, UUID operarioId) {
+                                             int cantidad, UUID operarioId, String codigoLote) {
         MovimientoInventario movimiento = MovimientoInventario.builder()
                 .movimientoId(UUID.randomUUID())
-                .codigoLote(null)  // Se registra a nivel de pedido/SKU
+                .codigoLote(codigoLote)
                 .tipoMovimiento(TipoMovimiento.PICKING)
                 .cantidad(-cantidad)
                 .fechaMovimiento(LocalDateTime.now())
                 .pedidoId(pedido.getPedidoId())
                 .operarioId(operarioId)
-                .observaciones("Picking confirmado para pedido %s, SKU %s: %d unidades"
-                        .formatted(pedido.getNumeroPedido(), linea.getSkuId(), cantidad))
+                .observaciones("Picking confirmado para pedido %s, SKU %s, Lote %s: %d unidades"
+                        .formatted(pedido.getNumeroPedido(), linea.getSkuId(), codigoLote, cantidad))
                 .build();
 
         movimientoRepository.save(movimiento);
+        log.info("Movimiento PICKING registrado: pedido={}, sku={}, lote={}, cantidad={}",
+                pedido.getNumeroPedido(), linea.getSkuId(), codigoLote, -cantidad);
     }
 }

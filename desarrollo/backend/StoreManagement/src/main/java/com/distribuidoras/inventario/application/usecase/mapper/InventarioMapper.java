@@ -10,6 +10,7 @@ import java.util.function.Function;
 
 /**
  * Functional mappers for converting domain models to DTOs.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  * Uses function composition and builder pattern.
  */
 public final class InventarioMapper {
@@ -40,7 +41,7 @@ public final class InventarioMapper {
     // Functional mapper: Producto -> ProductoInfo
     public static Function<Producto, StockDisponibleDTO.ProductoInfo> toProductoInfo() {
         return producto -> StockDisponibleDTO.ProductoInfo.builder()
-                .skuId(producto.getSkuId().toString())
+                .skuId(producto.getSkuId())
                 .marca(producto.getMarca())
                 .presentacion(producto.getPresentacion())
                 .contenidoMl(producto.getContenidoMl())
@@ -52,7 +53,7 @@ public final class InventarioMapper {
     // Functional mapper: Producto -> StockResumenDTO
     public static Function<Producto, StockResumenDTO> toStockResumenDTO(Integer stockTotal) {
         return producto -> StockResumenDTO.builder()
-                .skuId(producto.getSkuId().toString())
+                .skuId(producto.getSkuId())
                 .marca(producto.getMarca())
                 .presentacion(producto.getPresentacion())
                 .fisicoTotal(stockTotal)

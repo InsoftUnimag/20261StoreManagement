@@ -6,6 +6,7 @@ import com.distribuidoras.inventario.infrastructure.persistence.entity.LoteJpaEn
 import com.distribuidoras.inventario.infrastructure.persistence.repository.LoteJpaRepository;
 import org.springframework.stereotype.Component;
 import java.time.LocalDate;
+import java.util.Objects;
 import java.util.*;
 
 @Component
@@ -13,23 +14,23 @@ public class LoteRepositoryAdapter implements LoteRepository {
     private final LoteJpaRepository jpa;
     public LoteRepositoryAdapter(LoteJpaRepository jpa) { this.jpa = jpa; }
 
-    @Override public Lote save(Lote l) { return toDomain(jpa.save(toEntity(l))); }
-    @Override public Optional<Lote> findById(String id) { return jpa.findById(id).map(this::toDomain); }
-    @Override public Optional<Lote> findBySkuIdAndCodigoLoteAndFechaVencimiento(UUID skuId, String codigo, LocalDate fv) {
+    @Override public Lote save(Lote l) { return toDomain(jpa.save(Objects.requireNonNull(toEntity(l)))); }
+    @Override public Optional<Lote> findById(String id) { return jpa.findById(Objects.requireNonNull(id)).map(this::toDomain); }
+    @Override public Optional<Lote> findBySkuIdAndCodigoLoteAndFechaVencimiento(String skuId, String codigo, LocalDate fv) {
         return jpa.findBySkuIdAndCodigoLoteAndFechaVencimiento(skuId, codigo, fv).map(this::toDomain);
     }
-    @Override public List<Lote> findBySkuIdOrderByFechaVencimientoAsc(UUID skuId) {
+    @Override public List<Lote> findBySkuIdOrderByFechaVencimientoAsc(String skuId) {
         return jpa.findBySkuIdOrderByFechaVencimientoAsc(skuId).stream().map(this::toDomain).toList();
     }
-    @Override public List<Lote> findBySkuIdWithStock(UUID skuId) {
+    @Override public List<Lote> findBySkuIdWithStock(String skuId) {
         return jpa.findAvailableBySkuOrderByFEFO(skuId).stream().map(this::toDomain).toList();
     }
-    @Override public boolean existsBySkuIdAndCantidadGreaterThan(UUID skuId, int min) {
+    @Override public boolean existsBySkuIdAndCantidadGreaterThan(String skuId, int min) {
         return jpa.existsBySkuIdAndCantidadGreaterThan(skuId, min);
     }
 
     @Override
-    public Map<UUID, List<Lote>> findBySkuIdsWithStock(List<UUID> skuIds) {
+    public Map<String, List<Lote>> findBySkuIdsWithStock(List<String> skuIds) {
         // Functional approach: group by SKU ID using collectors
         return jpa.findBySkuIdsWithStock(skuIds).stream()
                 .map(this::toDomain)
@@ -46,6 +47,12 @@ public class LoteRepositoryAdapter implements LoteRepository {
     }
     
     @Override
+    public List<Lote> findLotesCriticos(int daysFromNow) {
+        LocalDate fechaLimite = LocalDate.now().plusDays(daysFromNow);
+        return jpa.findLotesCriticos(fechaLimite).stream().map(this::toDomain).toList();
+    }
+    
+    @Override
     public Integer countLotesWithStock() {
         return Optional.ofNullable(jpa.countLotesWithStock()).orElse(0);
     }
@@ -53,6 +60,11 @@ public class LoteRepositoryAdapter implements LoteRepository {
     @Override
     public Integer sumTotalStock() {
         return Optional.ofNullable(jpa.sumTotalStock()).orElse(0);
+    }
+
+    @Override
+    public List<Lote> findByFechaVencimientoBeforeAndCantidadGreaterThan(LocalDate fechaLimite, int cantidadMinima) {
+        return jpa.findByFechaVencimientoBeforeAndCantidadGreaterThan(fechaLimite, cantidadMinima).stream().map(this::toDomain).toList();
     }
 
     private LoteJpaEntity toEntity(Lote l) {

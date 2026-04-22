@@ -13,10 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Use Case: Consultar stock de múltiples SKUs (batch query).
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  * Spec 05: Consultar Inventario
  * 
  * Optimized for performance with single query using IN clause.
@@ -38,19 +38,19 @@ public class ConsultarStockMultipleSkusUseCase {
     /**
      * Ejecuta el caso de uso de consulta de stock múltiple.
      * 
-     * @param skuIds Lista de UUIDs de productos
+     * @param skuIds Lista de Strings de productos (formato SKU-001, etc.)
      * @param includeZeroStock Si true, incluye SKUs con stock = 0
      * @return StockMultipleDTO con resumen de stock
      */
     @Transactional(readOnly = true)
-    public StockMultipleDTO ejecutar(List<UUID> skuIds, boolean includeZeroStock) {
+    public StockMultipleDTO ejecutar(List<String> skuIds, boolean includeZeroStock) {
         log.info("Consultando stock para {} SKUs, includeZeroStock={}", skuIds.size(), includeZeroStock);
 
         // 1. Query eficiente con JOIN: Producto + SUM(Lote.cantidad) GROUP BY sku_id
-        Map<UUID, List<Lote>> lotesPorSku = loteRepository.findBySkuIdsWithStock(skuIds);
+        Map<String, List<Lote>> lotesPorSku = loteRepository.findBySkuIdsWithStock(skuIds);
 
         // 2. Obtener productos existentes
-        Map<UUID, Producto> productos = productoRepository.findByIds(skuIds);
+        Map<String, Producto> productos = productoRepository.findByIds(skuIds);
 
         // 3. Construir lista de resumen - Functional approach with stream composition
         List<StockResumenDTO> stocks = skuIds.stream()
@@ -64,10 +64,10 @@ public class ConsultarStockMultipleSkusUseCase {
                 })
                 .filter(entry -> includeZeroStock || entry.getValue() > 0) // Filter by stock
                 .map(entry -> {
-                    UUID skuId = entry.getKey();
+                    String skuId = entry.getKey();
                     Producto producto = productos.get(skuId);
                     return StockResumenDTO.builder()
-                            .skuId(skuId.toString())
+                            .skuId(skuId)
                             .marca(producto.getMarca())
                             .presentacion(producto.getPresentacion())
                             .fisicoTotal(entry.getValue())

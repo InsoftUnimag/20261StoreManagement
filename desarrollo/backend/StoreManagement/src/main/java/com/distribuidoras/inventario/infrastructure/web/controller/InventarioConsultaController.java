@@ -2,6 +2,8 @@ package com.distribuidoras.inventario.infrastructure.web.controller;
 
 import com.distribuidoras.inventario.application.usecase.*;
 import com.distribuidoras.inventario.infrastructure.web.dto.*;
+import com.distribuidoras.inventario.domain.exception.ProductoNotFoundException;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -17,11 +19,11 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
  * REST Controller for inventory consultation endpoints.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  * Spec 05: Consultar Inventario
  * Spec 06: Consultar Disponibilidad
  * 
@@ -40,22 +42,29 @@ public class InventarioConsultaController {
     private final ConsultarDisponibilidadPedidoUseCase consultarDisponibilidadPedidoUseCase;
     private final ConsultarMovimientosInventarioUseCase consultarMovimientosInventarioUseCase;
     private final ConsultarResumenInventarioUseCase consultarResumenInventarioUseCase;
+    private final ConsultarLotesCriticosUseCase consultarLotesCriticosUseCase;
+    private final ConsultarDetalleLoteUseCase consultarDetalleLoteUseCase;
 
     public InventarioConsultaController(ConsultarStockPorSkuUseCase consultarStockPorSkuUseCase,
                                          ConsultarStockMultipleSkusUseCase consultarStockMultipleSkusUseCase,
                                          ConsultarDisponibilidadPedidoUseCase consultarDisponibilidadPedidoUseCase,
                                          ConsultarMovimientosInventarioUseCase consultarMovimientosInventarioUseCase,
-                                         ConsultarResumenInventarioUseCase consultarResumenInventarioUseCase) {
+                                         ConsultarResumenInventarioUseCase consultarResumenInventarioUseCase,
+                                         ConsultarLotesCriticosUseCase consultarLotesCriticosUseCase,
+                                         ConsultarDetalleLoteUseCase consultarDetalleLoteUseCase) {
         this.consultarStockPorSkuUseCase = consultarStockPorSkuUseCase;
         this.consultarStockMultipleSkusUseCase = consultarStockMultipleSkusUseCase;
         this.consultarDisponibilidadPedidoUseCase = consultarDisponibilidadPedidoUseCase;
         this.consultarMovimientosInventarioUseCase = consultarMovimientosInventarioUseCase;
         this.consultarResumenInventarioUseCase = consultarResumenInventarioUseCase;
+        this.consultarLotesCriticosUseCase = consultarLotesCriticosUseCase;
+        this.consultarDetalleLoteUseCase = consultarDetalleLoteUseCase;
     }
 
     /**
      * GET /api/v1/inventario/stock/{sku_id}
-     * Consultar stock disponible de un SKU con detalle de lotes FEFO.
+     * Consultar stock disponible de un SKU con detalle de FEFO.
+     * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
      */
     @GetMapping("/stock/{skuId}")
     public ResponseEntity<StockDisponibleDTO> consultarStockPorSku(
@@ -63,7 +72,7 @@ public class InventarioConsultaController {
         
         log.info("REST: Consultando stock para SKU {}", skuId);
         
-        StockDisponibleDTO resultado = consultarStockPorSkuUseCase.ejecutar(UUID.fromString(skuId));
+        StockDisponibleDTO resultado = consultarStockPorSkuUseCase.ejecutar(skuId);
         
         return ResponseEntity.ok()
                 .header(HttpHeaders.CACHE_CONTROL, "max-age=" + CACHE_MAX_AGE_SECONDS)
@@ -81,9 +90,8 @@ public class InventarioConsultaController {
         
         log.info("REST: Consultando stock múltiple para SKUs: {}", skuIds);
         
-        List<UUID> skuIdList = Arrays.stream(skuIds.split(","))
+        List<String> skuIdList = Arrays.stream(skuIds.split(","))
                 .map(String::trim)
-                .map(UUID::fromString)
                 .collect(Collectors.toList());
         
         StockMultipleDTO resultado = consultarStockMultipleSkusUseCase.ejecutar(skuIdList, includeZeroStock);
@@ -137,7 +145,7 @@ public class InventarioConsultaController {
         
         ConsultarMovimientosInventarioUseCase.FiltrosKardexDTO filtros = 
                 new ConsultarMovimientosInventarioUseCase.FiltrosKardexDTO(
-                        skuId != null ? UUID.fromString(skuId) : null,
+                        skuId,
                         codigoLote,
                         tipoMovimiento != null ? 
                                 com.distribuidoras.inventario.domain.model.enums.TipoMovimiento.valueOf(tipoMovimiento) 
@@ -169,5 +177,33 @@ public class InventarioConsultaController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CACHE_CONTROL, "max-age=" + CACHE_MAX_AGE_SECONDS)
                 .body(resultado);
+    }
+    
+    @Operation(summary = "Consultar detalle de un lote")
+    @GetMapping("/lotes/{codigo_lote}")
+    public ResponseEntity<LoteDetalleDTO> consultarDetalleLote(
+            @PathVariable("codigo_lote") @NotBlank String codigoLote) {
+        log.info("REST request: Consultar detalle de lote {}", codigoLote);
+        
+        return consultarDetalleLoteUseCase.ejecutar(codigoLote)
+                .map(detalle -> ResponseEntity.ok()
+                        .header(HttpHeaders.CACHE_CONTROL, "max-age=30")
+                        .body(detalle))
+                .orElseThrow(() -> new ProductoNotFoundException("Lote no encontrado con código: " + codigoLote));
+    }
+
+    /**
+     * GET /api/v1/inventario/lotes/criticos
+     * Consultar listado de lotes crÃticos para el dashboard del Supervisor
+     */
+    @GetMapping("/lotes/criticos")
+    public ResponseEntity<List<com.distribuidoras.inventario.domain.model.Lote>> consultarLotesCriticos(
+            @RequestParam(defaultValue = "30") int diasAviso) {
+        
+        log.info("REST: Consultando listado de lotes crÃticos ({} dÃas aviso)", diasAviso);
+        
+        List<com.distribuidoras.inventario.domain.model.Lote> resultado = consultarLotesCriticosUseCase.ejecutar(diasAviso);
+        
+        return ResponseEntity.ok(resultado);
     }
 }

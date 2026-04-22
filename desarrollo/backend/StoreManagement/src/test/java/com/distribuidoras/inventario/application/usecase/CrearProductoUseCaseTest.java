@@ -31,10 +31,11 @@ class CrearProductoUseCaseTest {
     private CrearProductoUseCase useCase;
 
     @Test
-    @DisplayName("Crear producto exitoso - genera UUID y guarda con stock 0")
+    @DisplayName("Crear producto exitoso - genera SKU formato SKU-001 y guarda con stock 0")
     void crearProducto_exitoso() {
         // Given
         when(productoRepository.existsByMarcaAndPresentacion("Pilsen", "Six-pack")).thenReturn(false);
+        when(productoRepository.findMaxSkuNumero()).thenReturn(java.util.Optional.of(0));
         when(productoRepository.save(any(Producto.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
@@ -42,11 +43,12 @@ class CrearProductoUseCaseTest {
 
         // Then
         assertThat(resultado).isNotNull();
-        assertThat(resultado.getSkuId()).isNotNull(); // SC-001: SKU único generado
+        assertThat(resultado.getSkuId()).isNotNull();
+        assertThat(resultado.getSkuId()).startsWith("SKU-");
         assertThat(resultado.getMarca()).isEqualTo("Pilsen");
         assertThat(resultado.getPresentacion()).isEqualTo("Six-pack");
         assertThat(resultado.getContenidoMl()).isEqualTo(330);
-        assertThat(resultado.getPesoLogisticoKg()).isEqualByComparingTo(new BigDecimal("2.5")); // SC-002
+        assertThat(resultado.getPesoLogisticoKg()).isEqualByComparingTo(new BigDecimal("2.5"));
         assertThat(resultado.getCreadoEl()).isNotNull();
 
         // Verificar que se guardó
@@ -85,5 +87,18 @@ class CrearProductoUseCaseTest {
         assertThat(resultado).isNotNull();
         assertThat(resultado.getMarca()).isEqualTo("Pilsen");
         assertThat(resultado.getPresentacion()).isEqualTo("Unidad");
+    }
+
+    @Test
+    @DisplayName("Crear producto duplicado - case insensitive en BD (AGUILA+SIXPACK ya existe)")
+    void crearProducto_duplicado_caseInsensitive_lanzaExcepcion() {
+        // Given - la query JPQL usa LOWER() para comparación case-insensitive
+        when(productoRepository.existsByMarcaAndPresentacion("AGUILA", "SIXPACK")).thenReturn(true);
+
+        // When / Then - debe lanzar excepción aunque la BD haga la comparación case-insensitive
+        assertThatThrownBy(() -> useCase.ejecutar("AGUILA", "SIXPACK", 190, new BigDecimal("1.0")))
+                .isInstanceOf(ProductoDuplicadoException.class);
+
+        verify(productoRepository).existsByMarcaAndPresentacion("AGUILA", "SIXPACK");
     }
 }

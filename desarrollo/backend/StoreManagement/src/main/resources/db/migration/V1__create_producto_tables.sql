@@ -1,8 +1,9 @@
--- V2: Crear tablas de Producto (SKU) y Bitácora de Producto
+-- V1: Crear tablas de Producto (SKU) y Bitácora de Producto
 -- Spec: 01_crear_plantilla_producto.md, 02_modificar_plantilla_producto.md
+-- Formato skuId: SKU-001, SKU-012, SKU-111, etc.
 
 CREATE TABLE producto (
-    sku_id          UUID            PRIMARY KEY,
+    sku_id          VARCHAR(20)     PRIMARY KEY,
     marca           VARCHAR(100)    NOT NULL,
     presentacion    VARCHAR(100)    NOT NULL,
     contenido_ml    INTEGER         NOT NULL,
@@ -17,7 +18,7 @@ CREATE INDEX idx_producto_presentacion ON producto (presentacion);
 
 CREATE TABLE bitacora_producto (
     id              BIGSERIAL       PRIMARY KEY,
-    sku_id_ref      UUID            NOT NULL,
+    sku_id_ref      VARCHAR(20)    NOT NULL,
     campo           VARCHAR(50)     NOT NULL,
     valor_anterior  VARCHAR(255),
     valor_nuevo     VARCHAR(255),

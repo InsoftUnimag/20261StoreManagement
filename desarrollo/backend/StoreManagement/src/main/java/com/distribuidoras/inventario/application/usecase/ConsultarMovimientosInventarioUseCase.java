@@ -22,11 +22,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
  * Use Case: Consultar kardex (movimientos de inventario) con filtros.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  * Spec 05: Consultar Inventario - FR-041 (historial de MovimientosInventario)
  * 
  * FR-043: Consultar kardex con filtros por SKU, lote, tipo y fecha
@@ -53,7 +53,7 @@ public class ConsultarMovimientosInventarioUseCase {
      * Command object for query filters.
      */
     public record FiltrosKardexDTO(
-            UUID skuId,
+            String skuId,
             String codigoLote,
             TipoMovimiento tipoMovimiento,
             LocalDate fechaDesde,
@@ -137,7 +137,7 @@ public class ConsultarMovimientosInventarioUseCase {
         }
 
         // Get related entities for context - Functional approach
-        Set<UUID> skuIds = movimientos.stream()
+        Set<String> skuIds = movimientos.stream()
                 .map(MovimientoInventario::getCodigoLote)
                 .distinct()
                 .map(codigo -> loteRepository.findById(codigo))
@@ -145,7 +145,7 @@ public class ConsultarMovimientosInventarioUseCase {
                 .map(opt -> opt.get().getSkuId())
                 .collect(Collectors.toSet());
 
-        Map<UUID, Producto> productos = productoRepository.findByIds(List.copyOf(skuIds));
+        Map<String, Producto> productos = productoRepository.findByIds(List.copyOf(skuIds));
 
         // Transform movements to DTOs using functional mapping
         List<MovimientoInventarioDTO> movimientosDTO = movimientos.stream()
@@ -189,7 +189,7 @@ public class ConsultarMovimientosInventarioUseCase {
      * Transform a single movement to DTO with context.
      */
     private MovimientoInventarioDTO toMovimientoDTO(MovimientoInventario mov, 
-                                                     Map<UUID, Producto> productos) {
+                                                     Map<String, Producto> productos) {
         // Get lote context
         Lote lote = loteRepository.findById(mov.getCodigoLote()).orElse(null);
         Producto producto = lote != null ? productos.get(lote.getSkuId()) : null;
@@ -202,7 +202,7 @@ public class ConsultarMovimientosInventarioUseCase {
 
         MovimientoInventarioDTO.ProductoInfo productoInfo = producto != null ?
                 MovimientoInventarioDTO.ProductoInfo.builder()
-                        .skuId(producto.getSkuId().toString())
+                        .skuId(producto.getSkuId())
                         .marca(producto.getMarca())
                         .presentacion(producto.getPresentacion())
                         .build() : null;

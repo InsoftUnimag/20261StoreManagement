@@ -6,6 +6,7 @@ import com.distribuidoras.inventario.domain.repository.ExcepcionInventarioReposi
 import com.distribuidoras.inventario.infrastructure.persistence.entity.ExcepcionInventarioJpaEntity;
 import com.distribuidoras.inventario.infrastructure.persistence.repository.ExcepcionInventarioJpaRepository;
 import org.springframework.stereotype.Component;
+import java.util.Objects;
 import java.util.*;
 
 @Component
@@ -13,16 +14,21 @@ public class ExcepcionInventarioRepositoryAdapter implements ExcepcionInventario
     private final ExcepcionInventarioJpaRepository jpa;
     public ExcepcionInventarioRepositoryAdapter(ExcepcionInventarioJpaRepository jpa) { this.jpa = jpa; }
 
-    @Override public ExcepcionInventario save(ExcepcionInventario e) { return toDomain(jpa.save(toEntity(e))); }
-    @Override public Optional<ExcepcionInventario> findById(UUID id) { return jpa.findById(id).map(this::toDomain); }
+    @Override public ExcepcionInventario save(ExcepcionInventario e) { return toDomain(jpa.save(Objects.requireNonNull(toEntity(e)))); }
+    @Override public Optional<ExcepcionInventario> findById(UUID id) { return jpa.findById(Objects.requireNonNull(id)).map(this::toDomain); }
     @Override public List<ExcepcionInventario> findAll() { return jpa.findAll().stream().map(this::toDomain).toList(); }
-    @Override public List<ExcepcionInventario> findByFilters(TipoExcepcion tipo, UUID skuId) {
+    @Override public List<ExcepcionInventario> findByFilters(TipoExcepcion tipo, String skuId) {
         if (tipo != null) {
             return jpa.findByTipoExcepcion(tipo.name()).stream().map(this::toDomain).toList();
         } else if (skuId != null) {
             return jpa.findBySkuId(skuId).stream().map(this::toDomain).toList();
         }
         return findAll();
+    }
+
+    @Override
+    public List<ExcepcionInventario> findByCodigoLote(String codigoLote) {
+        return jpa.findByCodigoLote(codigoLote).stream().map(this::toDomain).toList();
     }
     
     @Override
@@ -34,7 +40,7 @@ public class ExcepcionInventarioRepositoryAdapter implements ExcepcionInventario
         return ExcepcionInventarioJpaEntity.builder().excepcionId(e.getExcepcionId())
                 .tipoExcepcion(e.getTipoExcepcion().name()).codigoLote(e.getCodigoLote()).skuId(e.getSkuId())
                 .cantidadAfectada(e.getCantidadAfectada()).fechaRegistro(e.getFechaRegistro())
-                .operarioId(e.getOperarioId()).descripcion(e.getDescripcion())
+                .operarioId(UUID.fromString(e.getOperarioId())).descripcion(e.getDescripcion())
                 .evidenciaUrl(e.getEvidenciaUrl()).build();
     }
     private ExcepcionInventario toDomain(ExcepcionInventarioJpaEntity e) {
@@ -45,7 +51,7 @@ public class ExcepcionInventarioRepositoryAdapter implements ExcepcionInventario
                 .skuId(e.getSkuId())
                 .cantidadAfectada(e.getCantidadAfectada())
                 .fechaRegistro(e.getFechaRegistro())
-                .operarioId(e.getOperarioId())
+                .operarioId(e.getOperarioId().toString())
                 .descripcion(e.getDescripcion())
                 .evidenciaUrl(e.getEvidenciaUrl())
                 .build();

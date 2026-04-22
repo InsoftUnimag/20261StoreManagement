@@ -9,9 +9,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
-import java.util.UUID;
+import java.util.Objects;
 
 /**
  * Controlador REST para gestión de Productos (SKU).
@@ -65,11 +69,12 @@ public class ProductoController {
     /**
      * PUT /api/v1/productos/{skuId} - Modificar producto existente
      * Actor: Supervisor de Inventario
+     * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
      * Spec: 02_modificar_plantilla_producto.md
      */
     @PutMapping("/{skuId}")
     public ResponseEntity<ProductoResponse> modificarProducto(
-            @PathVariable UUID skuId,
+            @PathVariable String skuId,
             @Valid @RequestBody ProductoUpdateRequest request) {
         log.info("PUT /api/v1/productos/{} - Modificar producto", skuId);
 
@@ -82,17 +87,18 @@ public class ProductoController {
                 request.getDescripcion()
         );
 
-        ProductoResponse response = ProductoResponse.fromDomain(resultado.producto(), 0, resultado.alerta());
+        ProductoResponse response = ProductoResponse.fromDomain(resultado.producto(), 0, resultado.alerta(), null);
         return ResponseEntity.ok(response);
     }
 
     /**
      * DELETE /api/v1/productos/{skuId} - Eliminar producto
      * Actor: Supervisor de Inventario
+     * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
      * Spec: 02_modificar_plantilla_producto.md (FR-011)
      */
     @DeleteMapping("/{skuId}")
-    public ResponseEntity<Void> eliminarProducto(@PathVariable UUID skuId) {
+    public ResponseEntity<Void> eliminarProducto(@PathVariable String skuId) {
         log.info("DELETE /api/v1/productos/{} - Eliminar producto", skuId);
 
         eliminarProductoUseCase.ejecutar(skuId);
@@ -101,24 +107,42 @@ public class ProductoController {
     }
 
     /**
-     * GET /api/v1/productos - Consultar catálogo con disponibilidad
+     * GET /api/v1/productos - Consultar catálogo con disponibilidad (Paginado)
      * Actor: Asesor Comercial
      * Spec: 03_consultar_productos.md
      */
     @GetMapping
-    public ResponseEntity<List<ProductoResponse>> consultarCatalogo(
-            @RequestParam(required = false) String busqueda) {
-        log.info("GET /api/v1/productos - Consultar catálogo, filtro='{}'", busqueda);
+    public ResponseEntity<Page<ProductoResponse>> consultarCatalogo(
+            @RequestParam(required = false) String busqueda,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "marca,asc") String[] sort) {
+            
+        log.info("GET /api/v1/productos - Consultar catálogo paginado, filtro='{}', page={}, size={}", busqueda, page, size);
 
-        List<ConsultarCatalogoUseCase.ProductoConDisponibilidad> resultado =
-                consultarCatalogoUseCase.ejecutar(busqueda);
+        // Convert the sort parameter into a Spring Data Sort object
+        // Format of sort parameter: [ "marca,asc", "presentacion,desc" ] or "marca,asc"
+        Sort sortObj = Sort.unsorted();
+        if (sort != null && sort.length > 0) {
+            if (sort.length == 2 && (sort[1].equalsIgnoreCase("asc") || sort[1].equalsIgnoreCase("desc"))) {
+                // simple case: sort=marca,asc
+                sortObj = Sort.by(Sort.Direction.fromString(Objects.requireNonNull(sort[1])), Objects.requireNonNull(sort[0]));
+            } else {
+                // Multiple sorts, but not expected realistically based on specs. Let's just handle simple case.
+                sortObj = Sort.by(Sort.Direction.fromString(Objects.requireNonNull(sort[1])), Objects.requireNonNull(sort[0]));
+            }
+        }
+        
+        Pageable pageable = PageRequest.of(page, size, sortObj);
 
-        List<ProductoResponse> response = resultado.stream()
-                .map(pcd -> ProductoResponse.fromDomain(
-                        pcd.producto(),
-                        pcd.stockDisponible(),
-                        null))
-                .toList();
+        Page<ConsultarCatalogoUseCase.ProductoConDisponibilidad> resultado =
+                consultarCatalogoUseCase.ejecutarConPaginacion(busqueda, pageable);
+
+        Page<ProductoResponse> response = resultado.map(pcd -> ProductoResponse.fromDomain(
+                pcd.producto(),
+                pcd.stockDisponible(),
+                null,
+                pcd.costoCop()));
 
         return ResponseEntity.ok(response);
     }
@@ -126,10 +150,11 @@ public class ProductoController {
     /**
      * GET /api/v1/productos/{skuId}/bitacora - Consultar historial de cambios
      * Actor: Supervisor de Inventario
+     * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
      * Spec: 02_modificar_plantilla_producto.md (FR-009)
      */
     @GetMapping("/{skuId}/bitacora")
-    public ResponseEntity<List<BitacoraResponse>> consultarBitacora(@PathVariable UUID skuId) {
+    public ResponseEntity<List<BitacoraResponse>> consultarBitacora(@PathVariable String skuId) {
         log.info("GET /api/v1/productos/{}/bitacora - Consultar historial", skuId);
 
         List<BitacoraResponse> response = consultarBitacoraUseCase.ejecutar(skuId).stream()

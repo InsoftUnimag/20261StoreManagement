@@ -10,9 +10,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Adapter for MovimientoInventarioRepository.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
+ */
 @Component
 public class MovimientoInventarioRepositoryAdapter implements MovimientoInventarioRepository {
     private final MovimientoInventarioJpaRepository jpa;
@@ -23,14 +28,14 @@ public class MovimientoInventarioRepositoryAdapter implements MovimientoInventar
         this.loteRepository = loteRepository;
     }
 
-    @Override public MovimientoInventario save(MovimientoInventario m) { return toDomain(jpa.save(toEntity(m))); }
+    @Override public MovimientoInventario save(MovimientoInventario m) { return toDomain(jpa.save(Objects.requireNonNull(toEntity(m)))); }
     @Override public List<MovimientoInventario> findByLoteId(String codigoLote) {
         return jpa.findByCodigoLoteOrderByFechaMovimientoDesc(codigoLote).stream().map(this::toDomain).toList();
     }
     
     @Override
     public List<MovimientoInventario> findByFilters(
-            UUID skuId,
+            String skuId,
             String codigoLote,
             TipoMovimiento tipoMovimiento,
             LocalDateTime fechaDesde,
@@ -39,7 +44,6 @@ public class MovimientoInventarioRepositoryAdapter implements MovimientoInventar
             int size
     ) {
         // Functional approach: filter in memory after fetching
-        // Note: For production, consider native queries for better performance
         List<MovimientoInventario> allMovimientos = jpa.findAll(
                 PageRequest.of(0, 10000, Sort.by("fechaMovimiento").descending())
         ).getContent().stream()
@@ -60,7 +64,7 @@ public class MovimientoInventarioRepositoryAdapter implements MovimientoInventar
     
     @Override
     public Long countByFilters(
-            UUID skuId,
+            String skuId,
             String codigoLote,
             TipoMovimiento tipoMovimiento,
             LocalDateTime fechaDesde,
@@ -83,7 +87,7 @@ public class MovimientoInventarioRepositoryAdapter implements MovimientoInventar
     /**
      * Helper to check if a movement matches a SKU ID (requires joining with Lote).
      */
-    private boolean matchesSkuId(MovimientoInventario mov, UUID skuId) {
+    private boolean matchesSkuId(MovimientoInventario mov, String skuId) {
         return loteRepository.findById(mov.getCodigoLote())
                 .map(lote -> lote.getSkuId().equals(skuId))
                 .orElse(false);

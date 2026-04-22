@@ -2,6 +2,7 @@ package com.distribuidoras.inventario.infrastructure.web.controller;
 
 import com.distribuidoras.inventario.application.usecase.ConfirmarPickingUseCase;
 import com.distribuidoras.inventario.application.usecase.ConfirmarPickingUseCase.*;
+import com.distribuidoras.inventario.application.usecase.ListarPedidosPickingUseCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +23,23 @@ public class PickingController {
     private static final Logger log = LoggerFactory.getLogger(PickingController.class);
 
     private final ConfirmarPickingUseCase confirmarPickingUseCase;
+    private final ListarPedidosPickingUseCase listarPedidosPickingUseCase;
 
-    public PickingController(ConfirmarPickingUseCase confirmarPickingUseCase) {
+    public PickingController(ConfirmarPickingUseCase confirmarPickingUseCase,
+                              ListarPedidosPickingUseCase listarPedidosPickingUseCase) {
         this.confirmarPickingUseCase = confirmarPickingUseCase;
+        this.listarPedidosPickingUseCase = listarPedidosPickingUseCase;
+    }
+
+    /**
+     * GET /api/v1/picking/pedidos
+     * Lista pedidos en estado COMPROMETIDO para picking.
+     */
+    @GetMapping("/pedidos")
+    public ResponseEntity<List<ListarPedidosPickingUseCase.PedidoPickingDTO>> listarPedidosParaPicking() {
+        log.info("REST: Listando pedidos para picking");
+        List<ListarPedidosPickingUseCase.PedidoPickingDTO> pedidos = listarPedidosPickingUseCase.ejecutar();
+        return ResponseEntity.ok(pedidos);
     }
 
     /**

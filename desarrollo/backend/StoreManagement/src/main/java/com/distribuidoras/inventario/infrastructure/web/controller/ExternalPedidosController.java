@@ -29,21 +29,15 @@ public class ExternalPedidosController {
     private final ProductoPedidoRepository productoPedidoRepository;
     private final ProductoRepository productoRepository;
     private final ClienteServicePort clienteServicePort;
-    private final LoteComprometidoRepository loteComprometidoRepository;
-    private final LoteRepository loteRepository;
 
     public ExternalPedidosController(PedidoRepository pedidoRepository,
                                       ProductoPedidoRepository productoPedidoRepository,
                                       ProductoRepository productoRepository,
-                                      ClienteServicePort clienteServicePort,
-                                      LoteComprometidoRepository loteComprometidoRepository,
-                                      LoteRepository loteRepository) {
+                                      ClienteServicePort clienteServicePort) {
         this.pedidoRepository = pedidoRepository;
         this.productoPedidoRepository = productoPedidoRepository;
         this.productoRepository = productoRepository;
         this.clienteServicePort = clienteServicePort;
-        this.loteComprometidoRepository = loteComprometidoRepository;
-        this.loteRepository = loteRepository;
     }
 
     /**
@@ -127,7 +121,7 @@ public class ExternalPedidosController {
                 BigDecimal.ZERO;
         
         return LineaExternalDTO.builder()
-                .skuId(linea.getSkuId().toString())
+                .skuId(linea.getSkuId())
                 .marca(producto != null ? producto.getMarca() : "N/A")
                 .presentacion(producto != null ? producto.getPresentacion() : "N/A")
                 .cantidadSolicitada(linea.getCantidadSolicitada())

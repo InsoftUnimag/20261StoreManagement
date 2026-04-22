@@ -21,8 +21,8 @@ public class ProductoPedidoJpaEntity {
     @Column(name = "pedido_id", nullable = false)
     private UUID pedidoId;
     
-    @Column(name = "sku_id", nullable = false)
-    private UUID skuId;
+    @Column(name = "sku_id", nullable = false, length = 20)
+    private String skuId;
     
     @Column(name = "cantidad_solicitada", nullable = false)
     private Integer cantidadSolicitada;

@@ -10,6 +10,7 @@ import com.distribuidoras.inventario.domain.model.Pedido;
 import com.distribuidoras.inventario.infrastructure.messaging.SolicitudRutaProducer;
 import com.distribuidoras.inventario.infrastructure.web.dto.*;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import org.slf4j.Logger;
@@ -140,7 +141,7 @@ public class PedidoController {
             @RequestParam(required = false) LocalDate fechaDesde,
             @RequestParam(required = false) LocalDate fechaHasta,
             @RequestParam(defaultValue = "0") @Min(0) Integer page,
-            @RequestParam(defaultValue = "20") @Min(1) @Min(100) Integer size) {
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) Integer size) {
         
         log.info("REST: Listando pedidos con filtros");
         

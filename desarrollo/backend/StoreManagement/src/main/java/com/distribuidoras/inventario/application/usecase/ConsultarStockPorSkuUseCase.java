@@ -6,6 +6,8 @@ import com.distribuidoras.inventario.domain.model.Lote;
 import com.distribuidoras.inventario.domain.model.Producto;
 import com.distribuidoras.inventario.domain.repository.LoteRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoRepository;
+import com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository;
+import com.distribuidoras.inventario.infrastructure.persistence.entity.StockGlobalSkuJpaEntity;
 import com.distribuidoras.inventario.infrastructure.web.dto.LoteStockDTO;
 import com.distribuidoras.inventario.infrastructure.web.dto.StockDisponibleDTO;
 import org.slf4j.Logger;
@@ -14,10 +16,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
+import java.util.Objects;
 
 /**
  * Use Case: Consultar stock disponible por SKU con detalle de lotes FEFO.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  * Spec 05: Consultar Inventario
  * 
  * FR-035: Calcular stock total como suma de lotes Disponibles
@@ -32,21 +35,24 @@ public class ConsultarStockPorSkuUseCase {
 
     private final ProductoRepository productoRepository;
     private final LoteRepository loteRepository;
+    private final StockGlobalSkuJpaRepository stockGlobalSkuRepository;
 
     public ConsultarStockPorSkuUseCase(ProductoRepository productoRepository,
-                                       LoteRepository loteRepository) {
+                                       LoteRepository loteRepository,
+                                       StockGlobalSkuJpaRepository stockGlobalSkuRepository) {
         this.productoRepository = productoRepository;
         this.loteRepository = loteRepository;
+        this.stockGlobalSkuRepository = stockGlobalSkuRepository;
     }
 
     /**
      * Ejecuta el caso de uso de consulta de stock por SKU.
      * 
-     * @param skuId UUID del producto
+     * @param skuId String del producto (formato SKU-001, SKU-012, etc.)
      * @return StockDisponibleDTO con información completa del stock
      */
     @Transactional(readOnly = true)
-    public StockDisponibleDTO ejecutar(UUID skuId) {
+    public StockDisponibleDTO ejecutar(String skuId) {
         log.info("Consultando stock para SKU: {}", skuId);
 
         // 1. Buscar Producto por sku_id (404 si no existe)
@@ -60,6 +66,11 @@ public class ConsultarStockPorSkuUseCase {
         Integer fisicoTotal = lotes.stream()
                 .mapToInt(Lote::getCantidad)
                 .sum();
+                
+        // FR-038: Diferenciar stock "Disponible" vs "Comprometido"
+        java.util.Optional<StockGlobalSkuJpaEntity> stockGlobalOpt = stockGlobalSkuRepository.findById(Objects.requireNonNull(skuId));
+        Integer disponibles = stockGlobalOpt.map(StockGlobalSkuJpaEntity::getDisponibles).orElse(fisicoTotal);
+        Integer comprometidos = stockGlobalOpt.map(StockGlobalSkuJpaEntity::getComprometidos).orElse(0);
 
         // 4. Transformar lotes a DTOs usando mapper funcional
         List<LoteStockDTO> lotesDTO = lotes.stream()
@@ -80,6 +91,8 @@ public class ConsultarStockPorSkuUseCase {
         StockDisponibleDTO resultado = StockDisponibleDTO.builder()
                 .sku(InventarioMapper.toProductoInfo().apply(producto))
                 .fisicoTotal(fisicoTotal)
+                .disponibles(disponibles)
+                .comprometidos(comprometidos)
                 .lotes(lotesDTO)
                 .proximoVencimiento(proximoVencimiento)
                 .build();

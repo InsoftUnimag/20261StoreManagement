@@ -7,10 +7,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Caso de uso: Consultar Excepciones de Inventario.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  */
 @Service
 public class ConsultarExcepcionesUseCase {
@@ -22,7 +22,7 @@ public class ConsultarExcepcionesUseCase {
     }
 
     @Transactional(readOnly = true)
-    public List<ExcepcionInventario> ejecutar(TipoExcepcion tipo, UUID skuId) {
+    public List<ExcepcionInventario> ejecutar(TipoExcepcion tipo, String skuId) {
         if (tipo == null && skuId == null) {
             return excepcionRepository.findAll();
         }

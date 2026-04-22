@@ -15,16 +15,19 @@ public class RabbitMQConfig {
     // ===== Exchange names =====
     public static final String INVENTARIO_PEDIDOS_EXCHANGE = "inventario.pedidos";
     public static final String LOGISTICA_EVENTOS_EXCHANGE = "logistica.eventos";
+    public static final String INVENTARIO_ALERTAS_EXCHANGE = "inventario.alertas";
 
     // ===== Queue names =====
     public static final String RUTA_ASIGNADA_QUEUE = "inventario.ruta-asignada";
     public static final String RUTA_ASIGNADA_DLQ_QUEUE = "inventario.ruta-asignada.dlq";
     public static final String RUTA_SOLICITAR_QUEUE = "inventario.ruta-solicitar";
+    public static final String ALERTA_INVENTARIO_QUEUE = "inventario.alertas-supervisor";
 
     // ===== Routing keys =====
     public static final String RUTA_SOLICITAR_KEY = "ruta.solicitar";
     public static final String RUTA_ASIGNADA_KEY = "ruta.asignada";
     public static final String PEDIDO_CREADO_KEY = "pedido.creado";
+    public static final String ALERTA_INVENTARIO_KEY = "alerta.inventario";
 
     // ===== Exchanges =====
 
@@ -36,6 +39,11 @@ public class RabbitMQConfig {
     @Bean
     public TopicExchange logisticaEventosExchange() {
         return new TopicExchange(LOGISTICA_EVENTOS_EXCHANGE, true, false);
+    }
+
+    @Bean
+    public TopicExchange inventarioAlertasExchange() {
+        return new TopicExchange(INVENTARIO_ALERTAS_EXCHANGE, true, false);
     }
 
     // ===== Queues for Consumer (Módulo 2 Logística) =====
@@ -58,6 +66,11 @@ public class RabbitMQConfig {
         return QueueBuilder.durable(RUTA_SOLICITAR_QUEUE).build();
     }
 
+    @Bean
+    public Queue alertaInventarioQueue() {
+        return QueueBuilder.durable(ALERTA_INVENTARIO_QUEUE).build();
+    }
+
     // ===== Bindings =====
 
     @Bean
@@ -72,5 +85,12 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(rutaSolicitarQueue())
                 .to(inventarioPedidosExchange())
                 .with(RUTA_SOLICITAR_KEY);
+    }
+
+    @Bean
+    public Binding alertaInventarioBinding() {
+        return BindingBuilder.bind(alertaInventarioQueue())
+                .to(inventarioAlertasExchange())
+                .with(ALERTA_INVENTARIO_KEY);
     }
 }

@@ -1,17 +1,24 @@
 package com.distribuidoras.inventario.infrastructure.messaging;
 
 import com.distribuidoras.inventario.domain.model.Pedido;
+import com.distribuidoras.inventario.domain.model.Producto;
 import com.distribuidoras.inventario.domain.repository.PedidoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoPedidoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoRepository;
+import com.distribuidoras.inventario.domain.repository.ClienteServicePort;
+import com.distribuidoras.inventario.domain.model.Cliente;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -30,6 +37,7 @@ public class SolicitudRutaProducer {
     private final PedidoRepository pedidoRepository;
     private final ProductoPedidoRepository productoPedidoRepository;
     private final ProductoRepository productoRepository;
+    private final ClienteServicePort clienteServicePort;
 
     @Value("${rabbitmq.exchange.solicitud-ruta:inventario.logistica}")
     private String exchange;
@@ -40,17 +48,20 @@ public class SolicitudRutaProducer {
     public SolicitudRutaProducer(RabbitTemplate rabbitTemplate,
                                   PedidoRepository pedidoRepository,
                                   ProductoPedidoRepository productoPedidoRepository,
-                                  ProductoRepository productoRepository) {
+                                  ProductoRepository productoRepository,
+                                  ClienteServicePort clienteServicePort) {
         this.rabbitTemplate = rabbitTemplate;
         this.pedidoRepository = pedidoRepository;
         this.productoPedidoRepository = productoPedidoRepository;
         this.productoRepository = productoRepository;
+        this.clienteServicePort = clienteServicePort;
     }
 
     /**
      * Envía solicitud de ruta al Módulo 2 de Logística.
      * Envía datos clave: pedido_id, cliente_cc, peso_logistico, direccion_entrega
      */
+    @Async
     public void enviarSolicitudRuta(String pedidoId) {
         log.info("Enviando solicitud de ruta para pedido: {}", pedidoId);
 
@@ -60,23 +71,37 @@ public class SolicitudRutaProducer {
         // Obtener líneas del pedido
         var lineas = productoPedidoRepository.findByPedidoId(pedido.getPedidoId());
 
-        // Calcular peso logístico total
+        // GAP-04: Calcular peso logístico total multiplicando por cantidad solicitada
         BigDecimal pesoTotal = lineas.stream()
-                .map(linea -> productoRepository.findById(linea.getSkuId()))
-                .filter(o -> o.isPresent())
-                .map(o -> o.get().getPesoLogisticoKg())
-                .filter(p -> p != null)
+                .map(linea -> {
+                    Optional<Producto> prod = productoRepository.findById(linea.getSkuId());
+                    BigDecimal peso = prod.map(Producto::getPesoLogisticoKg)
+                            .filter(Objects::nonNull)
+                            .orElse(BigDecimal.ZERO);
+                    return peso.multiply(BigDecimal.valueOf(linea.getCantidadSolicitada()));
+                })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        // GAP-05: Obtener dirección de entrega del cliente
+        String direccionEntrega = "No especificada";
+        try {
+            Cliente cliente = clienteServicePort.findByCedula(pedido.getClienteCc()).orElse(null);
+            if (cliente != null && cliente.getDireccion() != null) {
+                direccionEntrega = cliente.getDireccion();
+            }
+        } catch (Exception e) {
+            log.warn("No se pudo obtener dirección del cliente {}: {}", pedido.getClienteCc(), e.getMessage());
+        }
+
         // Construir mensaje
-        Map<String, Object> mensaje = Map.of(
-                "pedido_id", pedido.getPedidoId().toString(),
-                "numero_pedido", pedido.getNumeroPedido(),
-                "cliente_cc", pedido.getClienteCc(),
-                "peso_logistico_kg", pesoTotal.doubleValue(),
-                "total_lineas", lineas.size(),
-                "fecha_solicitud", java.time.LocalDateTime.now().toString()
-        );
+        Map<String, Object> mensaje = new HashMap<>();
+        mensaje.put("pedido_id", pedido.getPedidoId().toString());
+        mensaje.put("numero_pedido", pedido.getNumeroPedido());
+        mensaje.put("cliente_cc", pedido.getClienteCc());
+        mensaje.put("peso_logistico_kg", pesoTotal.doubleValue());
+        mensaje.put("total_lineas", lineas.size());
+        mensaje.put("fecha_solicitud", java.time.LocalDateTime.now().toString());
+        mensaje.put("direccion_entrega", direccionEntrega);
 
         // Enviar a RabbitMQ (fire-and-forget)
         try {
