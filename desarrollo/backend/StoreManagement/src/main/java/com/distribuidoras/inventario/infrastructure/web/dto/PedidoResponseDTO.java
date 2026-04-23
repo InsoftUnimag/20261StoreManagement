@@ -1,5 +1,6 @@
 package com.distribuidoras.inventario.infrastructure.web.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -18,7 +19,9 @@ public record PedidoResponseDTO(
         AsesorInfoDTO asesor,
         List<LineaPedidoResponseDTO> lineas,
         Integer totalSolicitado,
-        Integer totalConfirmado
+        Integer totalConfirmado,
+        BigDecimal pesoLogisticoTotal,
+        String tipoCumplimiento
 ) {
     public static Builder builder() {
         return new Builder();
@@ -36,6 +39,8 @@ public record PedidoResponseDTO(
         private List<LineaPedidoResponseDTO> lineas;
         private Integer totalSolicitado;
         private Integer totalConfirmado;
+        private BigDecimal pesoLogisticoTotal;
+        private String tipoCumplimiento;
 
         public Builder pedidoId(UUID pedidoId) {
             this.pedidoId = pedidoId;
@@ -92,6 +97,16 @@ public record PedidoResponseDTO(
             return this;
         }
 
+        public Builder pesoLogisticoTotal(BigDecimal pesoLogisticoTotal) {
+            this.pesoLogisticoTotal = pesoLogisticoTotal;
+            return this;
+        }
+
+        public Builder tipoCumplimiento(String tipoCumplimiento) {
+            this.tipoCumplimiento = tipoCumplimiento;
+            return this;
+        }
+
         public PedidoResponseDTO build() {
             return new PedidoResponseDTO(
                     pedidoId,
@@ -104,7 +119,9 @@ public record PedidoResponseDTO(
                     asesor,
                     lineas,
                     totalSolicitado,
-                    totalConfirmado
+                    totalConfirmado,
+                    pesoLogisticoTotal,
+                    tipoCumplimiento
             );
         }
     }

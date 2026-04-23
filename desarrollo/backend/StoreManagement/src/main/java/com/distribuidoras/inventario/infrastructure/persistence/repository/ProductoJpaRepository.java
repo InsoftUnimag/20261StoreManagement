@@ -7,29 +7,50 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Repositorio Spring Data JPA para Producto.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  */
 @Repository
-public interface ProductoJpaRepository extends JpaRepository<ProductoJpaEntity, UUID> {
+public interface ProductoJpaRepository extends JpaRepository<ProductoJpaEntity, String> {
 
-    boolean existsByMarcaAndPresentacion(String marca, String presentacion);
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM ProductoJpaEntity p WHERE LOWER(p.marca) = LOWER(:marca) AND LOWER(p.presentacion) = LOWER(:presentacion)")
+    boolean existsByMarcaAndPresentacion(@Param("marca") String marca, @Param("presentacion") String presentacion);
 
-    boolean existsByMarcaAndPresentacionAndSkuIdNot(String marca, String presentacion, UUID skuId);
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM ProductoJpaEntity p WHERE LOWER(p.marca) = LOWER(:marca) AND LOWER(p.presentacion) = LOWER(:presentacion) AND p.skuId <> :skuId")
+    boolean existsByMarcaAndPresentacionAndSkuIdNot(@Param("marca") String marca, @Param("presentacion") String presentacion, @Param("skuId") String skuId);
 
     List<ProductoJpaEntity> findByMarcaContainingIgnoreCaseOrPresentacionContainingIgnoreCase(
             String marca, String presentacion);
+
+    org.springframework.data.domain.Page<ProductoJpaEntity> findByMarcaContainingIgnoreCaseOrPresentacionContainingIgnoreCase(
+            String marca, String presentacion, org.springframework.data.domain.Pageable pageable);
+
+    /**
+     * Búsqueda que incluye skuId además de marca y presentación.
+     */
+    @Query("SELECT p FROM ProductoJpaEntity p WHERE LOWER(p.skuId) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR LOWER(p.marca) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR LOWER(p.presentacion) LIKE LOWER(CONCAT('%', :busqueda, '%'))")
+    List<ProductoJpaEntity> findByBusquedaAll(@Param("busqueda") String busqueda);
+
+    @Query("SELECT p FROM ProductoJpaEntity p WHERE LOWER(p.skuId) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR LOWER(p.marca) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR LOWER(p.presentacion) LIKE LOWER(CONCAT('%', :busqueda, '%'))")
+    org.springframework.data.domain.Page<ProductoJpaEntity> findByBusquedaAll(@Param("busqueda") String busqueda, org.springframework.data.domain.Pageable pageable);
     
     /**
      * Find multiple products by their IDs (batch query).
      */
-    List<ProductoJpaEntity> findBySkuIdIn(List<UUID> skuIds);
+    List<ProductoJpaEntity> findBySkuIdIn(List<String> skuIds);
     
     /**
      * Count active SKUs (those with lots with stock > 0).
      */
     @Query("SELECT COUNT(DISTINCT l.skuId) FROM LoteJpaEntity l WHERE l.cantidad > 0")
     Integer countActiveSkus();
+
+    /**
+     * Find maximum SKU number from all products (extracts number from format "SKU-XXX").
+     * Returns null if no products exist.
+     */
+    @Query("SELECT MAX(CAST(SUBSTRING(p.skuId, 5) AS int)) FROM ProductoJpaEntity p WHERE p.skuId LIKE 'SKU-%'")
+    Integer findMaxSkuNumero();
 }

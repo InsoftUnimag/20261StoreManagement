@@ -7,6 +7,7 @@ import java.util.UUID;
 /**
  * Domain entity: ProductoPedido (Order line item).
  * Represents a product line in an order.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  */
 @Getter
 @Setter
@@ -19,11 +20,13 @@ public class ProductoPedido {
     
     private UUID pedidoId;
     
-    private UUID skuId;
+    private String skuId;
     
     private Integer cantidadSolicitada;
     
     private Integer cantidadConfirmada;
+    
+    private Integer cantidadDespachada;
 
     /**
      * Validates that confirmed quantity doesn't exceed requested quantity.

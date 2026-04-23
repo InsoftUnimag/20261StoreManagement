@@ -15,10 +15,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Caso de uso: Modificar Producto existente.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  * Spec: 02_modificar_plantilla_producto.md
  *
  * Actualiza atributos del producto, registra bitácora por cada cambio,
@@ -39,7 +39,7 @@ public class ModificarProductoUseCase {
     }
 
     @Transactional
-    public ResultadoModificacion ejecutar(UUID skuId, String marca, String presentacion,
+    public ResultadoModificacion ejecutar(String skuId, String marca, String presentacion,
                                           Integer contenidoMl, BigDecimal pesoLogisticoKg,
                                           String descripcion) {
 
@@ -105,7 +105,7 @@ public class ModificarProductoUseCase {
         return new ResultadoModificacion(actualizado, alerta, cambios);
     }
 
-    private BitacoraProducto crearEntradaBitacora(UUID skuId, String campo,
+    private BitacoraProducto crearEntradaBitacora(String skuId, String campo,
                                                    String valorAnterior, String valorNuevo,
                                                    String descripcion, LocalDateTime fecha) {
         BitacoraProducto bitacora = new BitacoraProducto();

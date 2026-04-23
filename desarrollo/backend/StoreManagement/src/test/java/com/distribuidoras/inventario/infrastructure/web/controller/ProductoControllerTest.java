@@ -9,7 +9,7 @@ import com.distribuidoras.inventario.infrastructure.config.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
+import java.util.Objects;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -52,11 +52,17 @@ class ProductoControllerTest {
     @MockitoBean
     private ConsultarBitacoraUseCase consultarBitacoraUseCase;
 
-    private final UUID skuId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+    private final String skuId = "SKU-001";
 
     private Producto crearProducto() {
-        return new Producto(skuId, "Pilsen", "Six-pack", 330,
-                new BigDecimal("2.5"), LocalDateTime.of(2026, 4, 3, 19, 30));
+        return Producto.builder()
+                .skuId(skuId)
+                .marca("Pilsen")
+                .presentacion("Six-pack")
+                .contenidoMl(330)
+                .pesoLogisticoKg(new BigDecimal("2.5"))
+                .creadoEl(LocalDateTime.of(2026, 4, 3, 19, 30))
+                .build();
     }
 
     // --- POST /api/v1/productos ---
@@ -68,7 +74,7 @@ class ProductoControllerTest {
                 .thenReturn(crearProducto());
 
         mockMvc.perform(post("/api/v1/productos")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
                         .content("""
                                 {
                                     "marca": "Pilsen",
@@ -92,7 +98,7 @@ class ProductoControllerTest {
                 .thenThrow(new ProductoDuplicadoException("Pilsen", "Six-pack"));
 
         mockMvc.perform(post("/api/v1/productos")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
                         .content("""
                                 {
                                     "marca": "Pilsen",
@@ -109,7 +115,7 @@ class ProductoControllerTest {
     @DisplayName("POST /api/v1/productos con campos inválidos → 400 Bad Request")
     void crearProducto_camposInvalidos() throws Exception {
         mockMvc.perform(post("/api/v1/productos")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
                         .content("""
                                 {
                                     "marca": "",
@@ -136,7 +142,7 @@ class ProductoControllerTest {
                 ));
 
         mockMvc.perform(put("/api/v1/productos/{skuId}", skuId)
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
                         .content("""
                                 {
                                     "pesoLogisticoKg": 2.8,
@@ -151,12 +157,12 @@ class ProductoControllerTest {
     @Test
     @DisplayName("PUT /api/v1/productos/{skuId} no existe → 404 Not Found")
     void modificarProducto_noExiste() throws Exception {
-        UUID noExiste = UUID.randomUUID();
+        String noExiste = "SKU-999";
         when(modificarProductoUseCase.ejecutar(eq(noExiste), any(), any(), any(), any(), any()))
                 .thenThrow(new ProductoNotFoundException(noExiste));
 
         mockMvc.perform(put("/api/v1/productos/{skuId}", noExiste)
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
                         .content("""
                                 {
                                     "marca": "Aguila"
@@ -180,30 +186,32 @@ class ProductoControllerTest {
     @DisplayName("GET /api/v1/productos → 200 OK con lista")
     void consultarCatalogo_exitoso() throws Exception {
         Producto producto = crearProducto();
-        when(consultarCatalogoUseCase.ejecutar(null))
-                .thenReturn(List.of(
-                        new ConsultarCatalogoUseCase.ProductoConDisponibilidad(producto, 150, "Disponible")
-                ));
+        org.springframework.data.domain.Page<ConsultarCatalogoUseCase.ProductoConDisponibilidad> page = new org.springframework.data.domain.PageImpl<>(
+                Objects.requireNonNull(List.of(new ConsultarCatalogoUseCase.ProductoConDisponibilidad(producto, 150, "Disponible", new BigDecimal("1500.00"))))
+        );
+        when(consultarCatalogoUseCase.ejecutarConPaginacion(eq(null), any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(page);
 
         mockMvc.perform(get("/api/v1/productos"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].skuId").value(skuId.toString()))
-                .andExpect(jsonPath("$[0].stockDisponible").value(150))
-                .andExpect(jsonPath("$[0].disponibilidad").value("Disponible"));
+                .andExpect(jsonPath("$.content[0].skuId").value(skuId.toString()))
+                .andExpect(jsonPath("$.content[0].stockDisponible").value(150))
+                .andExpect(jsonPath("$.content[0].disponibilidad").value("Disponible"));
     }
 
     @Test
     @DisplayName("GET /api/v1/productos?busqueda=Pilsen → 200 OK filtrado")
     void consultarCatalogo_conFiltro() throws Exception {
         Producto producto = crearProducto();
-        when(consultarCatalogoUseCase.ejecutar("Pilsen"))
-                .thenReturn(List.of(
-                        new ConsultarCatalogoUseCase.ProductoConDisponibilidad(producto, 0, "No disponible")
-                ));
+        org.springframework.data.domain.Page<ConsultarCatalogoUseCase.ProductoConDisponibilidad> page = new org.springframework.data.domain.PageImpl<>(
+                Objects.requireNonNull(List.of(new ConsultarCatalogoUseCase.ProductoConDisponibilidad(producto, 0, "No disponible", null)))
+        );
+        when(consultarCatalogoUseCase.ejecutarConPaginacion(eq("Pilsen"), any(org.springframework.data.domain.Pageable.class)))
+                .thenReturn(page);
 
         mockMvc.perform(get("/api/v1/productos").param("busqueda", "Pilsen"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].marca").value("Pilsen"));
+                .andExpect(jsonPath("$.content[0].marca").value("Pilsen"));
     }
 
     // --- GET /api/v1/productos/{skuId}/bitacora ---
@@ -211,9 +219,16 @@ class ProductoControllerTest {
     @Test
     @DisplayName("GET /api/v1/productos/{skuId}/bitacora → 200 OK con historial")
     void consultarBitacora_exitoso() throws Exception {
-        BitacoraProducto entrada = new BitacoraProducto(
-                1L, skuId, "peso_logistico_kg", "2.5", "2.8",
-                "Cambio de empaque", LocalDateTime.of(2026, 4, 3, 19, 30), "supervisor01");
+        BitacoraProducto entrada = BitacoraProducto.builder()
+                .id(1L)
+                .skuIdRef(skuId)
+                .campo("peso_logistico_kg")
+                .valorAnterior("2.5")
+                .valorNuevo("2.8")
+                .descripcion("Cambio de empaque")
+                .fecha(LocalDateTime.of(2026, 4, 3, 19, 30))
+                .usuario("supervisor01")
+                .build();
 
         when(consultarBitacoraUseCase.ejecutar(skuId)).thenReturn(List.of(entrada));
 

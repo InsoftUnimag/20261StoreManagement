@@ -45,4 +45,14 @@ public interface PedidoRepository {
      * Find orders by status ordered by creation date ASC (FIFO).
      */
     List<Pedido> findByEstadoOrderByFechaCreacionAsc(EstadoPedido estado);
+
+    /**
+     * Find orders by status ordered by commitment date ASC (FIFO) for picking.
+     */
+    List<Pedido> findByEstadoOrderByFechaCompromisoAsc(EstadoPedido estado);
+
+    /**
+     * Find orders with picking status ordered by picking date ASC (FIFO).
+     */
+    List<Pedido> findByEstadoWithPickingOrderByFechaPickingAsc(EstadoPedido estado);
 }

@@ -1,9 +1,17 @@
 package com.distribuidoras.inventario.application.usecase;
 
-import com.distribuidoras.inventario.domain.model.*;
+import com.distribuidoras.inventario.domain.model.Lote;
+import com.distribuidoras.inventario.domain.model.LoteComprometido;
+import com.distribuidoras.inventario.domain.model.MovimientoInventario;
+import com.distribuidoras.inventario.domain.model.Pedido;
+import com.distribuidoras.inventario.domain.model.ProductoPedido;
 import com.distribuidoras.inventario.domain.model.enums.EstadoPedido;
 import com.distribuidoras.inventario.domain.model.enums.TipoMovimiento;
-import com.distribuidoras.inventario.domain.repository.*;
+import com.distribuidoras.inventario.domain.repository.LoteComprometidoRepository;
+import com.distribuidoras.inventario.domain.repository.LoteRepository;
+import com.distribuidoras.inventario.domain.repository.MovimientoInventarioRepository;
+import com.distribuidoras.inventario.domain.repository.PedidoRepository;
+import com.distribuidoras.inventario.domain.repository.ProductoPedidoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -13,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -36,17 +45,20 @@ public class ComprometerInventarioUseCase {
     private final LoteRepository loteRepository;
     private final LoteComprometidoRepository loteComprometidoRepository;
     private final MovimientoInventarioRepository movimientoRepository;
+    private final com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository stockGlobalSkuRepository;
 
     public ComprometerInventarioUseCase(PedidoRepository pedidoRepository,
                                          ProductoPedidoRepository productoPedidoRepository,
                                          LoteRepository loteRepository,
                                          LoteComprometidoRepository loteComprometidoRepository,
-                                         MovimientoInventarioRepository movimientoRepository) {
+                                         MovimientoInventarioRepository movimientoRepository,
+                                         com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository stockGlobalSkuRepository) {
         this.pedidoRepository = pedidoRepository;
         this.productoPedidoRepository = productoPedidoRepository;
         this.loteRepository = loteRepository;
         this.loteComprometidoRepository = loteComprometidoRepository;
         this.movimientoRepository = movimientoRepository;
+        this.stockGlobalSkuRepository = stockGlobalSkuRepository;
     }
 
     /**
@@ -133,7 +145,18 @@ public class ComprometerInventarioUseCase {
         for (Lote lote : lotesFEFO) {
             if (cantidadPendiente <= 0) break;
 
-            int cantidadAComprometer = Math.min(cantidadPendiente, lote.getCantidad());
+            // Verificar cuántas unidades disponibles tiene el lote
+            // disponible = lote.cantidad - lo ya comprometido en LoteComprometido
+            int totalComprometidoAnterior = loteComprometidoRepository.findByCodigoLote(lote.getCodigoLote())
+                    .stream().mapToInt(LoteComprometido::getCantidadComprometida).sum();
+            int cantidadDisponibleLote = lote.getCantidad() - totalComprometidoAnterior;
+
+            if (cantidadDisponibleLote <= 0) {
+                continue; // Este lote ya está completamente comprometido
+            }
+
+            // Cuánto podemos comprometer de este lote
+            int cantidadAComprometer = Math.min(cantidadPendiente, cantidadDisponibleLote);
 
             // Crear compromiso
             LoteComprometido compromiso = LoteComprometido.builder()
@@ -146,12 +169,14 @@ public class ComprometerInventarioUseCase {
 
             compromisos.add(compromiso);
 
-            // Reducir stock del lote
-            lote.reducirStock(cantidadAComprometer);
-            loteRepository.save(lote);
+            // Actualizar stock_global_sku
+            actualizarStockComprometido(linea.getSkuId(), cantidadAComprometer);
 
             // Registrar movimiento de inventario tipo COMPROMISO
             registrarMovimientoCompromiso(pedido, lote, cantidadAComprometer);
+
+            // Verificar si el lote quedó completamente comprometido
+            actualizarDisponibilidadLote(lote);
 
             cantidadPendiente -= cantidadAComprometer;
         }
@@ -193,5 +218,42 @@ public class ComprometerInventarioUseCase {
                 .build();
 
         movimientoRepository.save(movimiento);
+    }
+
+    private void actualizarStockComprometido(String skuId, int cantidadComprometer) {
+        var stockOpt = stockGlobalSkuRepository.findById(Objects.requireNonNull(skuId));
+        if (stockOpt.isPresent()) {
+            var stock = stockOpt.get();
+            stock.setComprometidos(stock.getComprometidos() + cantidadComprometer);
+            // NO descuenta disponibles porque ya se descontó al crear el pedido
+            stockGlobalSkuRepository.save(stock);
+            log.info("Stock global comprometido para {}: comprometidos={}, disponibles={}",
+                    skuId, stock.getComprometidos(), stock.getDisponibles());
+        }
+    }
+
+    /**
+     * Verifica si el lote ya está completamente comprometido.
+     * Busca en LoteComprometido la suma total de cantidades comprometidas para ese lote.
+     * Si totalComprometido >= lote.cantidad → lote.disponible = false
+     * Si no, lote.disponible = true
+     */
+    private void actualizarDisponibilidadLote(Lote lote) {
+        List<LoteComprometido> compromisos = loteComprometidoRepository.findByCodigoLote(lote.getCodigoLote());
+        
+        int totalComprometido = compromisos.stream()
+                .mapToInt(LoteComprometido::getCantidadComprometida)
+                .sum();
+
+        // Si total comprometido >= cantidad del lote, marcar no disponible
+        if (totalComprometido >= lote.getCantidad()) {
+            lote.setDisponible(false);
+        } else {
+            lote.setDisponible(true);
+        }
+        loteRepository.save(lote);
+        
+        log.info("Lote {} - Comprometido: {}, Original: {}, Disponible: {}", 
+                lote.getCodigoLote(), totalComprometido, lote.getCantidad(), lote.getDisponible());
     }
 }

@@ -9,4 +9,6 @@ import java.util.UUID;
 @Repository
 public interface ManifiestoJpaRepository extends JpaRepository<ManifiestoJpaEntity, UUID> {
     List<ManifiestoJpaEntity> findByEstadoInOrderByFechaEmisionAsc(List<String> estados);
+    List<ManifiestoJpaEntity> findByFechaEmisionBetweenOrderByFechaEmisionDesc(java.time.LocalDate desde, java.time.LocalDate hasta);
+    List<ManifiestoJpaEntity> findTop100ByFechaEmisionBetweenOrderByFechaEmisionDesc(java.time.LocalDate desde, java.time.LocalDate hasta);
 }

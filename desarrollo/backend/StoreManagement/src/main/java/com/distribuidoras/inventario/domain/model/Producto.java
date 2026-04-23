@@ -4,12 +4,11 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * Entidad de dominio: Producto (SKU).
  * Representa una referencia comercial en el catálogo.
- * POJO puro, sin dependencias de framework.
+ * Formato SKU: SKU-001, SKU-012, SKU-111, etc.
  */
 @Getter
 @Setter
@@ -20,7 +19,7 @@ import java.util.UUID;
 public class Producto {
 
     @EqualsAndHashCode.Include
-    private UUID skuId;
+    private String skuId;
     private String marca;
     private String presentacion;
     private Integer contenidoMl;

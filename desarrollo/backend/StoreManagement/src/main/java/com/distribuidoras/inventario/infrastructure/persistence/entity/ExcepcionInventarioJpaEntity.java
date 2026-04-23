@@ -11,7 +11,7 @@ public class ExcepcionInventarioJpaEntity {
     @Id @Column(name = "excepcion_id") private UUID excepcionId;
     @Column(name = "tipo_excepcion", nullable = false, length = 30) private String tipoExcepcion;
     @Column(name = "codigo_lote", length = 100) private String codigoLote;
-    @Column(name = "sku_id", nullable = false) private UUID skuId;
+    @Column(name = "sku_id", nullable = false) private String skuId;
     @Column(name = "cantidad_afectada", nullable = false) private Integer cantidadAfectada;
     @Column(name = "fecha_registro", nullable = false) private LocalDateTime fechaRegistro;
     @Column(name = "operario_id") private UUID operarioId;

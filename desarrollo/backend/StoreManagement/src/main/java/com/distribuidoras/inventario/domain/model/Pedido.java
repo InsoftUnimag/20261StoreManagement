@@ -25,6 +25,8 @@ public class Pedido {
     private String numeroPedido;
     
     private String clienteCc;
+
+    private String clienteNombre;
     
     private LocalDateTime fechaCreacion;
     

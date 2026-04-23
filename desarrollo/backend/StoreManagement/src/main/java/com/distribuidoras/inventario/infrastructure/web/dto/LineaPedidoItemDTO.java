@@ -1,12 +1,11 @@
 package com.distribuidoras.inventario.infrastructure.web.dto;
 
-import java.util.UUID;
-
 /**
  * Request DTO for a single line item in a pedido.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  */
 public record LineaPedidoItemDTO(
-        UUID skuId,
+        String skuId,
         Integer cantidad
 ) {
     public static Builder builder() {
@@ -14,10 +13,10 @@ public record LineaPedidoItemDTO(
     }
 
     public static class Builder {
-        private UUID skuId;
+        private String skuId;
         private Integer cantidad;
 
-        public Builder skuId(UUID skuId) {
+        public Builder skuId(String skuId) {
             this.skuId = skuId;
             return this;
         }

@@ -1,5 +1,5 @@
--- V3__create_pedidos_tables.sql
--- Creates tables for order management (Pedido, ProductoPedido, LoteComprometido)
+-- V3: Creates tables for order management (Pedido, ProductoPedido, LoteComprometido)
+-- Formato skuId: SKU-001, SKU-012, SKU-111, etc.
 
 -- Pedidos table
 CREATE TABLE pedidos (
@@ -22,7 +22,7 @@ CREATE INDEX idx_pedidos_fecha ON pedidos(fecha_creacion);
 CREATE TABLE productos_pedido (
     producto_pedido_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     pedido_id UUID NOT NULL REFERENCES pedidos(pedido_id) ON DELETE CASCADE,
-    sku_id UUID NOT NULL,
+    sku_id VARCHAR(20) NOT NULL,
     cantidad_solicitada INTEGER NOT NULL CHECK (cantidad_solicitada > 0),
     cantidad_confirmada INTEGER NOT NULL CHECK (cantidad_confirmada >= 0)
 );

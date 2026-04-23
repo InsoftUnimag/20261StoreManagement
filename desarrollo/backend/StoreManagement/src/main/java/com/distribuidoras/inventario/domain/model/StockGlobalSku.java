@@ -1,9 +1,11 @@
 package com.distribuidoras.inventario.domain.model;
 
-import java.util.UUID;
-
+/**
+ * Entidad de dominio para stock global por SKU.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
+ */
 public class StockGlobalSku {
-    private UUID skuId;
+    private String skuId;
     private Integer disponibles;
     private Integer comprometidos;
     private Integer fisicoTotal;
@@ -11,18 +13,18 @@ public class StockGlobalSku {
     public StockGlobalSku() {
     }
 
-    public StockGlobalSku(UUID skuId, Integer disponibles, Integer comprometidos, Integer fisicoTotal) {
+    public StockGlobalSku(String skuId, Integer disponibles, Integer comprometidos, Integer fisicoTotal) {
         this.skuId = skuId;
         this.disponibles = disponibles;
         this.comprometidos = comprometidos;
         this.fisicoTotal = fisicoTotal;
     }
 
-    public UUID getSkuId() {
+    public String getSkuId() {
         return skuId;
     }
 
-    public void setSkuId(UUID skuId) {
+    public void setSkuId(String skuId) {
         this.skuId = skuId;
     }
 

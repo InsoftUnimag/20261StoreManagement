@@ -15,7 +15,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -47,23 +46,41 @@ public class ListarManifiestosUseCase {
     public record FiltrosManifiestoDTO(
             LocalDate fechaDesde,
             LocalDate fechaHasta,
-            String estado
+            String estado,
+            boolean incluirHistorico
     ) {}
 
     /**
      * Lista manifiestos con filtros opcionales.
+     * GAP-08: Si incluirHistorico=true, trae últimos 100 manifiestos (historial paginado).
+     * Si incluirHistorico=false, solo trae pendientes.
      */
     @Transactional(readOnly = true)
     public List<ManifiestoResumenDTO> ejecutar(FiltrosManifiestoDTO filtros) {
-        log.info("Listando manifiestos con filtros: fechaDesde={}, fechaHasta={}, estado={}",
-                filtros.fechaDesde(), filtros.fechaHasta(), filtros.estado());
+        log.info("Listando manifiestos con filtros: fechaDesde={}, fechaHasta={}, estado={}, incluirHistorico={}",
+                filtros.fechaDesde(), filtros.fechaHasta(), filtros.estado(), filtros.incluirHistorico());
 
-        List<Manifiesto> manifiestos = manifiestoRepository.findPendientes();
+        List<Manifiesto> manifiestos;
+
+        // GAP-08: Si hay filtros de fecha o se pide historial, traer con límite
+        if (filtros.incluirHistorico() || filtros.fechaDesde() != null || filtros.fechaHasta() != null) {
+            if (filtros.fechaDesde() != null && filtros.fechaHasta() != null) {
+                // Por seguridad, siempre con límite al buscar por fecha
+                manifiestos = manifiestoRepository.findByFechaEmisionBetweenWithLimit(
+                        filtros.fechaDesde(), filtros.fechaHasta(), 100);
+            } else {
+                // Sin fecha = últimos 100
+                LocalDate hoy = LocalDate.now();
+                manifiestos = manifiestoRepository.findByFechaEmisionBetweenWithLimit(
+                        hoy.minusMonths(1), hoy, 100);
+            }
+        } else {
+            // Por defecto solo pendientes
+            manifiestos = manifiestoRepository.findPendientes();
+        }
 
         // Aplicar filtros funcionales
         return manifiestos.stream()
-                .filter(m -> filtros.fechaDesde() == null || !m.getFechaEmision().isBefore(filtros.fechaDesde()))
-                .filter(m -> filtros.fechaHasta() == null || !m.getFechaEmision().isAfter(filtros.fechaHasta()))
                 .filter(m -> filtros.estado() == null || m.getEstado().name().equals(filtros.estado()))
                 .sorted((m1, m2) -> m2.getFechaEmision().compareTo(m1.getFechaEmision()))
                 .map(this::toManifiestoResumenDTO)
@@ -83,7 +100,7 @@ public class ListarManifiestosUseCase {
 
         List<DetalleManifiesto> detalles = detalleManifiestoRepository.findByManifiestoId(manifiestoId);
         
-        Map<UUID, Producto> productos = detalles.stream()
+        Map<String, Producto> productos = detalles.stream()
                 .map(DetalleManifiesto::getSkuId)
                 .distinct()
                 .map(skuId -> Map.entry(skuId, productoRepository.findById(skuId)))
@@ -117,7 +134,7 @@ public class ListarManifiestosUseCase {
     private DetalleManifiestoLineaDTO toDetalleLineaDTO(DetalleManifiesto detalle, Producto producto) {
         return DetalleManifiestoLineaDTO.builder()
                 .detalleId(detalle.getDetalleId().toString())
-                .skuId(detalle.getSkuId().toString())
+                .skuId(detalle.getSkuId())
                 .marca(producto != null ? producto.getMarca() : "N/A")
                 .presentacion(producto != null ? producto.getPresentacion() : "N/A")
                 .cantidadEsperada(detalle.getCantidadEsperada())

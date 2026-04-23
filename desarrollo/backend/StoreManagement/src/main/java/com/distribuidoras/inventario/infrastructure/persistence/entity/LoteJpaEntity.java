@@ -10,7 +10,7 @@ import java.util.UUID;
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class LoteJpaEntity {
     @Id @Column(name = "codigo_lote", length = 100) private String codigoLote;
-    @Column(name = "sku_id", nullable = false) private UUID skuId;
+    @Column(name = "sku_id", nullable = false, length = 20) private String skuId;
     @Column(name = "cantidad", nullable = false) private Integer cantidad;
     @Column(name = "fecha_vencimiento", nullable = false) private LocalDate fechaVencimiento;
     @Column(name = "fecha_expedicion") private LocalDate fechaExpedicion;

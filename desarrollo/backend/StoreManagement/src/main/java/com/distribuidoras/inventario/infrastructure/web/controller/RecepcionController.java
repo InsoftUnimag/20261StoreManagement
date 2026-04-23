@@ -36,7 +36,7 @@ public class RecepcionController {
 
         List<LineaRecepcionCommand> lineas = request.lineasRecepcion.stream()
                 .map(l -> new LineaRecepcionCommand(l.skuId, l.codigoLote, l.fechaVencimiento,
-                        l.fechaFabricacion, l.cantidadRecibida))
+                        l.fechaFabricacion, l.cantidadRecibida, l.costoUnitarioProducto))
                 .toList();
 
         RecepcionCommand command = new RecepcionCommand(
@@ -57,8 +57,8 @@ public class RecepcionController {
     }
 
     public static class LineaRecepcionDto {
-        @NotNull(message = "El SKU es obligatorio")
-        public UUID skuId;
+        @NotBlank(message = "El SKU es obligatorio")
+        public String skuId;
         @NotBlank(message = "El código de lote es obligatorio")
         public String codigoLote;
         @NotNull(message = "La fecha de vencimiento es obligatoria")
@@ -66,5 +66,8 @@ public class RecepcionController {
         public LocalDate fechaFabricacion;
         @Positive(message = "La cantidad debe ser mayor a cero")
         public int cantidadRecibida;
+        
+        @NotNull(message = "El costo unitario es obligatorio")
+        public java.math.BigDecimal costoUnitarioProducto;
     }
 }

@@ -4,10 +4,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * Entidad JPA para la tabla 'bitacora_producto'.
+ * Formato skuIdRef: SKU-001, SKU-012, SKU-111, etc.
  */
 @Entity
 @Table(name = "bitacora_producto")
@@ -23,8 +23,8 @@ public class BitacoraProductoJpaEntity {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "sku_id_ref", nullable = false)
-    private UUID skuIdRef;
+    @Column(name = "sku_id_ref", nullable = false, length = 20)
+    private String skuIdRef;
 
     @Column(name = "campo", nullable = false, length = 50)
     private String campo;

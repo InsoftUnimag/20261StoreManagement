@@ -1,22 +1,22 @@
 package com.distribuidoras.inventario.application.usecase;
 
 import com.distribuidoras.inventario.domain.exception.ProductoNotFoundException;
-import com.distribuidoras.inventario.domain.exception.StockInsuficienteException;
 import com.distribuidoras.inventario.domain.model.*;
 import com.distribuidoras.inventario.domain.model.enums.*;
 import com.distribuidoras.inventario.domain.repository.*;
+import com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
  * Caso de uso: Registrar Excepción de Inventario.
  * Spec: 16_reportar_excepciones_inventario.md
- * FR-025 a FR-033
  */
 @Service
 public class RegistrarExcepcionUseCase {
@@ -27,15 +27,21 @@ public class RegistrarExcepcionUseCase {
     private final LoteRepository loteRepository;
     private final MovimientoInventarioRepository movimientoRepository;
     private final ProductoRepository productoRepository;
+    private final StockGlobalSkuJpaRepository stockGlobalSkuRepository;
+    private final com.distribuidoras.inventario.domain.repository.LoteComprometidoRepository loteComprometidoRepository;
 
     public RegistrarExcepcionUseCase(ExcepcionInventarioRepository excepcionRepository,
                                      LoteRepository loteRepository,
                                      MovimientoInventarioRepository movimientoRepository,
-                                     ProductoRepository productoRepository) {
+                                     ProductoRepository productoRepository,
+                                     StockGlobalSkuJpaRepository stockGlobalSkuRepository,
+                                     com.distribuidoras.inventario.domain.repository.LoteComprometidoRepository loteComprometidoRepository) {
         this.excepcionRepository = excepcionRepository;
         this.loteRepository = loteRepository;
         this.movimientoRepository = movimientoRepository;
         this.productoRepository = productoRepository;
+        this.stockGlobalSkuRepository = stockGlobalSkuRepository;
+        this.loteComprometidoRepository = loteComprometidoRepository;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -52,10 +58,17 @@ public class RegistrarExcepcionUseCase {
                     .orElseThrow(() -> new IllegalArgumentException(
                             "Lote con código '%s' no encontrado".formatted(command.codigoLote())));
 
-            if (command.cantidadAfectada() > lote.getCantidad()) {
+            // Calcular disponible: cantidad - comprometido - bajas
+            int totalComprometido = loteComprometidoRepository.findByCodigoLote(lote.getCodigoLote())
+                    .stream().mapToInt(c -> c.getCantidadComprometida()).sum();
+            int totalBajas = excepcionRepository.findByCodigoLote(lote.getCodigoLote())
+                    .stream().mapToInt(e -> e.getCantidadAfectada()).sum();
+            int disponible = lote.getCantidad() - totalComprometido - totalBajas;
+
+            if (command.cantidadAfectada() > disponible) {
                 throw new IllegalArgumentException(
                         "Cantidad afectada (%d) mayor al stock disponible (%d) en lote %s"
-                                .formatted(command.cantidadAfectada(), lote.getCantidad(), command.codigoLote()));
+                                .formatted(command.cantidadAfectada(), disponible, command.codigoLote()));
             }
         }
 
@@ -75,17 +88,35 @@ public class RegistrarExcepcionUseCase {
 
         // FR-027, FR-028: Si requiere baja de stock, crear movimiento y reducir stock
         MovimientoInventario movimiento = null;
+
         if (lote != null && requiereBajaStock(command.tipoExcepcion())) {
             TipoMovimiento tipoMov = mapTipoMovimiento(command.tipoExcepcion());
 
-            // FR-029/FR-030: Si vencimiento, forzar cantidad completa
+            // Calcular disponible actual
+            int totalComprometido = loteComprometidoRepository.findByCodigoLote(lote.getCodigoLote())
+                    .stream().mapToInt(c -> c.getCantidadComprometida()).sum();
+            int totalBajas = excepcionRepository.findByCodigoLote(lote.getCodigoLote())
+                    .stream().mapToInt(e -> e.getCantidadAfectada()).sum();
+            int disponible = lote.getCantidad() - totalComprometido - totalBajas;
+
+            // FR-029/FR-030: Si vencimiento, forzar cantidad completa (todo lo disponible)
             int cantidadBaja = command.cantidadAfectada();
             if (command.tipoExcepcion() == TipoExcepcion.VENCIMIENTO) {
-                cantidadBaja = lote.getCantidad(); // Forzar a cero (Agotado)
+                cantidadBaja = disponible;
+                // Vencimiento = todo el lote ya no está disponible
+                lote.setDisponible(false);
             }
 
-            lote.reducirStock(cantidadBaja);
-            loteRepository.save(lote);
+            // Actualiza el StockGlobalSku
+            actualizarStockGlobalSku(command.skuId(), cantidadBaja);
+
+            // Verificar disponibilidad del lote tras la excepción
+            if (command.tipoExcepcion() != TipoExcepcion.VENCIMIENTO) {
+                actualizarDisponibilidadLote(lote);
+            } else {
+                loteRepository.save(lote);
+                log.info("Lote {} marcado como no disponible por VENCIMIENTO", lote.getCodigoLote());
+            }
 
             movimiento = MovimientoInventario.builder()
                     .movimientoId(UUID.randomUUID())
@@ -94,7 +125,7 @@ public class RegistrarExcepcionUseCase {
                     .cantidad(-cantidadBaja)
                     .fechaMovimiento(LocalDateTime.now())
                     .excepcionId(excepcion.getExcepcionId())
-                    .operarioId(command.operarioId())
+                    .operarioId(UUID.fromString(command.operarioId()))
                     .observaciones(command.descripcion())
                     .build();
             movimientoRepository.save(movimiento);
@@ -126,11 +157,42 @@ public class RegistrarExcepcionUseCase {
         };
     }
 
-    // --- Command & Result Records ---
+    private void actualizarStockGlobalSku(String skuId, int cantidadBaja) {
+        var stockOpt = stockGlobalSkuRepository.findById(Objects.requireNonNull(skuId));
+        stockOpt.ifPresent(stock -> {
+            stock.setFisicoTotal(stock.getFisicoTotal() - cantidadBaja);
+            stock.setDisponibles(stock.getDisponibles() - cantidadBaja);
+            stockGlobalSkuRepository.save(stock);
+            log.info("StockGlobalSku actualizado tras excepción: sku={}, fisico_total={}, disponibles={}",
+                    skuId, stock.getFisicoTotal(), stock.getDisponibles());
+        });
+    }
 
-    public record ExcepcionCommand(TipoExcepcion tipoExcepcion, UUID skuId, String codigoLote,
+    private void actualizarDisponibilidadLote(Lote lote) {
+        int totalComprometido = loteComprometidoRepository.findByCodigoLote(lote.getCodigoLote())
+                .stream().mapToInt(c -> c.getCantidadComprometida()).sum();
+        
+        int totalBajas = excepcionRepository.findByCodigoLote(lote.getCodigoLote())
+                .stream().mapToInt(e -> e.getCantidadAfectada()).sum();
+        
+        int disponible = lote.getCantidad() - totalComprometido - totalBajas;
+        
+        if (disponible <= 0) {
+            lote.setDisponible(false);
+        } else {
+            lote.setDisponible(true);
+        }
+        loteRepository.save(lote);
+        
+        log.info("Lote {} - Original: {}, Comprometido: {}, Bajas: {}, Disponible: {}",
+                lote.getCodigoLote(), lote.getCantidad(), totalComprometido, totalBajas, disponible);
+    }
+
+    // --- Command & Records ---
+
+    public record ExcepcionCommand(TipoExcepcion tipoExcepcion, String skuId, String codigoLote,
                                     int cantidadAfectada, String descripcion,
-                                    String evidenciaUrl, UUID operarioId) {}
+                                    String evidenciaUrl, String operarioId) {}
 
     public record ExcepcionResultado(UUID excepcionId, String tipoExcepcion,
                                       LocalDateTime fechaRegistro, MovimientoInfo movimientoGenerado) {}

@@ -9,10 +9,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
-
 /**
  * Caso de uso: Eliminar Producto.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  * Spec: 02_modificar_plantilla_producto.md (FR-011)
  *
  * Valida que el producto no tenga lotes activos antes de eliminar.
@@ -34,7 +33,7 @@ public class EliminarProductoUseCase {
     }
 
     @Transactional
-    public void ejecutar(UUID skuId) {
+    public void ejecutar(String skuId) {
         // Verificar que el producto existe
         if (productoRepository.findById(skuId).isEmpty()) {
             throw new ProductoNotFoundException(skuId);

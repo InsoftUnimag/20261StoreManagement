@@ -15,13 +15,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 /**
  * Tests unitarios para EliminarProductoUseCase.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  * Incluye validación de lotes activos (FR-011).
  */
 @ExtendWith(MockitoExtension.class)
@@ -43,9 +43,15 @@ class EliminarProductoUseCaseTest {
     @Test
     @DisplayName("Eliminar producto exitoso (sin lotes activos)")
     void eliminarProducto_exitoso() {
-        UUID skuId = UUID.randomUUID();
-        Producto producto = new Producto(skuId, "Pilsen", "Six-pack", 330,
-                new BigDecimal("2.5"), LocalDateTime.now());
+        String skuId = "SKU-001";
+        Producto producto = Producto.builder()
+                .skuId(skuId)
+                .marca("Pilsen")
+                .presentacion("Six-pack")
+                .contenidoMl(330)
+                .pesoLogisticoKg(new BigDecimal("2.5"))
+                .creadoEl(LocalDateTime.now())
+                .build();
         when(productoRepository.findById(skuId)).thenReturn(Optional.of(producto));
         when(loteRepository.existsBySkuIdAndCantidadGreaterThan(skuId, 0)).thenReturn(false);
 
@@ -57,7 +63,7 @@ class EliminarProductoUseCaseTest {
     @Test
     @DisplayName("Eliminar producto no existente - lanza excepción")
     void eliminarProducto_noExiste_lanzaExcepcion() {
-        UUID skuId = UUID.randomUUID();
+        String skuId = "SKU-001";
         when(productoRepository.findById(skuId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> useCase.ejecutar(skuId))
@@ -69,9 +75,15 @@ class EliminarProductoUseCaseTest {
     @Test
     @DisplayName("Eliminar producto con lotes activos - lanza excepción (FR-011)")
     void eliminarProducto_conLotesActivos_lanzaExcepcion() {
-        UUID skuId = UUID.randomUUID();
-        Producto producto = new Producto(skuId, "Pilsen", "Six-pack", 330,
-                new BigDecimal("2.5"), LocalDateTime.now());
+        String skuId = "SKU-001";
+        Producto producto = Producto.builder()
+                .skuId(skuId)
+                .marca("Pilsen")
+                .presentacion("Six-pack")
+                .contenidoMl(330)
+                .pesoLogisticoKg(new BigDecimal("2.5"))
+                .creadoEl(LocalDateTime.now())
+                .build();
         when(productoRepository.findById(skuId)).thenReturn(Optional.of(producto));
         when(loteRepository.existsBySkuIdAndCantidadGreaterThan(skuId, 0)).thenReturn(true);
 

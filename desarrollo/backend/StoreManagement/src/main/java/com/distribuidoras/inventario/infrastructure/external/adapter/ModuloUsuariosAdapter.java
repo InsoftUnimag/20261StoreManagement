@@ -3,15 +3,20 @@ package com.distribuidoras.inventario.infrastructure.external.adapter;
 import com.distribuidoras.inventario.domain.exception.ExternalServiceException;
 import com.distribuidoras.inventario.domain.model.Cliente;
 import com.distribuidoras.inventario.domain.repository.ClienteServicePort;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -36,17 +41,20 @@ public class ModuloUsuariosAdapter implements ClienteServicePort {
     }
     
     @Override
+    @CircuitBreaker(name = "moduloUsuarios", fallbackMethod = "fallbackFindByCedula")
+    @Retry(name = "moduloUsuarios")
     public Optional<Cliente> findByCedula(String cedula) {
         log.info("Consultando cliente con CC: {}", cedula);
         
         try {
             String url = baseUrl + "/api/usuarios/clientes/" + cedula;
             
-            ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                    url, Objects.requireNonNull(HttpMethod.GET), null, new ParameterizedTypeReference<Map<String, Object>>() {});
             
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> body = response.getBody();
-                
+            Map<String, Object> body = response.getBody();
+            
+            if (response.getStatusCode().is2xxSuccessful() && body != null) {
                 Cliente cliente = Cliente.builder()
                         .cedula((String) body.get("cedula"))
                         .nombre((String) body.get("nombre"))
@@ -72,5 +80,10 @@ public class ModuloUsuariosAdapter implements ClienteServicePort {
             throw new ExternalServiceException(SERVICE_NAME, 
                     "Error interno al consultar el módulo de usuarios.");
         }
+    }
+
+    public Optional<Cliente> fallbackFindByCedula(String cedula, Exception ex) {
+        log.warn("Fallback invocado para cliente CC: {} debido a: {}", cedula, ex.getMessage());
+        return Optional.empty(); 
     }
 }

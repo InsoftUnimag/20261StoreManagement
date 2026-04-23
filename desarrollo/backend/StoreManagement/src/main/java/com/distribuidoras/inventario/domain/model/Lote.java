@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 /**
  * Entidad de dominio: Lote.
  * Unidad de trazabilidad con fecha de vencimiento para FEFO.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  * Spec: 04_registrar_ingreso_productos.md (FR-012 a FR-018)
  */
 @Getter
@@ -19,7 +20,7 @@ import java.math.BigDecimal;
 public class Lote {
 
     private String codigoLote;
-    private UUID skuId;
+    private String skuId;
     private Integer cantidad;
     private LocalDate fechaVencimiento;
     private LocalDate fechaExpedicion;

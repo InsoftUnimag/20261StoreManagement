@@ -13,46 +13,33 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Caso de uso: Consultar Detalles de un Manifiesto.
- */
 @Service
 public class ConsultarDetallesManifiestoUseCase {
 
-    private final ManifiestoRepository manifiestoRepository;
-    private final DetalleManifiestoRepository detalleManifiestoRepository;
-    private final ProductoRepository productoRepository;
+    private final ManifiestoRepository repoManifiesto;
+    private final DetalleManifiestoRepository repoDetalle;
+    private final ProductoRepository repoProducto;
 
-    public ConsultarDetallesManifiestoUseCase(ManifiestoRepository manifiestoRepository,
-                                              DetalleManifiestoRepository detalleManifiestoRepository,
-                                              ProductoRepository productoRepository) {
-        this.manifiestoRepository = manifiestoRepository;
-        this.detalleManifiestoRepository = detalleManifiestoRepository;
-        this.productoRepository = productoRepository;
+    public ConsultarDetallesManifiestoUseCase(ManifiestoRepository r1, DetalleManifiestoRepository r2, ProductoRepository r3) {
+        this.repoManifiesto = r1;
+        this.repoDetalle = r2;
+        this.repoProducto = r3;
     }
 
     @Transactional(readOnly = true)
-    public ManifiestoDetalleResult ejecutar(UUID manifiestoId) {
-        Manifiesto manifiesto = manifiestoRepository.findById(manifiestoId)
-                .orElseThrow(() -> new ManifiestoNotFoundException(manifiestoId));
-
-        List<DetalleManifiesto> detalles = detalleManifiestoRepository.findByManifiestoId(manifiestoId);
-
-        List<LineaManifiestoResult> lineas = detalles.stream().map(d -> {
-            Producto producto = productoRepository.findById(d.getSkuId()).orElse(null);
-            String marca = producto != null ? producto.getMarca() : "N/A";
-            String presentacion = producto != null ? producto.getPresentacion() : "N/A";
+    public ManifiestoDetalleResult ejecutar(UUID id) {
+        Manifiesto m = repoManifiesto.findById(id).orElseThrow(() -> new ManifiestoNotFoundException(id));
+        List<DetalleManifiesto> lista = repoDetalle.findByManifiestoId(id);
+        List<LineaManifiestoResult> lineas = lista.stream().map(d -> {
+            Producto p = repoProducto.findById(d.getSkuId()).orElse(null);
             return new LineaManifiestoResult(d.getDetalleId(), d.getSkuId(),
-                    marca, presentacion, d.getCantidadEsperada(), d.getCantidadRecibida());
+                    p != null ? p.getMarca() : "N/A",
+                    p != null ? p.getPresentacion() : "N/A",
+                    d.getCantidadEsperada(), d.getCantidadRecibida());
         }).toList();
-
-        return new ManifiestoDetalleResult(manifiesto.getManifiestoId(),
-                manifiesto.getNumeroManifiesto(), lineas);
+        return new ManifiestoDetalleResult(m.getManifiestoId(), m.getNumeroManifiesto(), lineas);
     }
 
-    public record ManifiestoDetalleResult(UUID manifiestoId, String numeroManifiesto,
-                                           List<LineaManifiestoResult> lineas) {}
-
-    public record LineaManifiestoResult(UUID detalleId, UUID skuId, String marca,
-                                         String presentacion, int cantidadEsperada, int cantidadRecibida) {}
+    public record ManifiestoDetalleResult(UUID manifistoId, String numeroManifiesto, List<LineaManifiestoResult> lineas) {}
+    public record LineaManifiestoResult(UUID detalleId, String skuId, String marca, String presentacion, int cantidadEsperada, int cantidadRecibida) {}
 }

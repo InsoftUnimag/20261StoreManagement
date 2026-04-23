@@ -8,14 +8,15 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
  * Adaptador que implementa el puerto ProductoRepository del dominio
  * delegando a Spring Data JPA.
  * Convierte entre ProductoJpaEntity <-> Producto (domain).
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  */
 @Component
 public class ProductoRepositoryAdapter implements ProductoRepository {
@@ -29,13 +30,13 @@ public class ProductoRepositoryAdapter implements ProductoRepository {
     @Override
     public Producto save(Producto producto) {
         ProductoJpaEntity entity = toEntity(producto);
-        ProductoJpaEntity saved = jpaRepository.save(entity);
+        ProductoJpaEntity saved = jpaRepository.save(Objects.requireNonNull(entity));
         return toDomain(saved);
     }
 
     @Override
-    public Optional<Producto> findById(UUID skuId) {
-        return jpaRepository.findById(skuId).map(this::toDomain);
+    public Optional<Producto> findById(String skuId) {
+        return jpaRepository.findById(Objects.requireNonNull(skuId)).map(this::toDomain);
     }
 
     @Override
@@ -46,12 +47,24 @@ public class ProductoRepositoryAdapter implements ProductoRepository {
     }
 
     @Override
+    public org.springframework.data.domain.Page<Producto> findAllWithPagination(org.springframework.data.domain.Pageable pageable) {
+        return jpaRepository.findAll(Objects.requireNonNull(pageable)).map(this::toDomain);
+    }
+
+    @Override
     public List<Producto> findByBusqueda(String busqueda) {
         return jpaRepository
-                .findByMarcaContainingIgnoreCaseOrPresentacionContainingIgnoreCase(busqueda, busqueda)
+                .findByBusquedaAll(busqueda)
                 .stream()
                 .map(this::toDomain)
                 .toList();
+    }
+
+    @Override
+    public org.springframework.data.domain.Page<Producto> findByBusquedaWithPagination(String busqueda, org.springframework.data.domain.Pageable pageable) {
+        return jpaRepository
+                .findByBusquedaAll(busqueda, pageable)
+                .map(this::toDomain);
     }
 
     @Override
@@ -60,17 +73,17 @@ public class ProductoRepositoryAdapter implements ProductoRepository {
     }
 
     @Override
-    public boolean existsByMarcaAndPresentacionAndSkuIdNot(String marca, String presentacion, UUID skuId) {
+    public boolean existsByMarcaAndPresentacionAndSkuIdNot(String marca, String presentacion, String skuId) {
         return jpaRepository.existsByMarcaAndPresentacionAndSkuIdNot(marca, presentacion, skuId);
     }
 
     @Override
-    public void deleteById(UUID skuId) {
-        jpaRepository.deleteById(skuId);
+    public void deleteById(String skuId) {
+        jpaRepository.deleteById(Objects.requireNonNull(skuId));
     }
     
     @Override
-    public Map<UUID, Producto> findByIds(List<UUID> skuIds) {
+    public Map<String, Producto> findByIds(List<String> skuIds) {
         // Functional approach: convert list to map
         return jpaRepository.findBySkuIdIn(skuIds).stream()
                 .map(this::toDomain)
@@ -80,6 +93,11 @@ public class ProductoRepositoryAdapter implements ProductoRepository {
     @Override
     public Integer countActiveSkus() {
         return Optional.ofNullable(jpaRepository.countActiveSkus()).orElse(0);
+    }
+
+    @Override
+    public Optional<Integer> findMaxSkuNumero() {
+        return Optional.ofNullable(jpaRepository.findMaxSkuNumero());
     }
 
     // --- Mappers ---

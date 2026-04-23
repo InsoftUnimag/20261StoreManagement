@@ -1,18 +1,31 @@
 package com.distribuidoras.inventario.application.usecase;
 
-import com.distribuidoras.inventario.domain.model.*;
-import com.distribuidoras.inventario.domain.model.enums.EstadoPedido;
-import com.distribuidoras.inventario.domain.repository.*;
-import com.distribuidoras.inventario.infrastructure.web.dto.*;
+
+import com.distribuidoras.inventario.domain.model.LoteComprometido;
+import com.distribuidoras.inventario.domain.model.Pedido;
+import com.distribuidoras.inventario.domain.model.Producto;
+import com.distribuidoras.inventario.domain.model.ProductoPedido;
+import com.distribuidoras.inventario.domain.repository.ClienteServicePort;
+import com.distribuidoras.inventario.domain.repository.LoteComprometidoRepository;
+import com.distribuidoras.inventario.domain.repository.PedidoRepository;
+import com.distribuidoras.inventario.domain.repository.ProductoPedidoRepository;
+import com.distribuidoras.inventario.domain.repository.ProductoRepository;
+import com.distribuidoras.inventario.domain.exception.PedidoNotFoundException;
+import com.distribuidoras.inventario.infrastructure.web.dto.ClienteInfoDTO;
+import com.distribuidoras.inventario.infrastructure.web.dto.LineaPedidoResponseDTO;
+import com.distribuidoras.inventario.infrastructure.web.dto.LoteComprometidoDTO;
+import com.distribuidoras.inventario.infrastructure.web.dto.PedidoResponseDTO;
+import com.distribuidoras.inventario.infrastructure.web.dto.ProductoInfoDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
+import java.math.BigDecimal;
 
 /**
  * Use Case: Consultar Detalle de Pedido.
@@ -34,20 +47,17 @@ public class ConsultarDetallePedidoUseCase {
     private final ProductoPedidoRepository productoPedidoRepository;
     private final LoteComprometidoRepository loteComprometidoRepository;
     private final ProductoRepository productoRepository;
-    private final LoteRepository loteRepository;
     private final ClienteServicePort clienteServicePort;
 
     public ConsultarDetallePedidoUseCase(PedidoRepository pedidoRepository,
                                           ProductoPedidoRepository productoPedidoRepository,
                                           LoteComprometidoRepository loteComprometidoRepository,
                                           ProductoRepository productoRepository,
-                                          LoteRepository loteRepository,
                                           ClienteServicePort clienteServicePort) {
         this.pedidoRepository = pedidoRepository;
         this.productoPedidoRepository = productoPedidoRepository;
         this.loteComprometidoRepository = loteComprometidoRepository;
         this.productoRepository = productoRepository;
-        this.loteRepository = loteRepository;
         this.clienteServicePort = clienteServicePort;
     }
 
@@ -75,6 +85,13 @@ public class ConsultarDetallePedidoUseCase {
         Integer totalSolicitado = lineas.stream().mapToInt(ProductoPedido::getCantidadSolicitada).sum();
         Integer totalConfirmado = lineas.stream().mapToInt(ProductoPedido::getCantidadConfirmada).sum();
 
+        BigDecimal pesoLogisticoTotal = lineasDTO.stream()
+                .filter(l -> l.producto() != null && l.producto().pesoLogisticoKg() != null && l.cantidadConfirmada() != null)
+                .map(l -> l.producto().pesoLogisticoKg().multiply(BigDecimal.valueOf(l.cantidadConfirmada())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        String tipoCumplimiento = totalSolicitado > 0 && totalSolicitado.equals(totalConfirmado) ? "COMPLETO" : "PARCIAL";
+
         return PedidoResponseDTO.builder()
                 .pedidoId(pedido.getPedidoId())
                 .numeroPedido(pedido.getNumeroPedido())
@@ -86,6 +103,8 @@ public class ConsultarDetallePedidoUseCase {
                 .lineas(lineasDTO)
                 .totalSolicitado(totalSolicitado)
                 .totalConfirmado(totalConfirmado)
+                .pesoLogisticoTotal(pesoLogisticoTotal)
+                .tipoCumplimiento(tipoCumplimiento)
                 .build();
     }
 
@@ -106,7 +125,7 @@ public class ConsultarDetallePedidoUseCase {
 
         return pedido.orElseThrow(() -> {
             log.warn("Pedido no encontrado: {}", identifier);
-            return new IllegalArgumentException("Pedido '" + identifier + "' no encontrado");
+            return new PedidoNotFoundException("Pedido '" + identifier + "' no encontrado");
         });
     }
 
