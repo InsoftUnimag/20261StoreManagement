@@ -53,26 +53,29 @@ Plan maestro de coordinación para la implementación del backend del Módulo 1.
 
 ```
 backend/
-├── src/main/java/com/distribuidora/inventario/
-│   ├── domain/
-│   │   ├── model/              # Entidades puras (sin @Entity JPA)
-│   │   ├── repository/         # Interfaces (puertos de salida)
-│   │   └── exception/          # Excepciones del dominio
-│   ├── application/
-│   │   └── usecase/            # Casos de uso (lógica de aplicación)
+├── src/main/java/com/distribuidoras/inventario/
+│   ├── domain/                  # Entidades, puertos (interfaces), excepciones
+│   ├── application/             # Casos de uso (@Service)
 │   └── infrastructure/
-│       ├── persistence/        # Entidades JPA + implementaciones
-│       ├── web/                # Controllers REST + DTOs
-│       ├── messaging/          # Productores/Consumidores de cola
-│       ├── external/           # Adaptadores a servicios externos
-│       └── config/             # Beans de Spring
+│       ├── web/
+│       │   ├── controller/      # Controllers REST
+│       │   └── dto/             # Request y Response DTOs
+│       ├── persistence/         # Entidades JPA + Repositories + Adapters
+│       ├── messaging/           # RabbitMQ (Producers/Consumers)
+│       │   └── config/          # Configuración de colas y exchanges
+│       ├── external/            # Integraciones HTTP externas
+│       ├── scheduler/           # Tareas programadas (@Scheduled)
+│       ├── observability/       # Logging e indicadores de salud
+│       └── config/              # Configuración general de Spring
 ├── src/main/resources/
-│   ├── application.yml
-│   └── db/migration/           # Scripts SQL (Flyway)
+│   ├── application.properties
+│   └── db/migration/            # Scripts SQL (Flyway)
 └── src/test/java/
-    ├── application/usecase/    # Tests unitarios
-    └── infrastructure/web/     # Tests de integración
+    ├── application/usecase/     # Tests unitarios
+    └── infrastructure/web/      # Tests de integración
 ```
+
+
 
 ### Performance Goals
 
