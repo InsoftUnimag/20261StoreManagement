@@ -14,6 +14,85 @@ Núcleo comercial del módulo. Permite consultar clientes (Módulo Usuarios), cr
 
 ---
 
+## Arquitectura y Estructura de Archivos
+
+Al aplicar **Clean Architecture**, se tienen tres capas concéntricas:
+
+```
+┌───────────────────────────────────────┐
+│         infrastructure                │  ← Controllers REST, JPA, Colas, Config
+│  ┌─────────────────────────────────┐  │
+│  │         application             │  │  ← Use Cases (lógica de aplicación)
+│  │  ┌───────────────────────────┐  │  │
+│  │  │         domain            │  │  │  ← Entities, Ports, Excepciones
+│  │  └───────────────────────────┘  │  │
+│  └─────────────────────────────────┘  │
+└───────────────────────────────────────┘
+```
+
+La estructura específica para este componente implementada es:
+
+```
+├── domain/                      # Entidades, puertos (interfaces), excepciones
+│   ├── model/
+│   │   ├── Cliente.java
+│   │   ├── EstadoPedido.java
+│   │   ├── LoteComprometido.java
+│   │   ├── Pedido.java          # Relativo comercial a pedidos
+│   │   └── ProductoPedido.java
+│   ├── repository/
+│   │   ├── ClienteServicePort.java # Puerto para ir al módulo usuario
+│   │   ├── LoteComprometidoRepository.java
+│   │   ├── PedidoRepository.java
+│   │   └── ProductoPedidoRepository.java
+│   └── exception/
+│       ├── ClienteInactivoException.java
+│       ├── ClienteNotFoundException.java
+│       ├── PedidoEstadoInvalidoException.java
+│       ├── PedidoNotFoundException.java
+│       └── StockInsuficienteException.java
+├── application/                 # Casos de uso (@Service)
+│   └── usecase/
+│       ├── ComprometerInventarioUseCase.java
+│       ├── ConsultarClienteUseCase.java     # Obtener info externa
+│       ├── ConsultarDetallePedidoUseCase.java
+│       ├── ConsultarListaPedidosUseCase.java
+│       └── RealizarPedidoUseCase.java       # Entrar un pedido sin comprometer lotes
+└── infrastructure/
+    ├── web/
+    │   ├── controller/
+    │   │   ├── ClienteController.java       # Proxy a cliente HTTP
+    │   │   └── PedidoController.java        # Crear y listar pedidos
+    │   └── dto/
+    │       ├── AsesorInfoDTO.java
+    │       ├── ClienteInfoDTO.java
+    │       ├── LineaPedidoItemDTO.java
+    │       ├── LineaPedidoRequestDTO.java
+    │       ├── LineaPedidoResponseDTO.java
+    │       ├── LoteComprometidoDTO.java
+    │       ├── PedidoRequestDTO.java        # DTO de entrada comercial
+    │       ├── PedidoResponseDTO.java
+    │       ├── PedidoResumenDTO.java
+    │       └── PedidosListResponseDTO.java
+    ├── persistence/             # Entidades JPA + Repositories + Adapters
+    │   ├── entity/
+    │   │   ├── LoteComprometidoJpaEntity.java
+    │   │   ├── PedidoJpaEntity.java
+    │   │   └── ProductoPedidoJpaEntity.java
+    │   ├── repository/
+    │   │   ├── LoteComprometidoJpaRepository.java
+    │   │   ├── PedidoJpaRepository.java
+    │   │   └── ProductoPedidoJpaRepository.java
+    │   └── adapter/
+    │       ├── LoteComprometidoRepositoryAdapter.java
+    │       ├── PedidoRepositoryAdapter.java
+    │       └── ProductoPedidoRepositoryAdapter.java
+    └── external/                # Adaptador cliente externo
+        └── ModuloUsuariosAdapter.java
+```
+
+---
+
 ## Dependencies
 
 **Blocked by**:

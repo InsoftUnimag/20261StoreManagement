@@ -14,6 +14,76 @@ Implementación de procesos operativos de almacén: picking (recolección de pro
 
 ---
 
+## Arquitectura y Estructura de Archivos
+
+Al aplicar **Clean Architecture**, se tienen tres capas concéntricas:
+
+```
+┌───────────────────────────────────────┐
+│         infrastructure                │  ← Controllers REST, JPA, Colas, Config
+│  ┌─────────────────────────────────┐  │
+│  │         application             │  │  ← Use Cases (lógica de aplicación)
+│  │  ┌───────────────────────────┐  │  │
+│  │  │         domain            │  │  │  ← Entities, Ports, Excepciones
+│  │  └───────────────────────────┘  │  │
+│  └─────────────────────────────────┘  │
+└───────────────────────────────────────┘
+```
+
+La estructura específica para este componente implementada es:
+
+```
+├── domain/                      # Entidades, puertos (interfaces), excepciones
+│   ├── model/
+│   │   ├── DetalleManifiesto.java
+│   │   ├── EstadoManifiesto.java
+│   │   ├── Manifiesto.java
+│   │   ├── RegistroDespacho.java
+│   │   └── RegistroPicking.java # Registros logísticos físicos
+│   ├── repository/
+│   │   ├── DetalleManifiestoRepository.java
+│   │   ├── ManifiestoRepository.java
+│   │   ├── RegistroDespachoRepository.java
+│   │   └── RegistroPickingRepository.java
+│   └── exception/
+│       └── ManifiestoNotFoundException.java
+├── application/                 # Casos de uso (@Service)
+│   └── usecase/
+│       ├── ConfirmarDespachoUseCase.java    # Lógica afectando inventario
+│       ├── ConfirmarPickingUseCase.java     # Lógica sin mover stock
+│       ├── ConsultarDetallesManifiestoUseCase.java
+│       ├── ConsultarPedidosParaDespachoUseCase.java
+│       ├── ConsultarPedidosParaPickingUseCase.java
+│       ├── ListarManifiestosPendientesUseCase.java
+│       ├── ListarManifiestosUseCase.java
+│       ├── ListarPedidosDespachoUseCase.java
+│       └── ListarPedidosPickingUseCase.java
+└── infrastructure/
+    ├── web/
+    │   ├── controller/          # Endpoints para PDT/dispositivos
+    │   │   ├── DespachoController.java
+    │   │   ├── ManifiestoController.java
+    │   │   └── PickingController.java
+    └── persistence/             # Entidades JPA + Repositories + Adapters
+        ├── entity/
+        │   ├── DetalleManifiestoJpaEntity.java
+        │   ├── ManifiestoJpaEntity.java
+        │   ├── RegistroDespachoJpaEntity.java
+        │   └── RegistroPickingJpaEntity.java
+        ├── repository/
+        │   ├── DetalleManifiestoJpaRepository.java
+        │   ├── ManifiestoJpaRepository.java
+        │   ├── RegistroDespachoJpaRepository.java
+        │   └── RegistroPickingJpaRepository.java
+        └── adapter/
+            ├── DetalleManifiestoRepositoryAdapter.java
+            ├── ManifiestoRepositoryAdapter.java
+            ├── RegistroDespachoRepositoryAdapter.java
+            └── RegistroPickingRepositoryAdapter.java
+```
+
+---
+
 ## Dependencies
 
 **Blocked by**:

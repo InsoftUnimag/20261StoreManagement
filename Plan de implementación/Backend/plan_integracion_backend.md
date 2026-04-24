@@ -14,6 +14,58 @@ Implementación de la capa de integración del Módulo 1 con sistemas externos: 
 
 ---
 
+## Arquitectura y Estructura de Archivos
+
+Al aplicar **Clean Architecture**, se tienen tres capas concéntricas:
+
+```
+┌───────────────────────────────────────┐
+│         infrastructure                │  ← Controllers REST, JPA, Colas, Config
+│  ┌─────────────────────────────────┐  │
+│  │         application             │  │  ← Use Cases (lógica de aplicación)
+│  │  ┌───────────────────────────┐  │  │
+│  │  │         domain            │  │  │  ← Entities, Ports, Excepciones
+│  │  └───────────────────────────┘  │  │
+│  └─────────────────────────────────┘  │
+└───────────────────────────────────────┘
+```
+
+La estructura específica para este componente implementada es:
+
+```
+├── domain/                      # Entidades, puertos (interfaces), excepciones
+│   ├── repository/
+│   │   └── ClienteServicePort.java          # Puerto definido para el módulo cliente
+│   └── exception/
+│       └── ExternalServiceException.java    # Fallos externos (integración)
+├── application/                 # Casos de uso (@Service)
+│   └── usecase/                 # Consumidos o alimentados por esta capa
+│       └── ...
+└── infrastructure/
+    ├── web/                     # Controles internos de red
+    │   ├── controller/
+    │   │   └── ExternalPedidosController.java # Endpoints dedicados
+    │   └── dto/
+    │       ├── ClienteExternalDTO.java      # DTO para módulos externos
+    │       ├── LineaExternalDTO.java
+    │       └── PedidoExternalDTO.java
+    ├── messaging/               # RabbitMQ (Producers/Consumers)
+    │   ├── config/
+    │   │   └── RabbitMQConfig.java          # Exchange, Queue, Routing Key
+    │   ├── consumer/
+    │   │   └── RutaAsignadaConsumer.java    # Escucha colas y llama Use Case
+    │   └── producer/
+    │       ├── PedidoCreadoProducer.java    # Emisión asíncrona hacia módulo 3
+    │       └── SolicitudRutaProducer.java   # Emisión hacia módulo 2
+    ├── external/                # Integraciones HTTP
+    │   └── ModuloUsuariosAdapter.java       # Call HTTP al módulo de usuarios
+    └── observability/           # Salud del sistema
+        ├── ExternalServicesHealthIndicator.java # Verifica que RabbitMQ/HTTP viva
+        └── IntegrationLogger.java
+```
+
+---
+
 ## Dependencies
 
 **Blocked by**:

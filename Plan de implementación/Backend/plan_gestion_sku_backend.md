@@ -14,6 +14,67 @@ Implementación del CRUD de productos (SKU) del catálogo. Este feature es la ba
 
 ---
 
+## Arquitectura y Estructura de Archivos
+
+Al aplicar **Clean Architecture**, se tienen tres capas concéntricas:
+
+```
+┌───────────────────────────────────────┐
+│         infrastructure                │  ← Controllers REST, JPA, Colas, Config
+│  ┌─────────────────────────────────┐  │
+│  │         application             │  │  ← Use Cases (lógica de aplicación)
+│  │  ┌───────────────────────────┐  │  │
+│  │  │         domain            │  │  │  ← Entities, Ports, Excepciones
+│  │  └───────────────────────────┘  │  │
+│  └─────────────────────────────────┘  │
+└───────────────────────────────────────┘
+```
+
+La estructura específica para este componente implementada es:
+
+```
+├── domain/                      # Entidades, puertos (interfaces), excepciones
+│   ├── model/
+│   │   ├── Producto.java        # Entidad de negocio Producto
+│   │   └── BitacoraProducto.java
+│   ├── repository/
+│   │   ├── ProductoRepository.java
+│   │   └── BitacoraProductoRepository.java
+│   └── exception/
+│       ├── ProductoConLotesActivosException.java
+│       ├── ProductoDuplicadoException.java
+│       └── ProductoNotFoundException.java
+├── application/                 # Casos de uso (@Service)
+│   └── usecase/
+│       ├── ConsultarBitacoraUseCase.java
+│       ├── ConsultarCatalogoUseCase.java
+│       ├── CrearProductoUseCase.java
+│       ├── EliminarProductoUseCase.java
+│       └── ModificarProductoUseCase.java
+└── infrastructure/
+    ├── web/
+    │   ├── controller/
+    │   │   └── ProductoController.java  # Expone los endpoints de CRUD
+    │   └── dto/
+    │       ├── BitacoraResponse.java
+    │       ├── ProductoInfoDTO.java
+    │       ├── ProductoRequest.java     # Request DTO
+    │       ├── ProductoResponse.java    # Response DTO
+    │       └── ProductoUpdateRequest.java
+    └── persistence/             # Entidades JPA + Repositories + Adapters
+        ├── entity/
+        │   ├── ProductoJpaEntity.java
+        │   └── BitacoraProductoJpaEntity.java
+        ├── repository/
+        │   ├── ProductoJpaRepository.java
+        │   └── BitacoraProductoJpaRepository.java
+        └── adapter/
+            ├── ProductoRepositoryAdapter.java
+            └── BitacoraProductoRepositoryAdapter.java
+```
+
+---
+
 ## Dependencies
 
 **Blocked by**:

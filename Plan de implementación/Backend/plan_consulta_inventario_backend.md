@@ -14,6 +14,74 @@ Implementación de endpoints de consulta para visualizar stock disponible (por S
 
 ---
 
+## Arquitectura y Estructura de Archivos
+
+Al aplicar **Clean Architecture**, se tienen tres capas concéntricas:
+
+```
+┌───────────────────────────────────────┐
+│         infrastructure                │  ← Controllers REST, JPA, Colas, Config
+│  ┌─────────────────────────────────┐  │
+│  │         application             │  │  ← Use Cases (lógica de aplicación)
+│  │  ┌───────────────────────────┐  │  │
+│  │  │         domain            │  │  │  ← Entities, Ports, Excepciones
+│  │  └───────────────────────────┘  │  │
+│  └─────────────────────────────────┘  │
+└───────────────────────────────────────┘
+```
+
+La estructura específica para este componente implementada es:
+
+```
+├── domain/                      # Entidades, puertos (interfaces), excepciones
+│   ├── model/
+│   │   ├── Lote.java
+│   │   ├── MovimientoInventario.java
+│   │   ├── StockGlobalSku.java  # Entidad abstracta de stock
+│   │   └── TipoMovimiento.java
+│   └── repository/              # Puertos orientados a consulta de operaciones
+│       ├── LoteRepository.java
+│       └── MovimientoInventarioRepository.java
+├── application/                 # Casos de uso (@Service)
+│   └── usecase/
+│       ├── ConsultarDetalleLoteUseCase.java
+│       ├── ConsultarDisponibilidadPedidoUseCase.java
+│       ├── ConsultarMovimientosInventarioUseCase.java
+│       ├── ConsultarResumenInventarioUseCase.java
+│       ├── ConsultarStockMultipleSkusUseCase.java
+│       ├── ConsultarStockPorSkuUseCase.java # Cálculo de stock FEFO y movimientos
+│       └── LotesVencidosScheduler.java      # Scheduled Job
+└── infrastructure/
+    ├── web/
+    │   ├── controller/
+    │   │   └── InventarioConsultaController.java # Endpoints GET para stock
+    │   └── dto/
+    │       ├── AlertasDTO.java
+    │       ├── DetalleDisponibilidadDTO.java
+    │       ├── DisponibilidadDTO.java
+    │       ├── DisponibilidadRequestDTO.java
+    │       ├── LineaResumenDTO.java
+    │       ├── LoteDetalleDTO.java
+    │       ├── LoteResumenDTO.java
+    │       ├── LoteStockDTO.java
+    │       ├── MovimientoInventarioDTO.java
+    │       ├── MovimientosHoyDTO.java
+    │       ├── MovimientosInventarioResponseDTO.java
+    │       ├── ResumenInventarioDTO.java
+    │       ├── StockDisponibleDTO.java      # Output DTO
+    │       ├── StockMultipleDTO.java
+    │       └── StockResumenDTO.java
+    └── persistence/             # Entidades JPA + Repositories + Adapters
+        ├── entity/
+        │   └── StockGlobalSkuJpaEntity.java
+        ├── repository/
+        │   └── StockGlobalSkuJpaRepository.java
+        └── adapter/
+            └── InventarioMapper.java
+```
+
+---
+
 ## Dependencies
 
 **Blocked by**:
