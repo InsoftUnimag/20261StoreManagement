@@ -1,12 +1,24 @@
 package com.distribuidoras.inventario.infrastructure.persistence.entity;
 
+import com.distribuidoras.inventario.domain.model.enums.EstadoManifiesto;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 import java.util.UUID;
 
-@Entity @Table(name = "manifiesto")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Entity
+@Table(name = "manifiesto", indexes = {
+    @Index(name = "idx_manifiesto_numero", columnList = "numero_manifiesto"),
+    @Index(name = "idx_manifiesto_estado", columnList = "estado"),
+    @Index(name = "idx_manifiesto_fecha", columnList = "fecha_emision")
+}, uniqueConstraints = {
+    @UniqueConstraint(name = "uk_manifiesto_numero", columnNames = "numero_manifiesto")
+})
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ManifiestoJpaEntity {
     @Id @Column(name = "manifiesto_id") private UUID manifiestoId;
     @Column(name = "numero_manifiesto", unique = true, nullable = false) private String numeroManifiesto;

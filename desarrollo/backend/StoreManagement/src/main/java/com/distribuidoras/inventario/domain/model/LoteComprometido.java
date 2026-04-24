@@ -1,5 +1,6 @@
 package com.distribuidoras.inventario.domain.model;
 
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -18,12 +19,18 @@ public class LoteComprometido {
 
     private UUID compromisoId;
     
+    @NotNull(message = "El ID del producto pedido no puede ser nulo")
     private UUID productoPedidoId;
     
+    @NotBlank(message = "El código de lote no puede estar vacío")
+    @Size(max = 100, message = "El código de lote no puede exceder 100 caracteres")
     private String codigoLote;
     
+    @NotNull(message = "La cantidad comprometida no puede ser nula")
+    @Min(value = 1, message = "La cantidad comprometida debe ser mayor a 0")
     private Integer cantidadComprometida;
     
+    @NotNull(message = "La fecha de compromiso no puede ser nula")
     private LocalDateTime fechaCompromiso;
 
     /**

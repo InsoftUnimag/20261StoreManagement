@@ -1,17 +1,22 @@
 package com.distribuidoras.inventario.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * Entidad JPA para la tabla 'producto'.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  */
 @Entity
-@Table(name = "producto")
+@Table(name = "producto", indexes = {
+    @Index(name = "idx_producto_sku_id", columnList = "sku_id")
+}, uniqueConstraints = {
+    @UniqueConstraint(name = "uk_producto_sku_id", columnNames = "sku_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,8 +25,8 @@ import java.util.UUID;
 public class ProductoJpaEntity {
 
     @Id
-    @Column(name = "sku_id", updatable = false, nullable = false)
-    private UUID skuId;
+    @Column(name = "sku_id", updatable = false, nullable = false, length = 20)
+    private String skuId;
 
     @Column(name = "marca", nullable = false, length = 100)
     private String marca;

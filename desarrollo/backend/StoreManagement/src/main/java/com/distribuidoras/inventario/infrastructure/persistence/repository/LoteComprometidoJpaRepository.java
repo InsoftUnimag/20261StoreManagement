@@ -11,4 +11,6 @@ import java.util.UUID;
 public interface LoteComprometidoJpaRepository extends JpaRepository<LoteComprometidoJpaEntity, UUID> {
     
     List<LoteComprometidoJpaEntity> findByProductoPedidoId(UUID productoPedidoId);
+
+    List<LoteComprometidoJpaEntity> findByCodigoLote(String codigoLote);
 }

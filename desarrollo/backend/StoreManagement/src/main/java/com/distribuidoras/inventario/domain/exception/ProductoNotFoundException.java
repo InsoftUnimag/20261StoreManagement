@@ -1,20 +1,19 @@
 package com.distribuidoras.inventario.domain.exception;
 
-import java.util.UUID;
-
 /**
  * Se lanza cuando no se encuentra un producto por su SKU ID.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  */
 public class ProductoNotFoundException extends RuntimeException {
 
-    private final UUID skuId;
+    private final String skuId;
 
-    public ProductoNotFoundException(UUID skuId) {
+    public ProductoNotFoundException(String skuId) {
         super("Producto con SKU '%s' no encontrado".formatted(skuId));
         this.skuId = skuId;
     }
 
-    public UUID getSkuId() {
+    public String getSkuId() {
         return skuId;
     }
 }

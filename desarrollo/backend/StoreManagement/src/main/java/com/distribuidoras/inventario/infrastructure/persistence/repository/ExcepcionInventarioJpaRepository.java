@@ -11,7 +11,8 @@ import java.util.UUID;
 @Repository
 public interface ExcepcionInventarioJpaRepository extends JpaRepository<ExcepcionInventarioJpaEntity, UUID> {
     List<ExcepcionInventarioJpaEntity> findByTipoExcepcion(String tipoExcepcion);
-    List<ExcepcionInventarioJpaEntity> findBySkuId(UUID skuId);
+    List<ExcepcionInventarioJpaEntity> findBySkuId(String skuId);
+    List<ExcepcionInventarioJpaEntity> findByCodigoLote(String codigoLote);
     
     /**
      * Count open exceptions (all exceptions are considered open until deleted).

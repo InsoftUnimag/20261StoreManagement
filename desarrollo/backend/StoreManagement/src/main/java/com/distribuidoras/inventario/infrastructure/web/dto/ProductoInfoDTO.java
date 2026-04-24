@@ -1,13 +1,13 @@
 package com.distribuidoras.inventario.infrastructure.web.dto;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 /**
  * Product info DTO.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  */
 public record ProductoInfoDTO(
-        UUID skuId,
+        String skuId,
         String marca,
         String presentacion,
         Integer contenidoMl,
@@ -18,13 +18,13 @@ public record ProductoInfoDTO(
     }
 
     public static class Builder {
-        private UUID skuId;
+        private String skuId;
         private String marca;
         private String presentacion;
         private Integer contenidoMl;
         private BigDecimal pesoLogisticoKg;
 
-        public Builder skuId(UUID skuId) {
+        public Builder skuId(String skuId) {
             this.skuId = skuId;
             return this;
         }

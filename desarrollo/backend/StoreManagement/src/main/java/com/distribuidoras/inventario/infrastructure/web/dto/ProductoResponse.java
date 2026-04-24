@@ -4,19 +4,20 @@ import com.distribuidoras.inventario.domain.model.Producto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * DTO de respuesta para Producto.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  * Incluye disponibilidad calculada y posible alerta.
  */
 public class ProductoResponse {
 
-    private UUID skuId;
+    private String skuId;
     private String marca;
     private String presentacion;
     private Integer contenidoMl;
     private BigDecimal pesoLogisticoKg;
+    private BigDecimal costoCop;
     private int stockDisponible;
     private String disponibilidad;
     private LocalDateTime creadoEl;
@@ -28,13 +29,14 @@ public class ProductoResponse {
     /**
      * Crea un ProductoResponse a partir del modelo de dominio.
      */
-    public static ProductoResponse fromDomain(Producto producto, int stockDisponible, String alerta) {
+    public static ProductoResponse fromDomain(Producto producto, int stockDisponible, String alerta, BigDecimal costoCop) {
         ProductoResponse response = new ProductoResponse();
         response.skuId = producto.getSkuId();
         response.marca = producto.getMarca();
         response.presentacion = producto.getPresentacion();
         response.contenidoMl = producto.getContenidoMl();
         response.pesoLogisticoKg = producto.getPesoLogisticoKg();
+        response.costoCop = costoCop;
         response.stockDisponible = stockDisponible;
         response.disponibilidad = stockDisponible > 0 ? "Disponible" : "No disponible";
         response.creadoEl = producto.getCreadoEl();
@@ -46,16 +48,16 @@ public class ProductoResponse {
      * Crea un ProductoResponse para un producto recién creado (stock = 0).
      */
     public static ProductoResponse fromCreado(Producto producto) {
-        return fromDomain(producto, 0, null);
+        return fromDomain(producto, 0, null, null);
     }
 
     // Getters y Setters
 
-    public UUID getSkuId() {
+    public String getSkuId() {
         return skuId;
     }
 
-    public void setSkuId(UUID skuId) {
+    public void setSkuId(String skuId) {
         this.skuId = skuId;
     }
 
@@ -89,6 +91,14 @@ public class ProductoResponse {
 
     public void setPesoLogisticoKg(BigDecimal pesoLogisticoKg) {
         this.pesoLogisticoKg = pesoLogisticoKg;
+    }
+
+    public BigDecimal getCostoCop() {
+        return costoCop;
+    }
+
+    public void setCostoCop(BigDecimal costoCop) {
+        this.costoCop = costoCop;
     }
 
     public int getStockDisponible() {

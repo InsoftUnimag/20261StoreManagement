@@ -10,6 +10,8 @@ import java.util.List;
 public record StockDisponibleDTO(
         ProductoInfo sku,
         Integer fisicoTotal,
+        Integer disponibles,
+        Integer comprometidos,
         List<LoteStockDTO> lotes,
         ProximoVencimientoInfo proximoVencimiento
 ) {
@@ -20,6 +22,8 @@ public record StockDisponibleDTO(
     public static class Builder {
         private ProductoInfo sku;
         private Integer fisicoTotal;
+        private Integer disponibles;
+        private Integer comprometidos;
         private List<LoteStockDTO> lotes;
         private ProximoVencimientoInfo proximoVencimiento;
 
@@ -30,6 +34,16 @@ public record StockDisponibleDTO(
 
         public Builder fisicoTotal(Integer fisicoTotal) {
             this.fisicoTotal = fisicoTotal;
+            return this;
+        }
+        
+        public Builder disponibles(Integer disponibles) {
+            this.disponibles = disponibles;
+            return this;
+        }
+        
+        public Builder comprometidos(Integer comprometidos) {
+            this.comprometidos = comprometidos;
             return this;
         }
 
@@ -47,6 +61,8 @@ public record StockDisponibleDTO(
             return new StockDisponibleDTO(
                     sku,
                     fisicoTotal,
+                    disponibles,
+                    comprometidos,
                     lotes,
                     proximoVencimiento
             );

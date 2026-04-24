@@ -1,6 +1,5 @@
 package com.distribuidoras.inventario.infrastructure.web.dto;
 
-import java.util.UUID;
 
 /**
  * DTO representing stock summary for a single SKU.

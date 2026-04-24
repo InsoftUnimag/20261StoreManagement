@@ -1,7 +1,6 @@
 package com.distribuidoras.inventario.infrastructure.web.dto;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 /**
  * Order line DTO for external API responses.

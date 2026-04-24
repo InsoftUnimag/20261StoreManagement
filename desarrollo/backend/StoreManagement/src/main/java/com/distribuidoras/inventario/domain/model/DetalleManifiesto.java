@@ -1,38 +1,36 @@
 package com.distribuidoras.inventario.domain.model;
 
+import jakarta.validation.constraints.*;
+import lombok.*;
+
 import java.util.UUID;
 
 /**
  * Entidad de dominio: DetalleManifiesto.
  * Línea de manifiesto con cantidad esperada por SKU.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  */
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DetalleManifiesto {
 
     private UUID detalleId;
-    private UUID manifiestoId;
-    private UUID skuId;
+
+    @NotNull(message = "El ID del manifiesto no puede ser nulo")
+    private UUID manifistoId;
+
+    @NotBlank(message = "El SKU no puede estar vacío")
+    @Size(max = 20, message = "El SKU no puede exceder 20 caracteres")
+    private String skuId;
+
+    @NotNull(message = "La cantidad esperada no puede ser nula")
+    @Min(value = 1, message = "La cantidad esperada debe ser mayor a 0")
     private Integer cantidadEsperada;
+
+    @NotNull(message = "La cantidad recibida no puede ser nula")
+    @Min(value = 0, message = "La cantidad recibida no puede ser negativa")
     private Integer cantidadRecibida;
-
-    public DetalleManifiesto() {}
-
-    public DetalleManifiesto(UUID detalleId, UUID manifiestoId, UUID skuId,
-                             Integer cantidadEsperada, Integer cantidadRecibida) {
-        this.detalleId = detalleId;
-        this.manifiestoId = manifiestoId;
-        this.skuId = skuId;
-        this.cantidadEsperada = cantidadEsperada;
-        this.cantidadRecibida = cantidadRecibida;
-    }
-
-    public UUID getDetalleId() { return detalleId; }
-    public void setDetalleId(UUID detalleId) { this.detalleId = detalleId; }
-    public UUID getManifiestoId() { return manifiestoId; }
-    public void setManifiestoId(UUID manifiestoId) { this.manifiestoId = manifiestoId; }
-    public UUID getSkuId() { return skuId; }
-    public void setSkuId(UUID skuId) { this.skuId = skuId; }
-    public Integer getCantidadEsperada() { return cantidadEsperada; }
-    public void setCantidadEsperada(Integer cantidadEsperada) { this.cantidadEsperada = cantidadEsperada; }
-    public Integer getCantidadRecibida() { return cantidadRecibida; }
-    public void setCantidadRecibida(Integer cantidadRecibida) { this.cantidadRecibida = cantidadRecibida; }
 }

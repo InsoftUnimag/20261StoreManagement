@@ -13,10 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Use Case: Verificar disponibilidad de stock para los productos de un pedido.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
  * Spec 06: Consultar Disponibilidad
  * 
  * FR-067: Permitir buscar e informar si hay producto en stock
@@ -41,7 +41,7 @@ public class ConsultarDisponibilidadPedidoUseCase {
      * Record que representa la línea de un pedido a validar.
      */
     public record LineaPedidoDTO(
-            UUID skuId,
+            String skuId,
             Integer cantidadSolicitada
     ) {}
 
@@ -57,14 +57,14 @@ public class ConsultarDisponibilidadPedidoUseCase {
         log.info("Verificando disponibilidad para pedido: {}, {} líneas", pedidoId, lineas.size());
 
         // 1. Obtener todos los SKU únicos
-        List<UUID> skuIds = lineas.stream()
+        List<String> skuIds = lineas.stream()
                 .map(LineaPedidoDTO::skuId)
                 .distinct()
                 .toList();
 
         // 2. Query eficiente: obtener stock de todos los SKUs en una sola consulta
-        Map<UUID, List<Lote>> lotesPorSku = loteRepository.findBySkuIdsWithStock(skuIds);
-        Map<UUID, Producto> productos = productoRepository.findByIds(skuIds);
+        Map<String, List<Lote>> lotesPorSku = loteRepository.findBySkuIdsWithStock(skuIds);
+        Map<String, Producto> productos = productoRepository.findByIds(skuIds);
 
         // 3. Validar disponibilidad por cada línea del pedido - Functional approach
         List<DetalleDisponibilidadDTO> detalles = lineas.stream()
@@ -97,16 +97,16 @@ public class ConsultarDisponibilidadPedidoUseCase {
      * Valida una línea de pedido usando composición funcional.
      */
     private DetalleDisponibilidadDTO validarLinea(LineaPedidoDTO linea,
-                                                    Map<UUID, List<Lote>> lotesPorSku,
-                                                    Map<UUID, Producto> productos) {
-        UUID skuId = linea.skuId();
+                                                Map<String, List<Lote>> lotesPorSku,
+                                                Map<String, Producto> productos) {
+        String skuId = linea.skuId();
         Integer cantidadSolicitada = linea.cantidadSolicitada();
 
         // Obtener producto (si existe)
         Producto producto = productos.get(skuId);
         if (producto == null) {
             return DetalleDisponibilidadDTO.builder()
-                    .skuId(skuId.toString())
+                    .skuId(skuId)
                     .marca("N/A")
                     .presentacion("N/A")
                     .cantidadSolicitada(cantidadSolicitada)
@@ -129,7 +129,7 @@ public class ConsultarDisponibilidadPedidoUseCase {
                         .formatted(cantidadDisponible, cantidadSolicitada);
 
         return DetalleDisponibilidadDTO.builder()
-                .skuId(skuId.toString())
+                .skuId(skuId)
                 .marca(producto.getMarca())
                 .presentacion(producto.getPresentacion())
                 .cantidadSolicitada(cantidadSolicitada)

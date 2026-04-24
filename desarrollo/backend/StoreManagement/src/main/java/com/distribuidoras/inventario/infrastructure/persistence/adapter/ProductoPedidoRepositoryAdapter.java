@@ -7,6 +7,7 @@ import com.distribuidoras.inventario.infrastructure.persistence.repository.Produ
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -22,26 +23,26 @@ public class ProductoPedidoRepositoryAdapter implements ProductoPedidoRepository
     
     @Override
     public List<ProductoPedido> saveAll(List<ProductoPedido> lineas) {
-        return jpa.saveAll(lineas.stream().map(this::toEntity).toList()).stream()
+        return jpa.saveAll(Objects.requireNonNull(lineas.stream().map(this::toEntity).toList())).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
     
     @Override
     public Optional<ProductoPedido> findById(UUID productoPedidoId) {
-        return jpa.findById(productoPedidoId).map(this::toDomain);
+        return jpa.findById(Objects.requireNonNull(productoPedidoId)).map(this::toDomain);
     }
     
     @Override
     public List<ProductoPedido> findByPedidoId(UUID pedidoId) {
-        return jpa.findByPedidoId(pedidoId).stream()
+        return jpa.findByPedidoId(Objects.requireNonNull(pedidoId)).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
     
     @Override
     public void update(ProductoPedido productoPedido) {
-        jpa.save(toEntity(productoPedido));
+        jpa.save(Objects.requireNonNull(toEntity(productoPedido)));
     }
     
     private ProductoPedidoJpaEntity toEntity(ProductoPedido pp) {

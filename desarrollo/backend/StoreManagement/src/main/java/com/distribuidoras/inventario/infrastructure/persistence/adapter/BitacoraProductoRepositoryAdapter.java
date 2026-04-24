@@ -7,10 +7,11 @@ import com.distribuidoras.inventario.infrastructure.persistence.repository.Bitac
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.UUID;
+import java.util.Objects;
 
 /**
  * Adaptador que implementa el puerto BitacoraProductoRepository del dominio.
+ * Formato skuIdRef: SKU-001, SKU-012, SKU-111, etc.
  */
 @Component
 public class BitacoraProductoRepositoryAdapter implements BitacoraProductoRepository {
@@ -24,12 +25,12 @@ public class BitacoraProductoRepositoryAdapter implements BitacoraProductoReposi
     @Override
     public BitacoraProducto save(BitacoraProducto bitacora) {
         BitacoraProductoJpaEntity entity = toEntity(bitacora);
-        BitacoraProductoJpaEntity saved = jpaRepository.save(entity);
+        BitacoraProductoJpaEntity saved = jpaRepository.save(Objects.requireNonNull(entity));
         return toDomain(saved);
     }
 
     @Override
-    public List<BitacoraProducto> findBySkuIdRef(UUID skuIdRef) {
+    public List<BitacoraProducto> findBySkuIdRef(String skuIdRef) {
         return jpaRepository.findBySkuIdRefOrderByFechaDesc(skuIdRef).stream()
                 .map(this::toDomain)
                 .toList();

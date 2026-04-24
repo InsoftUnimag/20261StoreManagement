@@ -5,6 +5,7 @@ import com.distribuidoras.inventario.domain.repository.ExcepcionInventarioReposi
 import com.distribuidoras.inventario.domain.repository.LoteRepository;
 import com.distribuidoras.inventario.domain.repository.MovimientoInventarioRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoRepository;
+import com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository;
 import com.distribuidoras.inventario.infrastructure.web.dto.AlertasDTO;
 import com.distribuidoras.inventario.infrastructure.web.dto.MovimientosHoyDTO;
 import com.distribuidoras.inventario.infrastructure.web.dto.ResumenInventarioDTO;
@@ -15,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 /**
  * Use Case: Dashboard con resumen general de inventario.
@@ -33,15 +33,18 @@ public class ConsultarResumenInventarioUseCase {
     private final LoteRepository loteRepository;
     private final MovimientoInventarioRepository movimientoRepository;
     private final ExcepcionInventarioRepository excepcionRepository;
+    private final StockGlobalSkuJpaRepository stockGlobalSkuRepository;
 
     public ConsultarResumenInventarioUseCase(ProductoRepository productoRepository,
                                               LoteRepository loteRepository,
                                               MovimientoInventarioRepository movimientoRepository,
-                                              ExcepcionInventarioRepository excepcionRepository) {
+                                              ExcepcionInventarioRepository excepcionRepository,
+                                              StockGlobalSkuJpaRepository stockGlobalSkuRepository) {
         this.productoRepository = productoRepository;
         this.loteRepository = loteRepository;
         this.movimientoRepository = movimientoRepository;
         this.excepcionRepository = excepcionRepository;
+        this.stockGlobalSkuRepository = stockGlobalSkuRepository;
     }
 
     /**
@@ -90,9 +93,8 @@ public class ConsultarResumenInventarioUseCase {
         // Lotes próximos a vencer (30 días)
         Integer proximosVencer = loteRepository.countLotesExpiringWithinDays(UMBRAL_VENCIMIENTO_DIAS);
 
-        // SKUs con stock bajo (umbral configurable, ej: 50 units - this is a simplified version)
-        // In a real scenario, you'd want a specific query for this
-        Integer stockBajo = 0; // Placeholder - would need additional repository method
+        // SKUs con stock bajo (umbral configurable, ej: 50 units - THIS REPLACES THE HARDCODED 0)
+        Integer stockBajo = stockGlobalSkuRepository.countByDisponiblesLessThan(50);
 
         // Excepciones abiertas
         Integer excepcionesAbiertas = excepcionRepository.countOpenExceptions();

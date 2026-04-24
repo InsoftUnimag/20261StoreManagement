@@ -1,6 +1,5 @@
 package com.distribuidoras.inventario.infrastructure.web.controller;
 
-import com.distribuidoras.inventario.application.usecase.*;
 import com.distribuidoras.inventario.domain.model.*;
 import com.distribuidoras.inventario.domain.repository.*;
 import com.distribuidoras.inventario.infrastructure.web.dto.*;
@@ -11,9 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 /**
  * REST Controller for external modules (Transporte/Financiero) to query pedido details.
@@ -32,21 +29,15 @@ public class ExternalPedidosController {
     private final ProductoPedidoRepository productoPedidoRepository;
     private final ProductoRepository productoRepository;
     private final ClienteServicePort clienteServicePort;
-    private final LoteComprometidoRepository loteComprometidoRepository;
-    private final LoteRepository loteRepository;
 
     public ExternalPedidosController(PedidoRepository pedidoRepository,
                                       ProductoPedidoRepository productoPedidoRepository,
                                       ProductoRepository productoRepository,
-                                      ClienteServicePort clienteServicePort,
-                                      LoteComprometidoRepository loteComprometidoRepository,
-                                      LoteRepository loteRepository) {
+                                      ClienteServicePort clienteServicePort) {
         this.pedidoRepository = pedidoRepository;
         this.productoPedidoRepository = productoPedidoRepository;
         this.productoRepository = productoRepository;
         this.clienteServicePort = clienteServicePort;
-        this.loteComprometidoRepository = loteComprometidoRepository;
-        this.loteRepository = loteRepository;
     }
 
     /**
@@ -130,7 +121,7 @@ public class ExternalPedidosController {
                 BigDecimal.ZERO;
         
         return LineaExternalDTO.builder()
-                .skuId(linea.getSkuId().toString())
+                .skuId(linea.getSkuId())
                 .marca(producto != null ? producto.getMarca() : "N/A")
                 .presentacion(producto != null ? producto.getPresentacion() : "N/A")
                 .cantidadSolicitada(linea.getCantidadSolicitada())

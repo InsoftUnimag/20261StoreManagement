@@ -1,6 +1,5 @@
 package com.distribuidoras.inventario.infrastructure.web.dto;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 /**

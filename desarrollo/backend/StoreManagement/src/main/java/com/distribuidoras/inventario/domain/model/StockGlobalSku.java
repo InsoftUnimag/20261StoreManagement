@@ -1,52 +1,32 @@
 package com.distribuidoras.inventario.domain.model;
 
-import java.util.UUID;
+import jakarta.validation.constraints.*;
+import lombok.*;
 
+/**
+ * Entidad de dominio para stock global por SKU.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
+ */
+@Getter
+@Setter
+@Builder(toBuilder = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class StockGlobalSku {
-    private UUID skuId;
+
+    @NotBlank(message = "El SKU no puede estar vacío")
+    @Size(max = 20, message = "El SKU no puede exceder 20 caracteres")
+    private String skuId;
+
+    @NotNull(message = "La cantidad disponible no puede ser nula")
+    @Min(value = 0, message = "La cantidad disponible no puede ser negativa")
     private Integer disponibles;
+
+    @NotNull(message = "La cantidad comprometida no puede ser nula")
+    @Min(value = 0, message = "La cantidad comprometida no puede ser negativa")
     private Integer comprometidos;
+
+    @NotNull(message = "El stock físico total no puede ser nula")
+    @Min(value = 0, message = "El stock físico total no puede ser negativo")
     private Integer fisicoTotal;
-
-    public StockGlobalSku() {
-    }
-
-    public StockGlobalSku(UUID skuId, Integer disponibles, Integer comprometidos, Integer fisicoTotal) {
-        this.skuId = skuId;
-        this.disponibles = disponibles;
-        this.comprometidos = comprometidos;
-        this.fisicoTotal = fisicoTotal;
-    }
-
-    public UUID getSkuId() {
-        return skuId;
-    }
-
-    public void setSkuId(UUID skuId) {
-        this.skuId = skuId;
-    }
-
-    public Integer getDisponibles() {
-        return disponibles;
-    }
-
-    public void setDisponibles(Integer disponibles) {
-        this.disponibles = disponibles;
-    }
-
-    public Integer getComprometidos() {
-        return comprometidos;
-    }
-
-    public void setComprometidos(Integer comprometidos) {
-        this.comprometidos = comprometidos;
-    }
-
-    public Integer getFisicoTotal() {
-        return fisicoTotal;
-    }
-
-    public void setFisicoTotal(Integer fisicoTotal) {
-        this.fisicoTotal = fisicoTotal;
-    }
 }

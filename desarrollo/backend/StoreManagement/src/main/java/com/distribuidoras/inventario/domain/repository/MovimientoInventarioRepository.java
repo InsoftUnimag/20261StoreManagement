@@ -5,8 +5,11 @@ import com.distribuidoras.inventario.domain.model.enums.TipoMovimiento;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
+/**
+ * Puerto del dominio para MovimientoInventario.
+ * Formato skuId: SKU-001, SKU-012, SKU-111, etc.
+ */
 public interface MovimientoInventarioRepository {
     MovimientoInventario save(MovimientoInventario movimiento);
     List<MovimientoInventario> findByLoteId(String codigoLote);
@@ -16,7 +19,7 @@ public interface MovimientoInventarioRepository {
      * All parameters are optional - null means no filter.
      */
     List<MovimientoInventario> findByFilters(
-            UUID skuId,
+            String skuId,
             String codigoLote,
             TipoMovimiento tipoMovimiento,
             LocalDateTime fechaDesde,
@@ -29,7 +32,7 @@ public interface MovimientoInventarioRepository {
      * Count movements matching filters.
      */
     Long countByFilters(
-            UUID skuId,
+            String skuId,
             String codigoLote,
             TipoMovimiento tipoMovimiento,
             LocalDateTime fechaDesde,

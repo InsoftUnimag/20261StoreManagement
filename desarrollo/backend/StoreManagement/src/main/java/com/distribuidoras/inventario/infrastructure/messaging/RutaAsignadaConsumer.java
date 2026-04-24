@@ -3,7 +3,6 @@ package com.distribuidoras.inventario.infrastructure.messaging;
 import com.distribuidoras.inventario.application.usecase.ComprometerInventarioUseCase;
 import com.distribuidoras.inventario.application.usecase.ComprometerInventarioUseCase.ComprometerCommand;
 import com.distribuidoras.inventario.application.usecase.ComprometerInventarioUseCase.ComprometerResult;
-import com.distribuidoras.inventario.domain.repository.PedidoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -22,12 +21,9 @@ public class RutaAsignadaConsumer {
     private static final Logger log = LoggerFactory.getLogger(RutaAsignadaConsumer.class);
 
     private final ComprometerInventarioUseCase comprometerInventarioUseCase;
-    private final PedidoRepository pedidoRepository;
 
-    public RutaAsignadaConsumer(ComprometerInventarioUseCase comprometerInventarioUseCase,
-                                 PedidoRepository pedidoRepository) {
+    public RutaAsignadaConsumer(ComprometerInventarioUseCase comprometerInventarioUseCase) {
         this.comprometerInventarioUseCase = comprometerInventarioUseCase;
-        this.pedidoRepository = pedidoRepository;
     }
 
     /**

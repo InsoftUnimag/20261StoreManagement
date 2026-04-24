@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * Caso de uso: Crear Producto (SKU).
@@ -38,9 +37,13 @@ public class CrearProductoUseCase {
             throw new ProductoDuplicadoException(marca, presentacion);
         }
 
-        // FR-003: Generar SKU único automáticamente
+        // FR-003: Generar SKU único automáticamente (formato: SKU-001, SKU-002, etc.)
+        String siguienteSku = productoRepository.findMaxSkuNumero()
+                .map(max -> String.format("SKU-%03d", max + 1))
+                .orElse("SKU-001");
+
         Producto producto = new Producto();
-        producto.setSkuId(UUID.randomUUID());
+        producto.setSkuId(siguienteSku);
         producto.setMarca(marca);
         producto.setPresentacion(presentacion);
         producto.setContenidoMl(contenidoMl);

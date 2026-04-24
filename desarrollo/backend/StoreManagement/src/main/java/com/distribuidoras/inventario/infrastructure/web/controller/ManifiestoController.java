@@ -40,16 +40,18 @@ public class ManifiestoController {
     /**
      * GET /api/v1/manifiestos
      * Listar manifiestos con filtros opcionales.
+     * GAP-08: Parametro incluirHistorico para ver historial completo (supervisor) o solo pendientes (operario).
      */
     @GetMapping
     public ResponseEntity<List<ManifiestoResumenDTO>> listarManifiestos(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaDesde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaHasta,
-            @RequestParam(required = false) String estado) {
+            @RequestParam(required = false) String estado,
+            @RequestParam(defaultValue = "false") boolean incluirHistorico) {
         
-        log.info("REST: Listando manifiestos con filtros");
+        log.info("REST: Listando manifiestos con filtros - incluirHistorico={}", incluirHistorico);
         
-        FiltrosManifiestoDTO filtros = new FiltrosManifiestoDTO(fechaDesde, fechaHasta, estado);
+        FiltrosManifiestoDTO filtros = new FiltrosManifiestoDTO(fechaDesde, fechaHasta, estado, incluirHistorico);
         List<ManifiestoResumenDTO> manifiestos = listarManifiestosUseCase.ejecutar(filtros);
         
         if (manifiestos.isEmpty()) {

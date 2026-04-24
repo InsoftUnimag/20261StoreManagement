@@ -40,7 +40,7 @@ public class ExcepcionController {
         RegistrarExcepcionUseCase.ExcepcionCommand command = new RegistrarExcepcionUseCase.ExcepcionCommand(
                 TipoExcepcion.valueOf(request.tipoExcepcion),
                 request.skuId, request.codigoLote, request.cantidadAfectada,
-                request.descripcion, request.evidenciaUrl, request.operarioId);
+                request.descripcion, request.evidenciaUrl, request.operarioId.toString());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(registrarExcepcionUseCase.ejecutar(command));
     }
@@ -49,7 +49,7 @@ public class ExcepcionController {
     @GetMapping
     public ResponseEntity<List<ExcepcionInventario>> consultarExcepciones(
             @RequestParam(required = false) String tipo,
-            @RequestParam(required = false) UUID skuId) {
+            @RequestParam(required = false) String skuId) {
         log.info("GET /api/v1/excepciones - tipo={}, sku={}", tipo, skuId);
 
         TipoExcepcion tipoEnum = tipo != null ? TipoExcepcion.valueOf(tipo) : null;
@@ -69,8 +69,8 @@ public class ExcepcionController {
     public static class ExcepcionRequestDto {
         @NotBlank(message = "El tipo de excepción es obligatorio")
         public String tipoExcepcion;
-        @NotNull(message = "El SKU es obligatorio")
-        public UUID skuId;
+        @NotBlank(message = "El SKU es obligatorio")
+        public String skuId;
         public String codigoLote;
         @Positive(message = "La cantidad afectada debe ser mayor a cero")
         public int cantidadAfectada;
