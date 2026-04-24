@@ -14,6 +14,70 @@ Implementación del registro de recepción de mercancía contra manifiestos y ge
 
 ---
 
+## Arquitectura y Estructura de Archivos
+
+Al aplicar **Clean Architecture**, se tienen tres capas concéntricas:
+
+```
+┌───────────────────────────────────────┐
+│         infrastructure                │  ← Controllers REST, JPA, Colas, Config
+│  ┌─────────────────────────────────┐  │
+│  │         application             │  │  ← Use Cases (lógica de aplicación)
+│  │  ┌───────────────────────────┐  │  │
+│  │  │         domain            │  │  │  ← Entities, Ports, Excepciones
+│  │  └───────────────────────────┘  │  │
+│  └─────────────────────────────────┘  │
+└───────────────────────────────────────┘
+```
+
+La estructura específica para este componente implementada es:
+
+```
+├── domain/                      # Entidades, puertos (interfaces), excepciones
+│   ├── model/
+│   │   ├── Recepcion.java       # Entidad Recepciones e Inventario atómico
+│   │   ├── Lote.java
+│   │   ├── MovimientoInventario.java
+│   │   └── ExcepcionInventario.java
+│   ├── repository/
+│   │   ├── RecepcionRepository.java
+│   │   ├── LoteRepository.java
+│   │   ├── MovimientoInventarioRepository.java
+│   │   └── ExcepcionInventarioRepository.java
+│   └── exception/
+│       ├── LoteDuplicadoException.java
+│       └── ExcepcionNotFoundException.java
+├── application/                 # Casos de uso (@Service)
+│   └── usecase/
+│       ├── RegistrarRecepcionUseCase.java # Lógica de Atomeridad Recepcion/Lotes
+│       ├── RegistrarExcepcionUseCase.java
+│       ├── ConsultarExcepcionesUseCase.java
+│       └── ConsultarDetalleExcepcionUseCase.java
+└── infrastructure/
+    ├── web/
+    │   ├── controller/
+    │   │   ├── RecepcionController.java # Endpoints de registro
+    │   │   └── ExcepcionController.java
+    └── persistence/             # Entidades JPA + Repositories + Adapters
+        ├── entity/
+        │   ├── RecepcionJpaEntity.java
+        │   ├── LoteJpaEntity.java
+        │   ├── MovimientoInventarioJpaEntity.java
+        │   └── ExcepcionInventarioJpaEntity.java
+        ├── repository/
+        │   ├── RecepcionJpaRepository.java
+        │   ├── LoteJpaRepository.java
+        │   ├── MovimientoInventarioJpaRepository.java
+        │   └── ExcepcionInventarioJpaRepository.java
+        └── adapter/
+            ├── RecepcionRepositoryAdapter.java
+            ├── LoteRepositoryAdapter.java
+            ├── MovimientoInventarioRepositoryAdapter.java
+            └── ExcepcionInventarioRepositoryAdapter.java
+```
+
+---
+
 ## Dependencies
 
 **Blocked by**:
