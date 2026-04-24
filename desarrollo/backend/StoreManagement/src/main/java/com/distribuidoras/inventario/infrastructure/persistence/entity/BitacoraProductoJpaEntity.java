@@ -10,7 +10,10 @@ import java.time.LocalDateTime;
  * Formato skuIdRef: SKU-001, SKU-012, SKU-111, etc.
  */
 @Entity
-@Table(name = "bitacora_producto")
+@Table(name = "bitacora_producto", indexes = {
+    @Index(name = "idx_bitacora_sku", columnList = "sku_id_ref"),
+    @Index(name = "idx_bitacora_fecha", columnList = "fecha")
+})
 @Getter
 @Setter
 @NoArgsConstructor

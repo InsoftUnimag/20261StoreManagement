@@ -1,6 +1,7 @@
 package com.distribuidoras.inventario.domain.model;
 
 import com.distribuidoras.inventario.domain.model.enums.EstadoPedido;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -22,14 +23,21 @@ public class Pedido {
     @EqualsAndHashCode.Include
     private UUID pedidoId;
     
+    @NotBlank(message = "El número de pedido no puede estar vacío")
+    @Size(max = 50, message = "El número de pedido no puede exceder 50 caracteres")
     private String numeroPedido;
     
+    @NotBlank(message = "La cédula del cliente no puede estar vacía")
+    @Size(max = 50, message = "La cédula no puede exceder 50 caracteres")
     private String clienteCc;
 
+    @Size(max = 200, message = "El nombre del cliente no puede exceder 200 caracteres")
     private String clienteNombre;
     
+    @NotNull(message = "La fecha de creación no puede ser nula")
     private LocalDateTime fechaCreacion;
     
+    @NotNull(message = "El estado del pedido no puede ser nulo")
     private EstadoPedido estado;
     
     private UUID rutaId;

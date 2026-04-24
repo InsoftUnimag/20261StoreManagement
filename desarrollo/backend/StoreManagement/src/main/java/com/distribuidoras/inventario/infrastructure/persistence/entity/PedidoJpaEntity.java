@@ -2,18 +2,26 @@ package com.distribuidoras.inventario.infrastructure.persistence.entity;
 
 import com.distribuidoras.inventario.domain.model.enums.EstadoPedido;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "pedidos")
+@Table(name = "pedidos", indexes = {
+    @Index(name = "idx_pedido_numero", columnList = "numero_pedido"),
+    @Index(name = "idx_pedido_cliente", columnList = "cliente_cc"),
+    @Index(name = "idx_pedido_estado", columnList = "estado"),
+    @Index(name = "idx_pedido_fecha_creacion", columnList = "fecha_creacion")
+}, uniqueConstraints = {
+    @UniqueConstraint(name = "uk_pedido_numero", columnNames = "numero_pedido")
+})
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 public class PedidoJpaEntity {
     
     @Id
