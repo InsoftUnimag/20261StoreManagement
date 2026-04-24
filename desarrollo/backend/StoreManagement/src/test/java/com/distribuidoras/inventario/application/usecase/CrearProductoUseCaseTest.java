@@ -34,19 +34,19 @@ class CrearProductoUseCaseTest {
     @DisplayName("Crear producto exitoso - genera SKU formato SKU-001 y guarda con stock 0")
     void crearProducto_exitoso() {
         // Given
-        when(productoRepository.existsByMarcaAndPresentacion("Pilsen", "Six-pack")).thenReturn(false);
+        when(productoRepository.existsByMarcaAndPresentacion("PILSEN", "SIX-PACK")).thenReturn(false);
         when(productoRepository.findMaxSkuNumero()).thenReturn(java.util.Optional.of(0));
         when(productoRepository.save(any(Producto.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
-        Producto resultado = useCase.ejecutar("Pilsen", "Six-pack", 330, new BigDecimal("2.5"));
+        Producto resultado = useCase.ejecutar("PILSEN", "SIX-PACK", 330, new BigDecimal("2.5"));
 
         // Then
         assertThat(resultado).isNotNull();
         assertThat(resultado.getSkuId()).isNotNull();
         assertThat(resultado.getSkuId()).startsWith("SKU-");
-        assertThat(resultado.getMarca()).isEqualTo("Pilsen");
-        assertThat(resultado.getPresentacion()).isEqualTo("Six-pack");
+        assertThat(resultado.getMarca()).isEqualTo("PILSEN");
+        assertThat(resultado.getPresentacion()).isEqualTo("SIX-PACK");
         assertThat(resultado.getContenidoMl()).isEqualTo(330);
         assertThat(resultado.getPesoLogisticoKg()).isEqualByComparingTo(new BigDecimal("2.5"));
         assertThat(resultado.getCreadoEl()).isNotNull();
@@ -61,13 +61,13 @@ class CrearProductoUseCaseTest {
     @DisplayName("Crear producto duplicado - lanza ProductoDuplicadoException (SC-003)")
     void crearProducto_duplicado_lanzaExcepcion() {
         // Given
-        when(productoRepository.existsByMarcaAndPresentacion("Pilsen", "Six-pack")).thenReturn(true);
+        when(productoRepository.existsByMarcaAndPresentacion("PILSEN", "SIX-PACK")).thenReturn(true);
 
         // When / Then
-        assertThatThrownBy(() -> useCase.ejecutar("Pilsen", "Six-pack", 330, new BigDecimal("2.5")))
+        assertThatThrownBy(() -> useCase.ejecutar("PILSEN", "SIX-PACK", 330, new BigDecimal("2.5")))
                 .isInstanceOf(ProductoDuplicadoException.class)
-                .hasMessageContaining("Pilsen")
-                .hasMessageContaining("Six-pack");
+                .hasMessageContaining("PILSEN")
+                .hasMessageContaining("SIX-PACK");
 
         // Verificar que NO se intentó guardar
         verify(productoRepository, never()).save(any());
@@ -77,16 +77,16 @@ class CrearProductoUseCaseTest {
     @DisplayName("Misma marca, diferente presentación - son productos distintos")
     void crearProducto_mismaMarca_diferentePresentacion_exitoso() {
         // Given - misma marca pero diferente presentación
-        when(productoRepository.existsByMarcaAndPresentacion("Pilsen", "Unidad")).thenReturn(false);
+        when(productoRepository.existsByMarcaAndPresentacion("PILSEN", "UNIDAD")).thenReturn(false);
         when(productoRepository.save(any(Producto.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
-        Producto resultado = useCase.ejecutar("Pilsen", "Unidad", 330, new BigDecimal("0.5"));
+        Producto resultado = useCase.ejecutar("PILSEN", "UNIDAD", 330, new BigDecimal("0.5"));
 
         // Then
         assertThat(resultado).isNotNull();
-        assertThat(resultado.getMarca()).isEqualTo("Pilsen");
-        assertThat(resultado.getPresentacion()).isEqualTo("Unidad");
+        assertThat(resultado.getMarca()).isEqualTo("PILSEN");
+        assertThat(resultado.getPresentacion()).isEqualTo("UNIDAD");
     }
 
     @Test

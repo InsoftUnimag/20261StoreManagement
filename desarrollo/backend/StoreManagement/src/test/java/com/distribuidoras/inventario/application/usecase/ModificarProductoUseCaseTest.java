@@ -42,8 +42,8 @@ class ModificarProductoUseCaseTest {
     private Producto crearProductoExistente() {
         return Producto.builder()
                 .skuId("SKU-001")
-                .marca("Pilsen")
-                .presentacion("Six-pack")
+                .marca("PILSEN")
+                .presentacion("SIX-PACK")
                 .contenidoMl(330)
                 .pesoLogisticoKg(new BigDecimal("2.5"))
                 .creadoEl(LocalDateTime.of(2026, 4, 3, 19, 30))
@@ -99,7 +99,7 @@ class ModificarProductoUseCaseTest {
         String skuId = "SKU-001";
         when(productoRepository.findById(skuId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> useCase.ejecutar(skuId, "Aguila", null, null, null, null))
+        assertThatThrownBy(() -> useCase.ejecutar(skuId, "AGUILA", null, null, null, null))
                 .isInstanceOf(ProductoNotFoundException.class);
     }
 
@@ -110,10 +110,10 @@ class ModificarProductoUseCaseTest {
         String skuId = existente.getSkuId();
 
         when(productoRepository.findById(skuId)).thenReturn(Optional.of(existente));
-        when(productoRepository.existsByMarcaAndPresentacionAndSkuIdNot("Aguila", "Six-pack", skuId))
+        when(productoRepository.existsByMarcaAndPresentacionAndSkuIdNot("AGUILA", "SIX-PACK", "SKU-001"))
                 .thenReturn(true);
 
-        assertThatThrownBy(() -> useCase.ejecutar(skuId, "Aguila", null, null, null, null))
+        assertThatThrownBy(() -> useCase.ejecutar(skuId, "AGUILA", null, null, null, null))
                 .isInstanceOf(ProductoDuplicadoException.class);
     }
 }

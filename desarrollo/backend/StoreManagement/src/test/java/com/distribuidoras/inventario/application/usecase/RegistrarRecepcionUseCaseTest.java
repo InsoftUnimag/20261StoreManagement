@@ -14,7 +14,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -33,7 +32,7 @@ class RegistrarRecepcionUseCaseTest {
     @Mock private ProductoRepository productoRepository;
     @Mock private ManifiestoRepository manifiestoRepository;
     @Mock private DetalleManifiestoRepository detalleManifiestoRepository;
-@Mock private ExcepcionInventarioRepository excepcionRepository;
+    @Mock private ExcepcionInventarioRepository excepcionRepository;
     @Mock private StockGlobalSkuJpaRepository stockGlobalSkuRepository;
 
     private RegistrarRecepcionUseCase useCase;
@@ -52,8 +51,9 @@ class RegistrarRecepcionUseCaseTest {
     @Test
     @DisplayName("Recepción exitosa sin manifiesto crea lote y movimiento")
     void recepcionExitosa_sinManifiesto() {
-        Producto producto = new Producto(skuId, "Pilsen", "Six-pack", 330,
-                new BigDecimal("2.5"), LocalDateTime.now());
+        // ANTES: new Producto(...)
+        Producto producto = Producto.crear(skuId, "Pilsen", "Six-pack", 330, new BigDecimal("2.5"));
+        
         when(productoRepository.findById(skuId)).thenReturn(Optional.of(producto));
         when(loteRepository.findBySkuIdAndCodigoLoteAndFechaVencimiento(any(), any(), any()))
                 .thenReturn(Optional.empty());
@@ -96,8 +96,7 @@ class RegistrarRecepcionUseCaseTest {
     @Test
     @DisplayName("Fecha de vencimiento no futura lanza IllegalArgumentException")
     void recepcion_fechaVencimientoPasada() {
-        Producto producto = new Producto(skuId, "Pilsen", "Six-pack", 330,
-                new BigDecimal("2.5"), LocalDateTime.now());
+        Producto producto = Producto.crear(skuId, "Pilsen", "Six-pack", 330, new BigDecimal("2.5"));
         when(productoRepository.findById(skuId)).thenReturn(Optional.of(producto));
 
         var command = new RegistrarRecepcionUseCase.RecepcionCommand(
@@ -113,8 +112,8 @@ class RegistrarRecepcionUseCaseTest {
     @DisplayName("Recepción con manifiesto y discrepancia genera excepción automática")
     void recepcion_conManifiesto_discrepancia() {
         UUID manifiestoId = UUID.randomUUID();
-        Producto producto = new Producto(skuId, "Pilsen", "Six-pack", 330,
-                new BigDecimal("2.5"), LocalDateTime.now());
+        Producto producto = Producto.crear(skuId, "Pilsen", "Six-pack", 330, new BigDecimal("2.5"));
+        
         when(productoRepository.findById(skuId)).thenReturn(Optional.of(producto));
         when(loteRepository.findBySkuIdAndCodigoLoteAndFechaVencimiento(any(), any(), any()))
                 .thenReturn(Optional.empty());
@@ -123,7 +122,6 @@ class RegistrarRecepcionUseCaseTest {
         when(movimientoRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(excepcionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        // Manifiesto espera 250, recibimos 240 → diferencia de -10
         DetalleManifiesto detalle = new DetalleManifiesto(UUID.randomUUID(), manifiestoId, skuId, 250, 0);
         when(detalleManifiestoRepository.findByManifiestoId(manifiestoId)).thenReturn(Objects.requireNonNull(List.of(detalle)));
         when(detalleManifiestoRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));

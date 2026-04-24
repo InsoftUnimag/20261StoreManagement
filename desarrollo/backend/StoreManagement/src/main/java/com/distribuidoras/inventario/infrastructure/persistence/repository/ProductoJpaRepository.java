@@ -48,7 +48,7 @@ public interface ProductoJpaRepository extends JpaRepository<ProductoJpaEntity, 
     Integer countActiveSkus();
 
     /**
-     * Find maximum SKU number from all products (extracts number from format "SKU-XXX").
+     * Find maximum SKU number from all products (extracts number from format "SKU-***").
      * Returns null if no products exist.
      */
     @Query("SELECT MAX(CAST(SUBSTRING(p.skuId, 5) AS int)) FROM ProductoJpaEntity p WHERE p.skuId LIKE 'SKU-%'")

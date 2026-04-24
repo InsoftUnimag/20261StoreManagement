@@ -1,29 +1,46 @@
 package com.distribuidoras.inventario.domain.model;
 
-import lombok.*;
-
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
-/**
- * Entidad de dominio: Producto (SKU).
- * Representa una referencia comercial en el catálogo.
- * Formato SKU: SKU-001, SKU-012, SKU-111, etc.
- */
 @Getter
-@Setter
-@Builder(toBuilder = true)
-@NoArgsConstructor
-@AllArgsConstructor
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Producto {
 
     @EqualsAndHashCode.Include
-    private String skuId;
-    private String marca;
-    private String presentacion;
-    private Integer contenidoMl;
-    private BigDecimal pesoLogisticoKg;
-    private LocalDateTime creadoEl;
-}
+    private final String skuId;
+    private final String marca;
+    private final String presentacion;
+    private final Integer contenidoMl;
+    private final BigDecimal pesoLogisticoKg;
+    private final LocalDateTime creadoEl;
 
+    public static Producto crear(String skuId, String marca, String presentacion,
+                                 Integer contenidoMl, BigDecimal pesoLogisticoKg) {
+        
+        String m = Objects.requireNonNull(marca, "marca obligatoria").trim().toUpperCase();
+        String p = Objects.requireNonNull(presentacion, "presentacion obligatoria").trim().toUpperCase();
+        
+        if (m.isEmpty() || p.isEmpty()) throw new IllegalArgumentException("marca/presentacion vacías");
+        if (contenidoMl == null || contenidoMl <= 0) throw new IllegalArgumentException("contenidoMl > 0");
+        if (pesoLogisticoKg == null || pesoLogisticoKg.compareTo(BigDecimal.ZERO) <= 0) 
+            throw new IllegalArgumentException("pesoLogisticoKg > 0");
+
+        return Producto.builder()
+                .skuId(Objects.requireNonNull(skuId))
+                .marca(m)
+                .presentacion(p)
+                .contenidoMl(contenidoMl)
+                .pesoLogisticoKg(pesoLogisticoKg)
+                .creadoEl(LocalDateTime.now())
+                .build();
+    }
+}

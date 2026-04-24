@@ -8,15 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-
-/**
- * Caso de uso: Crear Producto (SKU).
- * Spec: 01_crear_plantilla_producto.md
- *
- * Valida que no exista duplicado por marca + presentación,
- * genera SKU único y guarda el producto con stock inicial = 0.
- */
 @Service
 public class CrearProductoUseCase {
 
@@ -30,25 +21,25 @@ public class CrearProductoUseCase {
 
     @Transactional
     public Producto ejecutar(String marca, String presentacion, Integer contenidoMl,
-                             java.math.BigDecimal pesoLogisticoKg) {
+            java.math.BigDecimal pesoLogisticoKg) {
 
-        // FR-005: Validar que no exista combinación marca + presentación
-        if (productoRepository.existsByMarcaAndPresentacion(marca, presentacion)) {
-            throw new ProductoDuplicadoException(marca, presentacion);
+        // 1. Normaliza una sola vez
+        String marcaNorm = marca.trim().toUpperCase();
+        String presNorm = presentacion.trim().toUpperCase();
+
+        // 2. Valida duplicado con los valores normalizados
+        if (productoRepository.existsByMarcaAndPresentacion(marcaNorm, presNorm)) {
+            throw new ProductoDuplicadoException(marcaNorm, presNorm);
         }
 
-        // FR-003: Generar SKU único automáticamente (formato: SKU-001, SKU-002, etc.)
+        // 3. Genera SKU
         String siguienteSku = productoRepository.findMaxSkuNumero()
                 .map(max -> String.format("SKU-%03d", max + 1))
                 .orElse("SKU-001");
 
-        Producto producto = new Producto();
-        producto.setSkuId(siguienteSku);
-        producto.setMarca(marca);
-        producto.setPresentacion(presentacion);
-        producto.setContenidoMl(contenidoMl);
-        producto.setPesoLogisticoKg(pesoLogisticoKg);
-        producto.setCreadoEl(LocalDateTime.now());
+        // 4. Crea con los valores ya normalizados (Producto.crear los vuelve a
+        // normalizar, no pasa nada)
+        Producto producto = Producto.crear(siguienteSku, marcaNorm, presNorm, contenidoMl, pesoLogisticoKg);
 
         Producto guardado = productoRepository.save(producto);
 

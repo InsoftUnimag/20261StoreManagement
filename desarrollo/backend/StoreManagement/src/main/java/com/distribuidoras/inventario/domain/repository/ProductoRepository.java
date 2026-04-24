@@ -45,7 +45,7 @@ public interface ProductoRepository {
 
     /**
      * Find the maximum SKU number from all products (for auto-increment).
-     * Extracts number from format "SKU-XXX" and returns it.
+     * Extracts number from format "SKU-***" and returns it.
      */
     Optional<Integer> findMaxSkuNumero();
 }
