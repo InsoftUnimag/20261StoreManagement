@@ -1,13 +1,23 @@
 package com.distribuidoras.inventario.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity @Table(name = "lote")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Entity
+@Table(name = "lote", indexes = {
+    @Index(name = "idx_lote_sku_id", columnList = "sku_id"),
+    @Index(name = "idx_lote_fecha_vencimiento", columnList = "fecha_vencimiento"),
+    @Index(name = "idx_lote_disponible", columnList = "disponible")
+})
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class LoteJpaEntity {
     @Id @Column(name = "codigo_lote", length = 100) private String codigoLote;
     @Column(name = "sku_id", nullable = false, length = 20) private String skuId;

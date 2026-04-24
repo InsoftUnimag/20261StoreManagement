@@ -1,12 +1,22 @@
 package com.distribuidoras.inventario.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity @Table(name = "excepcion_inventario")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Entity
+@Table(name = "excepcion_inventario", indexes = {
+    @Index(name = "idx_excepcion_sku", columnList = "sku_id"),
+    @Index(name = "idx_excepcion_fecha", columnList = "fecha_registro"),
+    @Index(name = "idx_excepcion_lote", columnList = "codigo_lote")
+})
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ExcepcionInventarioJpaEntity {
     @Id @Column(name = "excepcion_id") private UUID excepcionId;
     @Column(name = "tipo_excepcion", nullable = false, length = 30) private String tipoExcepcion;

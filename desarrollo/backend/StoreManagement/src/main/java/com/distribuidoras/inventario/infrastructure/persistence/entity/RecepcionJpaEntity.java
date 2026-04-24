@@ -5,8 +5,16 @@ import lombok.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity @Table(name = "recepcion")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Entity
+@Table(name = "recepcion", indexes = {
+    @Index(name = "idx_recepcion_manifiesto", columnList = "manifiesto_id"),
+    @Index(name = "idx_recepcion_fecha", columnList = "fecha_recepcion")
+})
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class RecepcionJpaEntity {
     @Id @Column(name = "recepcion_id") private UUID recepcionId;
     @Column(name = "manifiesto_id") private UUID manifiestoId;
