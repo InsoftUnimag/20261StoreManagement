@@ -9,6 +9,7 @@ import com.distribuidoras.inventario.domain.repository.PedidoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoPedidoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoRepository;
 import com.distribuidoras.inventario.infrastructure.messaging.PedidoCreadoProducer;
+import com.distribuidoras.inventario.infrastructure.messaging.SolicitudRutaProducer;
 import com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,7 @@ public class RealizarPedidoUseCase {
         private final PedidoRepository pedidoRepository;
         private final ProductoPedidoRepository productoPedidoRepository;
         private final PedidoCreadoProducer pedidoCreadoProducer;
+        private final SolicitudRutaProducer solicitudRutaProducer;
         private final StockGlobalSkuJpaRepository stockGlobalSkuRepository;
 
         public RealizarPedidoUseCase(ConsultarClienteUseCase consultarClienteUseCase,
@@ -50,12 +52,14 @@ public class RealizarPedidoUseCase {
                         PedidoRepository pedidoRepository,
                         ProductoPedidoRepository productoPedidoRepository,
                         PedidoCreadoProducer pedidoCreadoProducer,
+                        SolicitudRutaProducer solicitudRutaProducer,
                         StockGlobalSkuJpaRepository stockGlobalSkuRepository) {
                 this.consultarClienteUseCase = Objects.requireNonNull(consultarClienteUseCase);
                 this.productoRepository = Objects.requireNonNull(productoRepository);
                 this.pedidoRepository = Objects.requireNonNull(pedidoRepository);
                 this.productoPedidoRepository = Objects.requireNonNull(productoPedidoRepository);
                 this.pedidoCreadoProducer = Objects.requireNonNull(pedidoCreadoProducer);
+                this.solicitudRutaProducer = Objects.requireNonNull(solicitudRutaProducer);
                 this.stockGlobalSkuRepository = Objects.requireNonNull(stockGlobalSkuRepository);
         }
 
@@ -132,7 +136,7 @@ public class RealizarPedidoUseCase {
                 pedidoCreadoProducer.publicarPedidoCreado(pedidoGuardado.getPedidoId(), numeroPedido);
 
                 // Spec 13: Solicitar ruta a Módulo 2 Logística
-                pedidoCreadoProducer.solicitarRuta(pedidoGuardado.getPedidoId(), numeroPedido);
+                solicitudRutaProducer.enviarSolicitudRuta(pedidoGuardado.getPedidoId().toString());
 
                 return pedidoGuardado;
         }

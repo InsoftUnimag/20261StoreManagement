@@ -9,6 +9,7 @@ CREATE TABLE producto (
     contenido_ml    INTEGER         NOT NULL,
     peso_logistico_kg DECIMAL(10,3) NOT NULL CHECK (peso_logistico_kg > 0),
     creado_el       TIMESTAMP       NOT NULL DEFAULT NOW(),
+    activo          BOOLEAN         NOT NULL DEFAULT TRUE,
 
     CONSTRAINT uk_producto_marca_presentacion UNIQUE (marca, presentacion)
 );
