@@ -41,14 +41,14 @@ public class ProductoRepositoryAdapter implements ProductoRepository {
 
     @Override
     public List<Producto> findAll() {
-        return jpaRepository.findAll().stream()
+        return jpaRepository.findAllActivos().stream()
                 .map(this::toDomain)
                 .toList();
     }
 
     @Override
     public org.springframework.data.domain.Page<Producto> findAllWithPagination(org.springframework.data.domain.Pageable pageable) {
-        return jpaRepository.findAll(Objects.requireNonNull(pageable)).map(this::toDomain);
+        return jpaRepository.findAllActivos(Objects.requireNonNull(pageable)).map(this::toDomain);
     }
 
     @Override
@@ -110,6 +110,7 @@ public class ProductoRepositoryAdapter implements ProductoRepository {
                 .contenidoMl(domain.getContenidoMl())
                 .pesoLogisticoKg(domain.getPesoLogisticoKg())
                 .creadoEl(domain.getCreadoEl())
+                .activo(domain.isActivo())
                 .build();
     }
 
@@ -121,6 +122,7 @@ public class ProductoRepositoryAdapter implements ProductoRepository {
                 .contenidoMl(entity.getContenidoMl())
                 .pesoLogisticoKg(entity.getPesoLogisticoKg())
                 .creadoEl(entity.getCreadoEl())
+                .activo(entity.isActivo())
                 .build();
     }
 }

@@ -41,4 +41,8 @@ public class ProductoJpaEntity {
 
     @Column(name = "creado_el", nullable = false, updatable = false)
     private LocalDateTime creadoEl;
+
+    @Column(name = "activo", nullable = false)
+    @Builder.Default
+    private boolean activo = true;
 }

@@ -43,5 +43,8 @@ public class Producto {
 
     @NotNull(message = "La fecha de creación no puede ser nula")
     private LocalDateTime creadoEl;
+
+    @Builder.Default
+    private boolean activo = true;
 }
 

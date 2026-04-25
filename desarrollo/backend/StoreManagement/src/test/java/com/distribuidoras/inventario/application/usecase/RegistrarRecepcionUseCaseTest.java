@@ -33,7 +33,7 @@ class RegistrarRecepcionUseCaseTest {
     @Mock private ProductoRepository productoRepository;
     @Mock private ManifiestoRepository manifiestoRepository;
     @Mock private DetalleManifiestoRepository detalleManifiestoRepository;
-@Mock private ExcepcionInventarioRepository excepcionRepository;
+    @Mock private ExcepcionInventarioRepository excepcionRepository;
     @Mock private StockGlobalSkuJpaRepository stockGlobalSkuRepository;
 
     private RegistrarRecepcionUseCase useCase;
@@ -52,8 +52,14 @@ class RegistrarRecepcionUseCaseTest {
     @Test
     @DisplayName("Recepción exitosa sin manifiesto crea lote y movimiento")
     void recepcionExitosa_sinManifiesto() {
-        Producto producto = new Producto(skuId, "Pilsen", "Six-pack", 330,
-                new BigDecimal("2.5"), LocalDateTime.now());
+        Producto producto = Producto.builder()
+                .skuId(skuId)
+                .marca("Pilsen")
+                .presentacion("Six-pack")
+                .contenidoMl(330)
+                .pesoLogisticoKg(new BigDecimal("2.5"))
+                .creadoEl(LocalDateTime.now())
+                .build();
         when(productoRepository.findById(skuId)).thenReturn(Optional.of(producto));
         when(loteRepository.findBySkuIdAndCodigoLoteAndFechaVencimiento(any(), any(), any()))
                 .thenReturn(Optional.empty());
@@ -96,8 +102,14 @@ class RegistrarRecepcionUseCaseTest {
     @Test
     @DisplayName("Fecha de vencimiento no futura lanza IllegalArgumentException")
     void recepcion_fechaVencimientoPasada() {
-        Producto producto = new Producto(skuId, "Pilsen", "Six-pack", 330,
-                new BigDecimal("2.5"), LocalDateTime.now());
+        Producto producto = Producto.builder()
+                .skuId(skuId)
+                .marca("Pilsen")
+                .presentacion("Six-pack")
+                .contenidoMl(330)
+                .pesoLogisticoKg(new BigDecimal("2.5"))
+                .creadoEl(LocalDateTime.now())
+                .build();
         when(productoRepository.findById(skuId)).thenReturn(Optional.of(producto));
 
         var command = new RegistrarRecepcionUseCase.RecepcionCommand(
@@ -113,8 +125,14 @@ class RegistrarRecepcionUseCaseTest {
     @DisplayName("Recepción con manifiesto y discrepancia genera excepción automática")
     void recepcion_conManifiesto_discrepancia() {
         UUID manifiestoId = UUID.randomUUID();
-        Producto producto = new Producto(skuId, "Pilsen", "Six-pack", 330,
-                new BigDecimal("2.5"), LocalDateTime.now());
+        Producto producto = Producto.builder()
+                .skuId(skuId)
+                .marca("Pilsen")
+                .presentacion("Six-pack")
+                .contenidoMl(330)
+                .pesoLogisticoKg(new BigDecimal("2.5"))
+                .creadoEl(LocalDateTime.now())
+                .build();
         when(productoRepository.findById(skuId)).thenReturn(Optional.of(producto));
         when(loteRepository.findBySkuIdAndCodigoLoteAndFechaVencimiento(any(), any(), any()))
                 .thenReturn(Optional.empty());

@@ -96,33 +96,4 @@ public class PedidoCreadoProducer {
             log.error("Error publicando evento pedido.creado para {}: {}", numeroPedido, e.getMessage());
         }
     }
-
-    /**
-     * Publishes a "ruta.solicitar" event to Module 2 (Logística).
-     * Spec 13: Solicitar Ruta
-     * 
-     * @param pedidoId UUID del pedido
-     * @param numeroPedido Número de pedido
-     */
-    public void solicitarRuta(UUID pedidoId, String numeroPedido) {
-        log.info("Solicitando ruta para pedido: {}", numeroPedido);
-
-        Map<String, Object> mensaje = Map.of(
-                "pedido_id", pedidoId.toString(),
-                "numero_pedido", numeroPedido,
-                "estado", "ESPERANDO_RUTA",
-                "timestamp", LocalDateTime.now().toString()
-        );
-
-        try {
-            rabbitTemplate.convertAndSend(
-                    RabbitMQConfig.INVENTARIO_PEDIDOS_EXCHANGE,
-                    RabbitMQConfig.RUTA_SOLICITAR_KEY,
-                    mensaje
-            );
-            log.info("Ruta solicitada exitosamente para: {}", numeroPedido);
-        } catch (Exception e) {
-            log.error("Error solicitando ruta para {}: {}", numeroPedido, e.getMessage());
-        }
-    }
 }

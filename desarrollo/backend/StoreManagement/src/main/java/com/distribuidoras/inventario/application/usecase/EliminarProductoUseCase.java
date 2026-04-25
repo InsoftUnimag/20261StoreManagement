@@ -35,17 +35,21 @@ public class EliminarProductoUseCase {
     @Transactional
     public void ejecutar(String skuId) {
         // Verificar que el producto existe
-        if (productoRepository.findById(skuId).isEmpty()) {
+        var productoOptional = productoRepository.findById(skuId);
+        if (productoOptional.isEmpty()) {
             throw new ProductoNotFoundException(skuId);
         }
+        
+        var producto = productoOptional.get();
 
         // FR-011: Validar que no tenga lotes activos (stock > 0)
         if (loteRepository.existsBySkuIdAndCantidadGreaterThan(skuId, 0)) {
             throw new ProductoConLotesActivosException(skuId);
         }
 
-        productoRepository.deleteById(skuId);
+        producto.setActivo(false);
+        productoRepository.save(producto);
 
-        log.info("Producto eliminado: SKU={}", skuId);
+        log.info("Producto desactivado (borrado lógico): SKU={}", skuId);
     }
 }
