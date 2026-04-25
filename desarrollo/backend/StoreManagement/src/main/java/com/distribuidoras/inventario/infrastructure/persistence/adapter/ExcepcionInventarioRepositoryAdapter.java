@@ -40,7 +40,7 @@ public class ExcepcionInventarioRepositoryAdapter implements ExcepcionInventario
         return ExcepcionInventarioJpaEntity.builder().excepcionId(e.getExcepcionId())
                 .tipoExcepcion(e.getTipoExcepcion().name()).codigoLote(e.getCodigoLote()).skuId(e.getSkuId())
                 .cantidadAfectada(e.getCantidadAfectada()).fechaRegistro(e.getFechaRegistro())
-                .operarioId(UUID.fromString(e.getOperarioId())).descripcion(e.getDescripcion())
+                .operarioId(e.getOperarioId()).descripcion(e.getDescripcion())
                 .evidenciaUrl(e.getEvidenciaUrl()).build();
     }
     private ExcepcionInventario toDomain(ExcepcionInventarioJpaEntity e) {
@@ -51,7 +51,7 @@ public class ExcepcionInventarioRepositoryAdapter implements ExcepcionInventario
                 .skuId(e.getSkuId())
                 .cantidadAfectada(e.getCantidadAfectada())
                 .fechaRegistro(e.getFechaRegistro())
-                .operarioId(e.getOperarioId().toString())
+                .operarioId(e.getOperarioId())
                 .descripcion(e.getDescripcion())
                 .evidenciaUrl(e.getEvidenciaUrl())
                 .build();

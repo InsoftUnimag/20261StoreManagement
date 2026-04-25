@@ -45,6 +45,10 @@ public class Pedido {
     private LocalDateTime fechaCompromiso;
     
     private UUID asesorId;
+    
+    private UUID operarioPickingId;
+    
+    private UUID operarioDespachoId;
 
     /**
      * Validates that the order can transition to the next state.

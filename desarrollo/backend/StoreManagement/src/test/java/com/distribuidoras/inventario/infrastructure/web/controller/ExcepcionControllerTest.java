@@ -100,9 +100,17 @@ class ExcepcionControllerTest {
     @DisplayName("GET /api/v1/excepciones → 200")
     void consultarExcepciones_exitoso() throws Exception {
         UUID excId = UUID.randomUUID();
-        ExcepcionInventario exc = new ExcepcionInventario(excId, TipoExcepcion.AVERIA,
-                null, UUID.randomUUID().toString(), 10, LocalDateTime.now(), UUID.randomUUID().toString(),
-                "Daño", null);
+        ExcepcionInventario exc = ExcepcionInventario.builder()
+                .excepcionId(excId)
+                .tipoExcepcion(TipoExcepcion.AVERIA)
+                .codigoLote(null)
+                .skuId(UUID.randomUUID().toString())
+                .cantidadAfectada(10)
+                .fechaRegistro(LocalDateTime.now())
+                .operarioId(UUID.randomUUID())
+                .descripcion("Daño")
+                .evidenciaUrl(null)
+                .build();
         when(consultarExcepcionesUseCase.ejecutar(null, null)).thenReturn(Objects.requireNonNull(List.of(exc)));
 
         mockMvc.perform(get("/api/v1/excepciones"))
@@ -114,9 +122,17 @@ class ExcepcionControllerTest {
     @DisplayName("GET /api/v1/excepciones/{id} → 200")
     void consultarDetalle_exitoso() throws Exception {
         UUID excId = UUID.randomUUID();
-        ExcepcionInventario exc = new ExcepcionInventario(excId, TipoExcepcion.AVERIA,
-                null, UUID.randomUUID().toString(), 10, LocalDateTime.now(), UUID.randomUUID().toString(),
-                "Daño", null);
+        ExcepcionInventario exc = ExcepcionInventario.builder()
+                .excepcionId(excId)
+                .tipoExcepcion(TipoExcepcion.AVERIA)
+                .codigoLote(null)
+                .skuId(UUID.randomUUID().toString())
+                .cantidadAfectada(10)
+                .fechaRegistro(LocalDateTime.now())
+                .operarioId(UUID.randomUUID())
+                .descripcion("Daño")
+                .evidenciaUrl(null)
+                .build();
         when(consultarDetalleUseCase.ejecutar(excId)).thenReturn(exc);
 
         mockMvc.perform(get("/api/v1/excepciones/{id}", excId))

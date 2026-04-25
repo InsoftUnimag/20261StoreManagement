@@ -3,6 +3,8 @@ package com.distribuidoras.inventario.infrastructure.web.controller;
 import com.distribuidoras.inventario.application.usecase.ConfirmarDespachoUseCase;
 import com.distribuidoras.inventario.application.usecase.ConfirmarDespachoUseCase.*;
 import com.distribuidoras.inventario.application.usecase.ListarPedidosDespachoUseCase;
+import com.distribuidoras.inventario.application.usecase.ListarPedidosAsignadosUseCase;
+import com.distribuidoras.inventario.domain.model.Pedido;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -24,11 +26,14 @@ public class DespachoController {
 
     private final ConfirmarDespachoUseCase confirmarDespachoUseCase;
     private final ListarPedidosDespachoUseCase listarPedidosDespachoUseCase;
+    private final ListarPedidosAsignadosUseCase listarPedidosAsignadosUseCase;
 
     public DespachoController(ConfirmarDespachoUseCase confirmarDespachoUseCase,
-                               ListarPedidosDespachoUseCase listarPedidosDespachoUseCase) {
+                               ListarPedidosDespachoUseCase listarPedidosDespachoUseCase,
+                               ListarPedidosAsignadosUseCase listarPedidosAsignadosUseCase) {
         this.confirmarDespachoUseCase = confirmarDespachoUseCase;
         this.listarPedidosDespachoUseCase = listarPedidosDespachoUseCase;
+        this.listarPedidosAsignadosUseCase = listarPedidosAsignadosUseCase;
     }
 
     /**
@@ -39,6 +44,13 @@ public class DespachoController {
     public ResponseEntity<List<ListarPedidosDespachoUseCase.PedidoDespachoDTO>> listarPedidosParaDespacho() {
         log.info("REST: Listando pedidos para despacho");
         List<ListarPedidosDespachoUseCase.PedidoDespachoDTO> pedidos = listarPedidosDespachoUseCase.ejecutar();
+        return ResponseEntity.ok(pedidos);
+    }
+
+    @GetMapping("/mis-pedidos/{operarioId}")
+    public ResponseEntity<List<Pedido>> listarMisPedidos(@PathVariable UUID operarioId) {
+        log.info("REST: Listando pedidos asignados a operario {}", operarioId);
+        List<Pedido> pedidos = listarPedidosAsignadosUseCase.ejecutar(operarioId, "despacho");
         return ResponseEntity.ok(pedidos);
     }
 

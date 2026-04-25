@@ -11,6 +11,7 @@ import jakarta.persistence.criteria.Root;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import java.util.Objects;
 
@@ -54,7 +55,7 @@ public class PedidoRepositoryAdapter implements PedidoRepository {
     
 @Override
     public Page<Pedido> findByFilters(EstadoPedido estado, String clienteCc, String numeroPedido,
-                                       LocalDate fechaDesde, LocalDate fechaHasta, Pageable pageable) {
+                                       LocalDate fechaDesde, LocalDate fechaHasta, @NonNull Pageable pageable) {
         
         Specification<PedidoJpaEntity> spec = (Root<PedidoJpaEntity> root, jakarta.persistence.criteria.CriteriaQuery<?> query, CriteriaBuilder cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -92,6 +93,20 @@ public class PedidoRepositoryAdapter implements PedidoRepository {
     public List<Pedido> findByEstadoWithPickingOrderByFechaPickingAsc(EstadoPedido estado) {
         // En esta fase 1 se omitirá el join con picking y ordenará temporalmente por creación o compromiso
         return jpa.findByEstadoOrderByFechaCreacionAsc(estado).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Pedido> findByOperarioPickingId(UUID operarioPickingId) {
+        return jpa.findByOperarioPickingId(operarioPickingId).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Pedido> findByOperarioDespachoId(UUID operarioDespachoId) {
+        return jpa.findByOperarioDespachoId(operarioDespachoId).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }

@@ -17,8 +17,8 @@ import java.util.UUID;
 @Builder
 public class RecepcionJpaEntity {
     @Id @Column(name = "recepcion_id") private UUID recepcionId;
-    @Column(name = "manifiesto_id") private UUID manifiestoId;
-    @Column(name = "operario_id") private UUID operarioId;
+    @Column(name = "manifiesto_id", nullable = false) private UUID manifiestoId;
+    @Column(name = "operario_id", nullable = false) private UUID operarioId;
     @Column(name = "fecha_recepcion", nullable = false) private LocalDateTime fechaRecepcion;
     @Column(name = "notas") private String notas;
 }

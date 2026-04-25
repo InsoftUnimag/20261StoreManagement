@@ -80,7 +80,7 @@ public class RegistrarExcepcionUseCase {
                 .skuId(command.skuId())
                 .cantidadAfectada(command.cantidadAfectada())
                 .fechaRegistro(LocalDateTime.now())
-                .operarioId(command.operarioId())
+                .operarioId(UUID.fromString(command.operarioId()))
                 .descripcion(command.descripcion())
                 .evidenciaUrl(command.evidenciaUrl())
                 .build();
