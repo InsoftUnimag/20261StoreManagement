@@ -2,7 +2,6 @@ package com.distribuidoras.inventario.infrastructure.persistence.entity;
 
 import com.distribuidoras.inventario.domain.model.enums.EstadoPedido;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -49,4 +48,10 @@ public class PedidoJpaEntity {
     
     @Column(name = "asesor_id")
     private UUID asesorId;
+    
+    @Column(name = "operario_picking_id")
+    private UUID operarioPickingId;
+    
+    @Column(name = "operario_despacho_id")
+    private UUID operarioDespachoId;
 }

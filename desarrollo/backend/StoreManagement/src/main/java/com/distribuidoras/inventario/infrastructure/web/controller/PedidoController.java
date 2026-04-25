@@ -43,17 +43,20 @@ public class PedidoController {
     private final ConsultarDetallePedidoUseCase consultarDetallePedidoUseCase;
     private final ConsultarListaPedidosUseCase consultarListaPedidosUseCase;
     private final SolicitudRutaProducer solicitudRutaProducer;
+    private final AsignarPedidoUseCase asignarPedidoUseCase;
 
     public PedidoController(RealizarPedidoUseCase realizarPedidoUseCase,
                              ComprometerInventarioUseCase comprometerInventarioUseCase,
                              ConsultarDetallePedidoUseCase consultarDetallePedidoUseCase,
                              ConsultarListaPedidosUseCase consultarListaPedidosUseCase,
-                             SolicitudRutaProducer solicitudRutaProducer) {
+                             SolicitudRutaProducer solicitudRutaProducer,
+                             AsignarPedidoUseCase asignarPedidoUseCase) {
         this.realizarPedidoUseCase = realizarPedidoUseCase;
         this.comprometerInventarioUseCase = comprometerInventarioUseCase;
         this.consultarDetallePedidoUseCase = consultarDetallePedidoUseCase;
         this.consultarListaPedidosUseCase = consultarListaPedidosUseCase;
         this.solicitudRutaProducer = solicitudRutaProducer;
+        this.asignarPedidoUseCase = asignarPedidoUseCase;
     }
 
     /**
@@ -188,6 +191,30 @@ public class PedidoController {
                 "mensaje", "Solicitud de ruta enviada a logística de transporte",
                 "pedido_id", pedidoId
         );
+        
+        return ResponseEntity.ok(response);
+    }
+
+    @PutMapping("/{pedidoId}/asignar")
+    public ResponseEntity<PedidoAsignadoResponse> asignarOperarios(
+            @PathVariable UUID pedidoId,
+            @Valid @RequestBody AsignarPedidoRequest request) {
+        log.info("REST: Asignando operarios a pedido {}", pedidoId);
+        
+        Pedido pedido = asignarPedidoUseCase.ejecutar(
+                pedidoId,
+                request.getOperarioPickingId(),
+                request.getOperarioDespachoId()
+        );
+        
+        PedidoAsignadoResponse response = PedidoAsignadoResponse.builder()
+                .pedidoId(pedido.getPedidoId())
+                .numeroPedido(pedido.getNumeroPedido())
+                .clienteCc(pedido.getClienteCc())
+                .estado(pedido.getEstado().name())
+                .operarioPickingId(pedido.getOperarioPickingId())
+                .operarioDespachoId(pedido.getOperarioDespachoId())
+                .build();
         
         return ResponseEntity.ok(response);
     }

@@ -68,7 +68,7 @@ public class LotesVencidosScheduler {
                         .skuId(skuId)
                         .cantidadAfectada(cantidadBaja)
                         .fechaRegistro(LocalDateTime.now())
-                        .operarioId("SYSTEM")
+                        .operarioId(UUID.fromString("00000000-0000-0000-0000-000000000000"))
                         .descripcion("Proceso automático: Lote vencido el " + lote.getFechaVencimiento())
                         .build();
                 excepcionRepository.save(excepcion);

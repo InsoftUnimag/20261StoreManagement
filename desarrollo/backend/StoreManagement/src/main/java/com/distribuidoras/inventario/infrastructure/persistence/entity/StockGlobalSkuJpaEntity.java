@@ -38,38 +38,4 @@ public class StockGlobalSkuJpaEntity {
 
     @Column(name = "fisico_total", nullable = false)
     private Integer fisicoTotal;
-
-    public StockGlobalSkuJpaEntity() {}
-
-    public String getSkuId() {
-        return skuId;
-    }
-
-    public void setSkuId(String skuId) {
-        this.skuId = skuId;
-    }
-
-    public Integer getDisponibles() {
-        return disponibles;
-    }
-
-    public void setDisponibles(Integer disponibles) {
-        this.disponibles = disponibles;
-    }
-
-    public Integer getComprometidos() {
-        return comprometidos;
-    }
-
-    public void setComprometidos(Integer comprometidos) {
-        this.comprometidos = comprometidos;
-    }
-
-    public Integer getFisicoTotal() {
-        return fisicoTotal;
-    }
-
-    public void setFisicoTotal(Integer fisicoTotal) {
-        this.fisicoTotal = fisicoTotal;
-    }
 }

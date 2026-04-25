@@ -151,7 +151,7 @@ private final LoteRepository loteRepository;
                             .skuId(linea.skuId().toString())
                             .cantidadAfectada(Math.abs(diferencia))
                             .fechaRegistro(LocalDateTime.now())
-                            .operarioId(command.operarioId().toString())
+                            .operarioId(command.operarioId())
                             .descripcion("Diferencia automática: Esperado %d, Recibido %d"
                                     .formatted(detalle.getCantidadEsperada(), detalle.getCantidadRecibida()))
                             .build();

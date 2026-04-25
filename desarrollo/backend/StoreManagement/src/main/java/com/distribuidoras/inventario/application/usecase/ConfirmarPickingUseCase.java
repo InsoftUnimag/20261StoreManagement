@@ -225,7 +225,7 @@ public class ConfirmarPickingUseCase {
                 .skuId(linea.getSkuId())
                 .cantidadAfectada(cantidadFaltante)
                 .fechaRegistro(LocalDateTime.now())
-                .operarioId(operarioId.toString())
+                .operarioId(operarioId)
                 .descripcion("Faltante en picking para pedido %s, SKU %s, Lote %s: %d unidades no recolectadas"
                         .formatted(pedido.getNumeroPedido(), linea.getSkuId(), codigoLote, cantidadFaltante))
                 .evidenciaUrl(null)

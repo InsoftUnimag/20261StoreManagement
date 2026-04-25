@@ -1,6 +1,5 @@
 package com.distribuidoras.inventario.infrastructure.persistence.entity;
 
-import com.distribuidoras.inventario.domain.model.enums.EstadoManifiesto;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;

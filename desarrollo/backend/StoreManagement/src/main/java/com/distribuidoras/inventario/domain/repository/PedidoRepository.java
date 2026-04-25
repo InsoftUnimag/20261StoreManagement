@@ -4,6 +4,7 @@ import com.distribuidoras.inventario.domain.model.Pedido;
 import com.distribuidoras.inventario.domain.model.enums.EstadoPedido;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.lang.NonNull;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -36,7 +37,7 @@ public interface PedidoRepository {
             String numeroPedido,
             LocalDate fechaDesde,
             LocalDate fechaHasta,
-            Pageable pageable
+            @NonNull Pageable pageable
     );
     
     void update(Pedido pedido);
@@ -55,4 +56,14 @@ public interface PedidoRepository {
      * Find orders with picking status ordered by picking date ASC (FIFO).
      */
     List<Pedido> findByEstadoWithPickingOrderByFechaPickingAsc(EstadoPedido estado);
+
+    /**
+     * Find orders assigned to picking operario.
+     */
+    List<Pedido> findByOperarioPickingId(java.util.UUID operarioPickingId);
+
+    /**
+     * Find orders assigned to despacho operario.
+     */
+    List<Pedido> findByOperarioDespachoId(java.util.UUID operarioDespachoId);
 }

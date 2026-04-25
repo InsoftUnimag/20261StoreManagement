@@ -3,6 +3,8 @@ package com.distribuidoras.inventario.infrastructure.web.controller;
 import com.distribuidoras.inventario.application.usecase.ConfirmarPickingUseCase;
 import com.distribuidoras.inventario.application.usecase.ConfirmarPickingUseCase.*;
 import com.distribuidoras.inventario.application.usecase.ListarPedidosPickingUseCase;
+import com.distribuidoras.inventario.application.usecase.ListarPedidosAsignadosUseCase;
+import com.distribuidoras.inventario.domain.model.Pedido;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -24,11 +26,14 @@ public class PickingController {
 
     private final ConfirmarPickingUseCase confirmarPickingUseCase;
     private final ListarPedidosPickingUseCase listarPedidosPickingUseCase;
+    private final ListarPedidosAsignadosUseCase listarPedidosAsignadosUseCase;
 
     public PickingController(ConfirmarPickingUseCase confirmarPickingUseCase,
-                              ListarPedidosPickingUseCase listarPedidosPickingUseCase) {
+                              ListarPedidosPickingUseCase listarPedidosPickingUseCase,
+                              ListarPedidosAsignadosUseCase listarPedidosAsignadosUseCase) {
         this.confirmarPickingUseCase = confirmarPickingUseCase;
         this.listarPedidosPickingUseCase = listarPedidosPickingUseCase;
+        this.listarPedidosAsignadosUseCase = listarPedidosAsignadosUseCase;
     }
 
     /**
@@ -39,6 +44,13 @@ public class PickingController {
     public ResponseEntity<List<ListarPedidosPickingUseCase.PedidoPickingDTO>> listarPedidosParaPicking() {
         log.info("REST: Listando pedidos para picking");
         List<ListarPedidosPickingUseCase.PedidoPickingDTO> pedidos = listarPedidosPickingUseCase.ejecutar();
+        return ResponseEntity.ok(pedidos);
+    }
+
+    @GetMapping("/mis-pedidos/{operarioId}")
+    public ResponseEntity<List<Pedido>> listarMisPedidos(@PathVariable UUID operarioId) {
+        log.info("REST: Listando pedidos asignados a operario {}", operarioId);
+        List<Pedido> pedidos = listarPedidosAsignadosUseCase.ejecutar(operarioId, "picking");
         return ResponseEntity.ok(pedidos);
     }
 
