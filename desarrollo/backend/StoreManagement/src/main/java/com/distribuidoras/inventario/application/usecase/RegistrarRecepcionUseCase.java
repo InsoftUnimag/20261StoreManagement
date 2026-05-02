@@ -119,7 +119,7 @@ private final LoteRepository loteRepository;
             loteRepository.save(lote);
 
             // Actualizar stock_global_sku
-            actualizarStockGlobal(lote.getSkuId(), linea.cantidadRecibida());
+            actualizarStockGlobal(lote.getSkuId(), linea.cantidadRecibida(), linea.costoUnitarioProducto());
 
             // FR-017: Registrar MovimientoInventario tipo "Entrada"
             MovimientoInventario movimiento = MovimientoInventario.builder()
@@ -211,24 +211,32 @@ manifistoRepository.findById(manifiestoId).ifPresent(m -> {
     public record ExcepcionResult(UUID excepcionId, String tipo,
                                    int cantidadAfectada, String descripcion) {}
 
-    private void actualizarStockGlobal(String skuId, int cantidadEntrante) {
+    private void actualizarStockGlobal(String skuId, int cantidadEntrante, java.math.BigDecimal precioUnitario) {
         var stockOpt = stockGlobalSkuRepository.findById(Objects.requireNonNull(skuId));
         if (stockOpt.isPresent()) {
             var stock = stockOpt.get();
             stock.setFisicoTotal(stock.getFisicoTotal() + cantidadEntrante);
             stock.setDisponibles(stock.getDisponibles() + cantidadEntrante);
+            if (precioUnitario != null) {
+                stock.setPrecio(precioUnitario);
+            }
             stockGlobalSkuRepository.save(stock);
-            log.info("Stock global actualizado para {}: fisico_total={}, disponibles={}",
-                    skuId, stock.getFisicoTotal(), stock.getDisponibles());
+            log.info("Stock global actualizado para {}: fisico_total={}, disponibles={}, precio={}",
+                    skuId, stock.getFisicoTotal(), stock.getDisponibles(), stock.getPrecio());
         } else {
             var stock = new com.distribuidoras.inventario.infrastructure.persistence.entity.StockGlobalSkuJpaEntity();
             stock.setSkuId(skuId);
             stock.setFisicoTotal(cantidadEntrante);
             stock.setDisponibles(cantidadEntrante);
             stock.setComprometidos(0);
+            if (precioUnitario != null) {
+                stock.setPrecio(precioUnitario);
+            } else {
+                stock.setPrecio(java.math.BigDecimal.ZERO);
+            }
             stockGlobalSkuRepository.save(stock);
-            log.info("Stock global creado para {}: fisico_total={}, disponibles={}",
-                    skuId, cantidadEntrante, cantidadEntrante);
+            log.info("Stock global creado para {}: fisico_total={}, disponibles={}, precio={}",
+                    skuId, cantidadEntrante, cantidadEntrante, stock.getPrecio());
         }
     }
 }

@@ -88,7 +88,6 @@ public class OperarioAdapter implements OperarioServicePort {
         return Optional.empty(); 
     }
     
-    @SuppressWarnings("unchecked")
     @Override
     public List<Operario> findByRol(String rol) {
         log.info("Consultando operarios con rol: {}", rol);
@@ -97,7 +96,7 @@ public class OperarioAdapter implements OperarioServicePort {
             String url = baseUrl + "/api/usuarios/operarios?rol=" + rol;
             
             ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
-                    url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Map<String, Object>>>() {});
+                    url, Objects.requireNonNull(HttpMethod.GET), null, new ParameterizedTypeReference<List<Map<String, Object>>>() {});
             
             List<Map<String, Object>> body = response.getBody();
             

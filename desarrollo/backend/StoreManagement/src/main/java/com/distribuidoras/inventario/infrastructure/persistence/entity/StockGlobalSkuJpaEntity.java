@@ -38,4 +38,7 @@ public class StockGlobalSkuJpaEntity {
 
     @Column(name = "fisico_total", nullable = false)
     private Integer fisicoTotal;
+
+    @Column(name = "precio")
+    private java.math.BigDecimal precio;
 }
