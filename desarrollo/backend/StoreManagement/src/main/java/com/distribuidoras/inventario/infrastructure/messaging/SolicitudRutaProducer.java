@@ -5,6 +5,7 @@ import com.distribuidoras.inventario.domain.model.Producto;
 import com.distribuidoras.inventario.domain.repository.PedidoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoPedidoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoRepository;
+import com.distribuidoras.inventario.domain.repository.LoteRepository;
 import com.distribuidoras.inventario.domain.repository.ClienteServicePort;
 import com.distribuidoras.inventario.domain.model.Cliente;
 import com.distribuidoras.inventario.infrastructure.messaging.config.RabbitMQConfig;
@@ -39,6 +40,7 @@ public class SolicitudRutaProducer {
     private final ProductoPedidoRepository productoPedidoRepository;
     private final ProductoRepository productoRepository;
     private final ClienteServicePort clienteServicePort;
+    private final LoteRepository loteRepository;
 
     @Value("${rabbitmq.exchange.solicitud-ruta:inventario.logistica}")
     private String exchange;
