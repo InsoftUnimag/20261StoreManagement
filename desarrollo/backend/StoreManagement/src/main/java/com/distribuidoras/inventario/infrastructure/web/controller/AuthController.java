@@ -41,4 +41,33 @@ public class AuthController {
                 })
                 .orElse(ResponseEntity.status(401).build());
     }
+
+    @PostMapping("/mock-login")
+    public ResponseEntity<LoginResponse> mockLogin(@RequestBody LoginRequest request) {
+        String cc = request.getCedula();
+        String rol = "";
+        String nombre = "";
+
+        switch (cc) {
+            case "11111111": rol = "OPERARIO_PICKING"; nombre = "Carlos Perez"; break;
+            case "22222222": rol = "OPERARIO_DESPACHO"; nombre = "Maria Lopez"; break;
+            case "33333333": rol = "SUPERVISOR_INVENTARIO"; nombre = "Pedro Gomez"; break;
+            case "44444444": rol = "ASESOR_COMERCIAL"; nombre = "Roberto Sanchez"; break;
+            case "55555555": rol = "OPERARIO_RECEPCION"; nombre = "Ana Reception"; break;
+            default: return ResponseEntity.status(401).build();
+        }
+
+        String token = jwtUtil.generateToken(
+                java.util.UUID.randomUUID(),
+                nombre,
+                rol
+        );
+        return ResponseEntity.ok(LoginResponse.builder()
+                .token(token)
+                .nombre(nombre)
+                .cedula(cc)
+                .rol(rol)
+                .expiresIn(86400L)
+                .build());
+    }
 }

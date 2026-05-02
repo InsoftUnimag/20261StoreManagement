@@ -57,4 +57,7 @@ public interface LoteJpaRepository extends JpaRepository<LoteJpaEntity, String> 
      */
     @Query("SELECT l FROM LoteJpaEntity l WHERE l.fechaVencimiento < :fechaLimite AND l.cantidad > 0 ORDER BY l.fechaVencimiento ASC")
     List<LoteJpaEntity> findByFechaVencimientoBeforeAndCantidadGreaterThan(@Param("fechaLimite") LocalDate fechaLimite, @Param("cantidadMinima") int cantidadMinima);
+
+    @Query("SELECT l FROM LoteJpaEntity l WHERE l.fechaVencimiento <= :fechaLimite AND l.cantidad > 0 AND l.flagUrgenciaFefo = false ORDER BY l.fechaVencimiento ASC")
+    List<LoteJpaEntity> findLotesProximosAVencerSinFlag(@Param("fechaLimite") LocalDate fechaLimite);
 }

@@ -45,4 +45,9 @@ public interface LoteRepository {
      * Find lots with expiration date before current date and with stock > 0.
      */
     List<Lote> findByFechaVencimientoBeforeAndCantidadGreaterThan(LocalDate fechaLimite, int cantidadMinima);
+
+    /**
+     * Find lots that are close to expiring but don't have the urgency flag yet.
+     */
+    List<Lote> findLotesProximosAVencerSinFlag(LocalDate fechaLimite);
 }

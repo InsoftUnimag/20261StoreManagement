@@ -50,6 +50,6 @@ public class EliminarProductoUseCase {
         producto.setActivo(false);
         productoRepository.save(producto);
 
-        log.info("Producto desactivado (borrado lógico): SKU={}", skuId);
+        log.info("Producto eliminado: SKU={}", skuId);
     }
 }
