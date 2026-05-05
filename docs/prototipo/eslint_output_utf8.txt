@@ -1,0 +1,13 @@
+﻿
+C:\Users\ESTUDIANTE\Downloads\Ing Software\prototipo-modulo1\src\App.jsx
+  197:7    error  'recepciones' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  353:5    error  'setSaved' is not defined                                                                    no-undef
+  357:79   error  'setSaved' is not defined                                                                    no-undef
+  368:145  error  'setSaved' is not defined                                                                    no-undef
+  373:118  error  'setSaved' is not defined                                                                    no-undef
+  379:146  error  'setSaved' is not defined                                                                    no-undef
+  384:135  error  'setSaved' is not defined                                                                    no-undef
+  396:10   error  'saved' is not defined                                                                       no-undef
+
+Ô£û 8 problems (8 errors, 0 warnings)
+
