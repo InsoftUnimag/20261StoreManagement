@@ -1,0 +1,39 @@
+package com.distribuidoras.inventario.infrastructure.persistence.repository;
+
+import com.distribuidoras.inventario.infrastructure.persistence.entity.PedidoJpaEntity;
+import com.distribuidoras.inventario.domain.model.enums.EstadoPedido;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+public interface PedidoJpaRepository extends JpaRepository<PedidoJpaEntity, UUID>, JpaSpecificationExecutor<PedidoJpaEntity> {
+    
+    Optional<PedidoJpaEntity> findByNumeroPedido(String numeroPedido);
+    
+    /**
+     * Find max order number sequence for a given date prefix.
+     */
+    @Query("SELECT MAX(CAST(SUBSTRING(p.numeroPedido, LENGTH(p.numeroPedido) - 2) AS int)) FROM PedidoJpaEntity p WHERE p.numeroPedido LIKE :prefix%")
+    Integer findMaxNumeroPedidoByPrefix(@Param("prefix") String prefix);
+    
+    /**
+     * Find orders by status ordered by creation ASC (FIFO).
+     */
+    List<PedidoJpaEntity> findByEstadoOrderByFechaCreacionAsc(EstadoPedido estado);
+
+    /**
+     * Find orders by status ordered by compromise date ASC (FIFO).
+     */
+    List<PedidoJpaEntity> findByEstadoOrderByFechaCompromisoAsc(EstadoPedido estado);
+
+    List<PedidoJpaEntity> findByOperarioPickingId(UUID operarioPickingId);
+
+    List<PedidoJpaEntity> findByOperarioDespachoId(UUID operarioDespachoId);
+}
