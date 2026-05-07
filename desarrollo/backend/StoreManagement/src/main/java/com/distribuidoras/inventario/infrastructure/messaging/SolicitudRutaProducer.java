@@ -15,6 +15,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -40,7 +41,6 @@ public class SolicitudRutaProducer {
     private final ProductoPedidoRepository productoPedidoRepository;
     private final ProductoRepository productoRepository;
     private final ClienteServicePort clienteServicePort;
-    private final LoteRepository loteRepository;
 
     @Value("${rabbitmq.exchange.solicitud-ruta:inventario.logistica}")
     private String exchange;
@@ -48,14 +48,14 @@ public class SolicitudRutaProducer {
     @Value("${rabbitmq.routing-key.solicitud-ruta:solicitud.ruta}")
     private String routingKey;
 
-    private final com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository stockGlobalSkuRepository;
+    private final StockGlobalSkuJpaRepository stockGlobalSkuRepository;
 
     public SolicitudRutaProducer(RabbitTemplate rabbitTemplate,
             PedidoRepository pedidoRepository,
             ProductoPedidoRepository productoPedidoRepository,
             ProductoRepository productoRepository,
             ClienteServicePort clienteServicePort,
-            com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository stockGlobalSkuRepository) {
+            StockGlobalSkuJpaRepository stockGlobalSkuRepository) {
         this.rabbitTemplate = rabbitTemplate;
         this.pedidoRepository = pedidoRepository;
         this.productoPedidoRepository = productoPedidoRepository;

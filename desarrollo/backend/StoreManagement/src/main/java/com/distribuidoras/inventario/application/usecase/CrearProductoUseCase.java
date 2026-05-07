@@ -42,13 +42,14 @@ public class CrearProductoUseCase {
                 .map(max -> String.format("SKU-%03d", max + 1))
                 .orElse("SKU-001");
 
-        Producto producto = new Producto();
-        producto.setSkuId(siguienteSku);
-        producto.setMarca(marca);
-        producto.setPresentacion(presentacion);
-        producto.setContenidoMl(contenidoMl);
-        producto.setPesoLogisticoKg(pesoLogisticoKg);
-        producto.setCreadoEl(LocalDateTime.now());
+        Producto producto = Producto.builder()
+        .skuId(siguienteSku)
+        .marca(marca)
+        .presentacion(presentacion)
+        .contenidoMl(contenidoMl)
+        .pesoLogisticoKg(pesoLogisticoKg)
+        .creadoEl(LocalDateTime.now())
+        .build();
 
         Producto guardado = productoRepository.save(producto);
 

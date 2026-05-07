@@ -11,6 +11,7 @@ import com.distribuidoras.inventario.infrastructure.web.dto.CrearManifiestoReque
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import java.time.LocalDate;
 
 import java.util.UUID;
 
@@ -43,7 +44,7 @@ public class CrearManifiestoUseCase {
         Manifiesto manifisto = Manifiesto.builder()
                 .manifiestoId(UUID.randomUUID())
                 .numeroManifiesto(numero)
-                .fechaEmision(request.getFechaEmision())
+                .fechaEmision(LocalDate.now())
                 .proveedor(request.getProveedor())
                 .estado(EstadoManifiesto.PENDIENTE)
                 .build();
@@ -71,7 +72,13 @@ public class CrearManifiestoUseCase {
     }
 
     private String generarNumeroManifiesto() {
-        String fecha = java.time.LocalDate.now().toString().replace("-", "");
-        return "MAN-" + fecha + "-001";
+        java.time.LocalDate hoy = java.time.LocalDate.now();
+        String fecha = hoy.toString().replace("-", "");
+        
+        int siguienteNumero = manifistoRepository.findMaxNumeroManifiestoByFecha(hoy)
+                .map(max -> max + 1)
+                .orElse(1);
+        
+        return String.format("MAN-%s-%03d", fecha, siguienteNumero);
     }
 }

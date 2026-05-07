@@ -28,14 +28,14 @@ public class RegistrarExcepcionUseCase {
     private final MovimientoInventarioRepository movimientoRepository;
     private final ProductoRepository productoRepository;
     private final StockGlobalSkuJpaRepository stockGlobalSkuRepository;
-    private final com.distribuidoras.inventario.domain.repository.LoteComprometidoRepository loteComprometidoRepository;
+    private final LoteComprometidoRepository loteComprometidoRepository;
 
     public RegistrarExcepcionUseCase(ExcepcionInventarioRepository excepcionRepository,
                                      LoteRepository loteRepository,
                                      MovimientoInventarioRepository movimientoRepository,
                                      ProductoRepository productoRepository,
                                      StockGlobalSkuJpaRepository stockGlobalSkuRepository,
-                                     com.distribuidoras.inventario.domain.repository.LoteComprometidoRepository loteComprometidoRepository) {
+                                     LoteComprometidoRepository loteComprometidoRepository) {
         this.excepcionRepository = excepcionRepository;
         this.loteRepository = loteRepository;
         this.movimientoRepository = movimientoRepository;

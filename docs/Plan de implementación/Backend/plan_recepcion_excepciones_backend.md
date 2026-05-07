@@ -254,7 +254,7 @@ La estructura específica para este componente implementada es:
 
 ### UC-003: Registrar Excepción de Inventario (Spec 16)
 
-**Actor**: Operario de Almacén, Supervisor
+**Actor**: Operario de Recepción, Operario de Picking, Operario de Despacho, Supervisor
 
 **Flujo Principal**:
 1. Usuario detecta anomalía (avería, vencimiento, faltante)

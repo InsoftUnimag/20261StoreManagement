@@ -14,7 +14,6 @@ import java.util.List;
 @AllArgsConstructor
 public class CrearManifiestoRequest {
     private String numeroManifiesto;
-    private LocalDate fechaEmision;
     private String proveedor;
     private List<LineaManifiestoRequest> lineas;
 

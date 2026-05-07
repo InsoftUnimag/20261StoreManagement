@@ -5,6 +5,8 @@ import com.distribuidoras.inventario.domain.model.*;
 import com.distribuidoras.inventario.domain.model.enums.*;
 import com.distribuidoras.inventario.domain.repository.*;
 import com.distribuidoras.inventario.application.usecase.mapper.InventarioMapper;
+import com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository;
+import com.distribuidoras.inventario.infrastructure.persistence.entity.StockGlobalSkuJpaEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.math.BigDecimal;
 
 /**
  * Caso de uso: Registrar Recepción de Mercancía.
@@ -26,13 +30,13 @@ public class RegistrarRecepcionUseCase {
     private static final Logger log = LoggerFactory.getLogger(RegistrarRecepcionUseCase.class);
 
     private final RecepcionRepository recepcionRepository;
-private final LoteRepository loteRepository;
+    private final LoteRepository loteRepository;
     private final MovimientoInventarioRepository movimientoRepository;
     private final ProductoRepository productoRepository;
     private final ManifiestoRepository manifistoRepository;
     private final DetalleManifiestoRepository detalleManifiestoRepository;
     private final ExcepcionInventarioRepository excepcionRepository;
-    private final com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository stockGlobalSkuRepository;
+    private final StockGlobalSkuJpaRepository stockGlobalSkuRepository;
 
     public RegistrarRecepcionUseCase(RecepcionRepository recepcionRepository,
                                      LoteRepository loteRepository,
@@ -41,7 +45,7 @@ private final LoteRepository loteRepository;
                                      ManifiestoRepository manifistoRepository,
                                      DetalleManifiestoRepository detalleManifiestoRepository,
                                      ExcepcionInventarioRepository excepcionRepository,
-                                     com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository stockGlobalSkuRepository) {
+                                     StockGlobalSkuJpaRepository stockGlobalSkuRepository) {
         this.recepcionRepository = recepcionRepository;
         this.loteRepository = loteRepository;
         this.movimientoRepository = movimientoRepository;
@@ -79,7 +83,7 @@ private final LoteRepository loteRepository;
         // 3. Cargar detalles del manifiesto si aplica
         Map<String, DetalleManifiesto> detallesPorSku = command.manifiestoId() != null
                 ? detalleManifiestoRepository.findByManifiestoId(command.manifiestoId()).stream()
-                        .collect(java.util.stream.Collectors.toMap(DetalleManifiesto::getSkuId, d -> d))
+                        .collect(Collectors.toMap(DetalleManifiesto::getSkuId, d -> d))
                 : Collections.emptyMap();
 
         List<LoteResult> lotesCreados = new ArrayList<>();
@@ -200,7 +204,7 @@ manifistoRepository.findById(manifiestoId).ifPresent(m -> {
 
     public record LineaRecepcionCommand(String skuId, String codigoLote,
                                          LocalDate fechaVencimiento, LocalDate fechaFabricacion,
-                                         int cantidadRecibida, java.math.BigDecimal costoUnitarioProducto) {}
+                                         int cantidadRecibida, BigDecimal costoUnitarioProducto) {}
 
     public record RecepcionResult(UUID recepcionId, LocalDateTime fechaRecepcion,
                                    List<LoteResult> lotesCreados,
@@ -211,7 +215,7 @@ manifistoRepository.findById(manifiestoId).ifPresent(m -> {
     public record ExcepcionResult(UUID excepcionId, String tipo,
                                    int cantidadAfectada, String descripcion) {}
 
-    private void actualizarStockGlobal(String skuId, int cantidadEntrante, java.math.BigDecimal precioUnitario) {
+    private void actualizarStockGlobal(String skuId, int cantidadEntrante, BigDecimal precioUnitario) {
         var stockOpt = stockGlobalSkuRepository.findById(Objects.requireNonNull(skuId));
         if (stockOpt.isPresent()) {
             var stock = stockOpt.get();
@@ -224,7 +228,7 @@ manifistoRepository.findById(manifiestoId).ifPresent(m -> {
             log.info("Stock global actualizado para {}: fisico_total={}, disponibles={}, precio={}",
                     skuId, stock.getFisicoTotal(), stock.getDisponibles(), stock.getPrecio());
         } else {
-            var stock = new com.distribuidoras.inventario.infrastructure.persistence.entity.StockGlobalSkuJpaEntity();
+            var stock = new StockGlobalSkuJpaEntity();
             stock.setSkuId(skuId);
             stock.setFisicoTotal(cantidadEntrante);
             stock.setDisponibles(cantidadEntrante);
@@ -232,7 +236,7 @@ manifistoRepository.findById(manifiestoId).ifPresent(m -> {
             if (precioUnitario != null) {
                 stock.setPrecio(precioUnitario);
             } else {
-                stock.setPrecio(java.math.BigDecimal.ZERO);
+                stock.setPrecio(BigDecimal.ZERO);
             }
             stockGlobalSkuRepository.save(stock);
             log.info("Stock global creado para {}: fisico_total={}, disponibles={}, precio={}",

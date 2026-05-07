@@ -44,6 +44,7 @@ public class Pedido {
     
     private LocalDateTime fechaCompromiso;
     
+    @NotNull(message = "El asesorId no puede ser nulo")
     private UUID asesorId;
     
     private UUID operarioPickingId;

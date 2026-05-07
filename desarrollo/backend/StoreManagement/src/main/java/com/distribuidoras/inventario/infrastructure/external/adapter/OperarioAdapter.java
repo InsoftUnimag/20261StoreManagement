@@ -58,7 +58,7 @@ public class OperarioAdapter implements OperarioServicePort {
                 RolUsuario rol = rolStr != null ? RolUsuario.valueOf(rolStr.toUpperCase()) : null;
                 
                 Operario operario = Operario.builder()
-                        .id(UUID.fromString((String) body.get("id")))
+                        .operarioId(UUID.fromString((String) body.get("id")))
                         .nombre((String) body.get("nombre"))
                         .cedula((String) body.get("cedula"))
                         .activo((Boolean) body.getOrDefault("activo", false))
@@ -108,7 +108,7 @@ public class OperarioAdapter implements OperarioServicePort {
                     RolUsuario rolEnum = rolStr != null ? RolUsuario.valueOf(rolStr.toUpperCase()) : null;
                     
                     Operario operario = Operario.builder()
-                            .id(UUID.fromString((String) item.get("id")))
+                            .operarioId(UUID.fromString((String) item.get("id")))
                             .nombre((String) item.get("nombre"))
                             .cedula((String) item.get("cedula"))
                             .activo((Boolean) item.getOrDefault("activo", false))

@@ -27,6 +27,12 @@ public class AsignarPedidoUseCase {
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new PedidoNotFoundException(pedidoId.toString()));
 
+        if (pedido.getEstado() != EstadoPedido.COMPROMETIDO) {
+            throw new IllegalStateException(
+                    "Solo se pueden asignar pedidos en estado COMPROMETIDO. Estado actual: " + pedido.getEstado()
+            );
+        }
+
         if (operarioPickingId != null) {
             pedido.setOperarioPickingId(operarioPickingId);
         }
@@ -34,12 +40,8 @@ public class AsignarPedidoUseCase {
             pedido.setOperarioDespachoId(operarioDespachoId);
         }
 
-        if (pedido.getOperarioPickingId() != null || pedido.getOperarioDespachoId() != null) {
-            if (pedido.getEstado() == EstadoPedido.ESPERANDO_RUTA) {
-                pedido.setEstado(EstadoPedido.COMPROMETIDO);
-                log.info("Pedido {} actualizado a estado COMPROMETIDO", pedidoId);
-            }
-        }
+        log.info("Pedido {} asignado exitosamente (Picking: {}, Despacho: {})", 
+                pedidoId, pedido.getOperarioPickingId(), pedido.getOperarioDespachoId());
 
         pedidoRepository.update(pedido);
         return pedido;
