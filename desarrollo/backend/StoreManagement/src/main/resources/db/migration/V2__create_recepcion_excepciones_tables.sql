@@ -9,7 +9,8 @@ CREATE TABLE manifiesto (
     fecha_emision     DATE            NOT NULL,
     proveedor         VARCHAR(200)    NOT NULL,
     estado            VARCHAR(30)     NOT NULL DEFAULT 'PENDIENTE'
-        CHECK (estado IN ('PENDIENTE', 'RECEPCIONADO_PARCIAL', 'RECEPCIONADO_TOTAL'))
+        CHECK (estado IN ('PENDIENTE', 'RECEPCIONADO_PARCIAL', 'RECEPCIONADO_TOTAL')),
+    creado_el        TIMESTAMP       NOT NULL DEFAULT NOW()
 );
 
 -- Detalle de manifiesto: líneas con cantidades esperadas por SKU
@@ -29,6 +30,7 @@ CREATE TABLE detalle_manifiesto (
 -- Recepción: evento de recepción física de mercancía
 CREATE TABLE recepcion (
     recepcion_id     UUID            PRIMARY KEY,
+    numero_recepcion VARCHAR(50)     NOT NULL UNIQUE,
     manifiesto_id    UUID,
     operario_id     UUID,
     fecha_recepcion TIMESTAMP       NOT NULL DEFAULT NOW(),
@@ -48,7 +50,7 @@ CREATE TABLE lote (
     disponible       BOOLEAN          NOT NULL DEFAULT TRUE,
     flag_urgencia_fefo BOOLEAN          NOT NULL DEFAULT FALSE,
     costo_unitario_producto DECIMAL(15,2),
-    recepcion_id     UUID,
+    recepcion_id     UUID            NOT NULL,
     creado_el        TIMESTAMP       NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_lote_producto FOREIGN KEY (sku_id)

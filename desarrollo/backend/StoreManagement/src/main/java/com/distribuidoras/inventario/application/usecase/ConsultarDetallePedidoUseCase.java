@@ -1,26 +1,28 @@
 package com.distribuidoras.inventario.application.usecase;
 
-
 import com.distribuidoras.inventario.domain.model.LoteComprometido;
 import com.distribuidoras.inventario.domain.model.Pedido;
 import com.distribuidoras.inventario.domain.model.Producto;
 import com.distribuidoras.inventario.domain.model.ProductoPedido;
 import com.distribuidoras.inventario.domain.repository.ClienteServicePort;
 import com.distribuidoras.inventario.domain.repository.LoteComprometidoRepository;
+import com.distribuidoras.inventario.domain.repository.LoteRepository;
+import com.distribuidoras.inventario.domain.repository.OperarioServicePort;
 import com.distribuidoras.inventario.domain.repository.PedidoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoPedidoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoRepository;
 import com.distribuidoras.inventario.domain.exception.PedidoNotFoundException;
+import com.distribuidoras.inventario.infrastructure.web.dto.AsesorInfoDTO;
 import com.distribuidoras.inventario.infrastructure.web.dto.ClienteInfoDTO;
 import com.distribuidoras.inventario.infrastructure.web.dto.LineaPedidoResponseDTO;
 import com.distribuidoras.inventario.infrastructure.web.dto.LoteComprometidoDTO;
+import com.distribuidoras.inventario.infrastructure.web.dto.OperarioInfoDTO;
 import com.distribuidoras.inventario.infrastructure.web.dto.PedidoResponseDTO;
 import com.distribuidoras.inventario.infrastructure.web.dto.ProductoInfoDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 
 import java.util.List;
 import java.util.Optional;
@@ -41,155 +43,190 @@ import java.math.BigDecimal;
 @Service
 public class ConsultarDetallePedidoUseCase {
 
-    private static final Logger log = LoggerFactory.getLogger(ConsultarDetallePedidoUseCase.class);
+        private static final Logger log = LoggerFactory.getLogger(ConsultarDetallePedidoUseCase.class);
 
-    private final PedidoRepository pedidoRepository;
-    private final ProductoPedidoRepository productoPedidoRepository;
-    private final LoteComprometidoRepository loteComprometidoRepository;
-    private final ProductoRepository productoRepository;
-    private final ClienteServicePort clienteServicePort;
+        private final PedidoRepository pedidoRepository;
+        private final ProductoPedidoRepository productoPedidoRepository;
+        private final LoteComprometidoRepository loteComprometidoRepository;
+        private final LoteRepository loteRepository;
+        private final ProductoRepository productoRepository;
+        private final ClienteServicePort clienteServicePort;
+        private final OperarioServicePort operarioServicePort;
 
-    public ConsultarDetallePedidoUseCase(PedidoRepository pedidoRepository,
-                                          ProductoPedidoRepository productoPedidoRepository,
-                                          LoteComprometidoRepository loteComprometidoRepository,
-                                          ProductoRepository productoRepository,
-                                          ClienteServicePort clienteServicePort) {
-        this.pedidoRepository = pedidoRepository;
-        this.productoPedidoRepository = productoPedidoRepository;
-        this.loteComprometidoRepository = loteComprometidoRepository;
-        this.productoRepository = productoRepository;
-        this.clienteServicePort = clienteServicePort;
-    }
-
-    /**
-     * Ejecuta la consulta por ID o número de pedido.
-     */
-    @Transactional(readOnly = true)
-    public PedidoResponseDTO ejecutar(String identifier) {
-        log.info("Consultando detalle de pedido: {}", identifier);
-
-        // 1. Buscar pedido por UUID o numero_pedido
-        Pedido pedido = buscarPedido(identifier);
-
-        // 2. Obtener líneas del pedido
-        List<ProductoPedido> lineas = productoPedidoRepository.findByPedidoId(pedido.getPedidoId());
-
-        // 3. Obtener cliente (puede fallar si módulo externo no responde)
-        ClienteInfoDTO clienteInfo = obtenerClienteInfo(pedido.getClienteCc());
-
-        // 4. Construir response con líneas y lotes comprometidos
-        List<LineaPedidoResponseDTO> lineasDTO = lineas.stream()
-                .map(this::toLineaDTO)
-                .toList();
-
-        Integer totalSolicitado = lineas.stream().mapToInt(ProductoPedido::getCantidadSolicitada).sum();
-        Integer totalConfirmado = lineas.stream().mapToInt(ProductoPedido::getCantidadConfirmada).sum();
-
-        BigDecimal pesoLogisticoTotal = lineasDTO.stream()
-                .filter(l -> l.producto() != null && l.producto().pesoLogisticoKg() != null && l.cantidadConfirmada() != null)
-                .map(l -> l.producto().pesoLogisticoKg().multiply(BigDecimal.valueOf(l.cantidadConfirmada())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        String tipoCumplimiento = totalSolicitado > 0 && totalSolicitado.equals(totalConfirmado) ? "COMPLETO" : "PARCIAL";
-
-        return PedidoResponseDTO.builder()
-                .pedidoId(pedido.getPedidoId())
-                .numeroPedido(pedido.getNumeroPedido())
-                .estado(pedido.getEstado().name())
-                .fechaCreacion(pedido.getFechaCreacion())
-                .fechaCompromiso(pedido.getFechaCompromiso())
-                .rutaId(pedido.getRutaId())
-                .cliente(clienteInfo)
-                .lineas(lineasDTO)
-                .totalSolicitado(totalSolicitado)
-                .totalConfirmado(totalConfirmado)
-                .pesoLogisticoTotal(pesoLogisticoTotal)
-                .tipoCumplimiento(tipoCumplimiento)
-                .build();
-    }
-
-    /**
-     * Busca pedido por UUID o número.
-     */
-    private Pedido buscarPedido(String identifier) {
-        Optional<Pedido> pedido;
-        
-        try {
-            // Intentar como UUID primero
-            UUID id = UUID.fromString(identifier);
-            pedido = pedidoRepository.findById(id);
-        } catch (IllegalArgumentException e) {
-            // Si no es UUID válido, buscar por numero_pedido
-            pedido = pedidoRepository.findByNumeroPedido(identifier);
+        public ConsultarDetallePedidoUseCase(PedidoRepository pedidoRepository,
+                        ProductoPedidoRepository productoPedidoRepository,
+                        LoteComprometidoRepository loteComprometidoRepository,
+                        LoteRepository loteRepository,
+                        ProductoRepository productoRepository,
+                        ClienteServicePort clienteServicePort,
+                        OperarioServicePort operarioServicePort) {
+                this.pedidoRepository = pedidoRepository;
+                this.productoPedidoRepository = productoPedidoRepository;
+                this.loteComprometidoRepository = loteComprometidoRepository;
+                this.loteRepository = loteRepository;
+                this.productoRepository = productoRepository;
+                this.clienteServicePort = clienteServicePort;
+                this.operarioServicePort = operarioServicePort;
         }
 
-        return pedido.orElseThrow(() -> {
-            log.warn("Pedido no encontrado: {}", identifier);
-            return new PedidoNotFoundException("Pedido '" + identifier + "' no encontrado");
-        });
-    }
+        /**
+         * Ejecuta la consulta por ID o número de pedido.
+         */
+        @Transactional(readOnly = true)
+        public PedidoResponseDTO ejecutar(String identifier) {
+                log.info("Consultando detalle de pedido: {}", identifier);
 
-    /**
-     * Obtiene info del cliente desde módulo externo.
-     */
-    private ClienteInfoDTO obtenerClienteInfo(String clienteCc) {
-        return clienteServicePort.findByCedula(clienteCc)
-                .map(cliente -> ClienteInfoDTO.builder()
-                        .cedula(cliente.getCedula())
-                        .nombre(cliente.getNombre())
-                        .telefono(cliente.getTelefono())
-                        .direccion(cliente.getDireccion())
-                        .build())
-                .orElse(ClienteInfoDTO.builder()
-                        .cedula(clienteCc)
-                        .nombre("Cliente no disponible")
-                        .build());
-    }
+                // 1. Buscar pedido por UUID o numero_pedido
+                Pedido pedido = buscarPedido(identifier);
 
-    /**
-     * Transforma ProductoPedido a DTO con lotes si están comprometidos.
-     */
-    private LineaPedidoResponseDTO toLineaDTO(ProductoPedido linea) {
-        // Obtener info del producto
-        Producto producto = productoRepository.findById(linea.getSkuId())
-                .orElse(null);
+                // 2. Obtener líneas del pedido
+                List<ProductoPedido> lineas = productoPedidoRepository.findByPedidoId(pedido.getPedidoId());
 
-        ProductoInfoDTO productoInfo = producto != null ?
-                ProductoInfoDTO.builder()
-                        .skuId(producto.getSkuId())
-                        .marca(producto.getMarca())
-                        .presentacion(producto.getPresentacion())
-                        .contenidoMl(producto.getContenidoMl())
-                        .pesoLogisticoKg(producto.getPesoLogisticoKg())
-                        .build() : null;
+                // 3. Obtener cliente (puede fallar si módulo externo no responde)
+                ClienteInfoDTO clienteInfo = obtenerClienteInfo(pedido.getClienteCc());
 
-        // Obtener lotes comprometidos si existen
-        List<LoteComprometidoDTO> lotesDTO = List.of();
-        if (linea.getCantidadConfirmada() > 0) {
-            lotesDTO = loteComprometidoRepository.findByProductoPedidoId(linea.getProductoPedidoId()).stream()
-                    .map(this::toLoteComprometidoDTO)
-                    .toList();
+                // 4. Construir response con líneas y lotes comprometidos
+                List<LineaPedidoResponseDTO> lineasDTO = lineas.stream()
+                                .map(this::toLineaDTO)
+                                .toList();
+
+                Integer totalSolicitado = lineas.stream().mapToInt(ProductoPedido::getCantidadSolicitada).sum();
+                Integer totalConfirmado = lineas.stream().mapToInt(ProductoPedido::getCantidadConfirmada).sum();
+
+                BigDecimal pesoLogisticoTotal = lineasDTO.stream()
+                                .filter(l -> l.producto() != null && l.producto().pesoLogisticoKg() != null
+                                                && l.cantidadConfirmada() != null)
+                                .map(l -> l.producto().pesoLogisticoKg()
+                                                .multiply(BigDecimal.valueOf(l.cantidadConfirmada())))
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                String tipoCumplimiento = totalSolicitado > 0 && totalSolicitado.equals(totalConfirmado) ? "COMPLETO"
+                                : "PARCIAL";
+
+                return PedidoResponseDTO.builder()
+                                .pedidoId(pedido.getPedidoId())
+                                .numeroPedido(pedido.getNumeroPedido())
+                                .estado(pedido.getEstado().name())
+                                .fechaCreacion(pedido.getFechaCreacion())
+                                .fechaCompromiso(pedido.getFechaCompromiso())
+                                .rutaId(pedido.getRutaId())
+                                .cliente(clienteInfo)
+                                .clienteNombre(pedido.getClienteNombre())
+                                .asesor(AsesorInfoDTO.builder().asesorId(pedido.getAsesorId()).nombre("Asesor").build())
+                                .operarioPicking(mapearOperario(pedido.getOperarioPickingId()))
+                                .operarioDespacho(mapearOperario(pedido.getOperarioDespachoId()))
+                                .direccionEntrega(pedido.getDireccionEntrega())
+                                .lineas(lineasDTO)
+                                .totalSolicitado(totalSolicitado)
+                                .totalConfirmado(totalConfirmado)
+                                .pesoLogisticoTotal(pesoLogisticoTotal)
+                                .tipoCumplimiento(tipoCumplimiento)
+                                .build();
         }
 
-        return LineaPedidoResponseDTO.builder()
-                .productoPedidoId(linea.getProductoPedidoId())
-                .producto(productoInfo)
-                .cantidadSolicitada(linea.getCantidadSolicitada())
-                .cantidadConfirmada(linea.getCantidadConfirmada())
-                .lotesComprometidos(lotesDTO)
-                .build();
-    }
+        /**
+         * Busca pedido por UUID o número.
+         */
+        private Pedido buscarPedido(String identifier) {
+                Optional<Pedido> pedido;
 
-    /**
-     * Transforma LoteComprometido a DTO.
-     * FR-098: NO exponer info interna de lotes (solo código y fecha vencimiento)
-     */
-    private LoteComprometidoDTO toLoteComprometidoDTO(LoteComprometido lc) {
-        return LoteComprometidoDTO.builder()
-                .compromisoId(lc.getCompromisoId())
-                .codigoLote(lc.getCodigoLote())
-                .cantidadComprometida(lc.getCantidadComprometida())
-                .fechaVencimiento(null)  // FR-098: NO exponer fecha vencimiento a externos
-                .build();
-    }
+                try {
+                        // Intentar como UUID primero
+                        UUID id = UUID.fromString(identifier);
+                        pedido = pedidoRepository.findById(id);
+                } catch (IllegalArgumentException e) {
+                        // Si no es UUID válido, buscar por numero_pedido
+                        pedido = pedidoRepository.findByNumeroPedido(identifier);
+                }
+
+                return pedido.orElseThrow(() -> {
+                        log.warn("Pedido no encontrado: {}", identifier);
+                        return new PedidoNotFoundException("Pedido '" + identifier + "' no encontrado");
+                });
+        }
+
+        /**
+         * Obtiene info del cliente desde módulo externo.
+         */
+        private ClienteInfoDTO obtenerClienteInfo(String clienteCc) {
+                return clienteServicePort.findByCedula(clienteCc)
+                                .map(cliente -> ClienteInfoDTO.builder()
+                                                .cedula(cliente.getCedula())
+                                                .nombre(cliente.getNombre())
+                                                .telefono(cliente.getTelefono())
+                                                .direccion(cliente.getDireccion())
+                                                .build())
+                                .orElse(ClienteInfoDTO.builder()
+                                                .cedula(clienteCc)
+                                                .nombre("Cliente no disponible")
+                                                .build());
+        }
+
+        /**
+         * Mapea un ID de operario a su DTO de información.
+         */
+        private OperarioInfoDTO mapearOperario(UUID operarioId) {
+                if (operarioId == null)
+                        return null;
+                return operarioServicePort.findById(operarioId)
+                                .map(o -> OperarioInfoDTO.builder()
+                                                .id(o.getOperarioId())
+                                                .nombre(o.getNombre())
+                                                .cedula(o.getCedula())
+                                                .rol(o.getRol() != null ? o.getRol().name() : null)
+                                                .build())
+                                .orElse(OperarioInfoDTO.builder()
+                                                .id(operarioId)
+                                                .nombre("Operario no disponible")
+                                                .build());
+        }
+
+        /**
+         * Transforma ProductoPedido a DTO con lotes si están comprometidos.
+         */
+        private LineaPedidoResponseDTO toLineaDTO(ProductoPedido linea) {
+                // Obtener info del producto
+                Producto producto = productoRepository.findById(linea.getSkuId())
+                                .orElse(null);
+
+                ProductoInfoDTO productoInfo = producto != null ? ProductoInfoDTO.builder()
+                                .skuId(producto.getSkuId())
+                                .marca(producto.getMarca())
+                                .presentacion(producto.getPresentacion())
+                                .contenidoMl(producto.getContenidoMl())
+                                .pesoLogisticoKg(producto.getPesoLogisticoKg())
+                                .build() : null;
+
+                // Obtener lotes comprometidos si existen
+                List<LoteComprometidoDTO> lotesDTO = loteComprometidoRepository
+                                .findByProductoPedidoId(linea.getProductoPedidoId()).stream()
+                                .map(this::toLoteComprometidoDTO)
+                                .toList();
+
+                return LineaPedidoResponseDTO.builder()
+                                .productoPedidoId(linea.getProductoPedidoId())
+                                .skuId(linea.getSkuId())
+                                .producto(productoInfo)
+                                .cantidadSolicitada(linea.getCantidadSolicitada())
+                                .cantidadConfirmada(linea.getCantidadConfirmada())
+                                .lotesComprometidos(lotesDTO)
+                                .build();
+        }
+
+        /**
+         * Transforma LoteComprometido a DTO.
+         * FR-098: NO exponer info interna de lotes (solo código y fecha vencimiento)
+         */
+        private LoteComprometidoDTO toLoteComprometidoDTO(LoteComprometido lc) {
+                java.time.LocalDate vencimiento = loteRepository.findById(lc.getCodigoLote())
+                                .map(com.distribuidoras.inventario.domain.model.Lote::getFechaVencimiento)
+                                .orElse(null);
+
+                return LoteComprometidoDTO.builder()
+                                .compromisoId(lc.getCompromisoId())
+                                .codigoLote(lc.getCodigoLote())
+                                .cantidadComprometida(lc.getCantidadComprometida())
+                                .fechaVencimiento(vencimiento)
+                                .build();
+        }
 }

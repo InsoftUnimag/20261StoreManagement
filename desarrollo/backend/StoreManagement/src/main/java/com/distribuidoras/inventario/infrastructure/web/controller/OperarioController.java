@@ -36,6 +36,15 @@ public class OperarioController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/recepcion")
+    public ResponseEntity<List<OperarioDTO>> listarOperariosRecepcion() {
+        List<Operario> operarios = operarioService.findByRol("OPERARIO_RECEPCION");
+        List<OperarioDTO> response = operarios.stream()
+                .map(this::toDTO)
+                .toList();
+        return ResponseEntity.ok(response);
+    }
+
     private OperarioDTO toDTO(Operario operario) {
         return OperarioDTO.builder()
                 .id(operario.getOperarioId())

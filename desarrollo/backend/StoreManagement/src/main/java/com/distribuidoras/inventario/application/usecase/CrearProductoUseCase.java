@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
  * Caso de uso: Crear Producto (SKU).
@@ -43,7 +44,7 @@ public class CrearProductoUseCase {
                 .orElse("SKU-001");
 
         Producto producto = Producto.builder()
-        .skuId(siguienteSku)
+        .skuId(Objects.requireNonNull(siguienteSku))
         .marca(marca)
         .presentacion(presentacion)
         .contenidoMl(contenidoMl)

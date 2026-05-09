@@ -74,8 +74,8 @@ public class ConfirmarDespachoUseCase {
                                 .orElseThrow(() -> new IllegalArgumentException(
                                                 "Pedido no encontrado: " + command.pedidoId()));
 
-                // 2. Validar estado (FR-081): Solo EN_PICKING puede pasar a DESPACHADO
-                if (pedido.getEstado() != EstadoPedido.EN_PICKING) {
+                // 2. Validar estado (FR-081): Solo pedidos en estado PICKUP pueden ser despachados
+                if (pedido.getEstado() != EstadoPedido.PICKUP) {
                         throw new PedidoEstadoInvalidoException(
                                         pedido.getNumeroPedido(), pedido.getEstado().name());
                 }
