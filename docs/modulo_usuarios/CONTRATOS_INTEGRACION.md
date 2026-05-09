@@ -1,4 +1,4 @@
-# SPEC-INT-USUARIOS-001: Contratos de Integración — Módulo de Personas / Usuarios
+# Contratos de Integración — Módulo de Personas / Usuarios
 
 **Fecha**: 08/05/2026  
 **Actualizado**: Fusionado con especificación de Gestión de Personas  
