@@ -13,5 +13,6 @@ public interface ManifiestoRepository {
     List<Manifiesto> findAll();
     List<Manifiesto> findByFechaEmisionBetween(LocalDate desde, LocalDate hasta);
     List<Manifiesto> findByFechaEmisionBetweenWithLimit(LocalDate desde, LocalDate hasta, int limit);
+    Optional<Integer> findMaxNumeroManifiestoByFecha(LocalDate fecha);
     Manifiesto save(Manifiesto m);
 }

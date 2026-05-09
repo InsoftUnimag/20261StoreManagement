@@ -24,7 +24,7 @@ public class ListarPedidosDespachoUseCase {
 
     @Transactional(readOnly = true)
     public List<PedidoDespachoDTO> ejecutar() {
-        List<Pedido> pedidos = pedidoRepository.findByEstadoOrderByFechaCreacionAsc(EstadoPedido.EN_PICKING);
+        List<Pedido> pedidos = pedidoRepository.findByEstadoOrderByFechaCreacionAsc(EstadoPedido.PICKUP);
 
         return pedidos.stream().map(pedido -> {
             List<ProductoPedido> lineas = productoPedidoRepository.findByPedidoId(pedido.getPedidoId());

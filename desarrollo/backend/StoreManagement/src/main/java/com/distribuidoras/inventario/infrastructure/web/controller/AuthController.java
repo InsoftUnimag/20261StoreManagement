@@ -7,9 +7,20 @@ import com.distribuidoras.inventario.infrastructure.web.dto.LoginResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
+
+    private static final Map<String, MockUser> MOCK_USERS = Map.of(
+            "11111111", new MockUser(UUID.fromString("81000000-0000-0000-0000-000000000001"), "Carlos Perez", "OPERARIO_PICKING"),
+            "22222222", new MockUser(UUID.fromString("81000000-0000-0000-0000-000000000002"), "Maria Lopez", "OPERARIO_DESPACHO"),
+            "33333333", new MockUser(UUID.fromString("81000000-0000-0000-0000-000000000003"), "Pedro Gomez", "SUPERVISOR_INVENTARIO"),
+            "44444444", new MockUser(UUID.fromString("81000000-0000-0000-0000-000000000004"), "Roberto Sanchez", "ASESOR_COMERCIAL"),
+            "55555555", new MockUser(UUID.fromString("81000000-0000-0000-0000-000000000005"), "Ana Reception", "OPERARIO_RECEPCION")
+    );
 
     private final OperarioServicePort operarioService;
     private final JwtUtil jwtUtil;
@@ -27,12 +38,13 @@ public class AuthController {
                 .filter(operario -> operario.getActivo())
                 .map(operario -> {
                     String token = jwtUtil.generateToken(
-                            operario.getId(),
+                            operario.getOperarioId(),
                             operario.getNombre(),
                             operario.getRol().name()
                     );
                     return ResponseEntity.ok(LoginResponse.builder()
                             .token(token)
+                            .operarioId(operario.getOperarioId())
                             .nombre(operario.getNombre())
                             .cedula(operario.getCedula())
                             .rol(operario.getRol().name())
@@ -45,29 +57,26 @@ public class AuthController {
     @PostMapping("/mock-login")
     public ResponseEntity<LoginResponse> mockLogin(@RequestBody LoginRequest request) {
         String cc = request.getCedula();
-        String rol = "";
-        String nombre = "";
+        MockUser mockUser = MOCK_USERS.get(cc);
 
-        switch (cc) {
-            case "11111111": rol = "OPERARIO_PICKING"; nombre = "Carlos Perez"; break;
-            case "22222222": rol = "OPERARIO_DESPACHO"; nombre = "Maria Lopez"; break;
-            case "33333333": rol = "SUPERVISOR_INVENTARIO"; nombre = "Pedro Gomez"; break;
-            case "44444444": rol = "ASESOR_COMERCIAL"; nombre = "Roberto Sanchez"; break;
-            case "55555555": rol = "OPERARIO_RECEPCION"; nombre = "Ana Reception"; break;
-            default: return ResponseEntity.status(401).build();
+        if (mockUser == null) {
+            return ResponseEntity.status(401).build();
         }
 
         String token = jwtUtil.generateToken(
-                java.util.UUID.randomUUID(),
-                nombre,
-                rol
+                mockUser.operarioId(),
+                mockUser.nombre(),
+                mockUser.rol()
         );
         return ResponseEntity.ok(LoginResponse.builder()
                 .token(token)
-                .nombre(nombre)
+                .operarioId(mockUser.operarioId())
+                .nombre(mockUser.nombre())
                 .cedula(cc)
-                .rol(rol)
+                .rol(mockUser.rol())
                 .expiresIn(86400L)
                 .build());
     }
+
+    private record MockUser(UUID operarioId, String nombre, String rol) {}
 }

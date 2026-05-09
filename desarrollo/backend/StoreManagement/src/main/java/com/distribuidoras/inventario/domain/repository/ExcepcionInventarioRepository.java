@@ -2,6 +2,10 @@ package com.distribuidoras.inventario.domain.repository;
 
 import com.distribuidoras.inventario.domain.model.ExcepcionInventario;
 import com.distribuidoras.inventario.domain.model.enums.TipoExcepcion;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,6 +20,9 @@ public interface ExcepcionInventarioRepository {
     List<ExcepcionInventario> findAll();
     List<ExcepcionInventario> findByFilters(TipoExcepcion tipo, String skuId);
     List<ExcepcionInventario> findByCodigoLote(String codigoLote);
+    List<ExcepcionInventario> findByFechaRegistroAfter(LocalDateTime fecha);
+    Page<ExcepcionInventario> findByFiltersWithPagination(TipoExcepcion tipo, String skuId, 
+            LocalDateTime desde, LocalDateTime hasta, Pageable pageable);
     
     /**
      * Count open exceptions.

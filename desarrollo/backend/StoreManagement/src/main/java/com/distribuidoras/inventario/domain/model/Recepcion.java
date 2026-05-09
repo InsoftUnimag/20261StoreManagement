@@ -28,5 +28,8 @@ public class Recepcion {
 
     @Size(max = 1000, message = "Las notas no pueden exceder 1000 caracteres")
     private String notas;
+
+    // Número de recepción generado (secuencial, no UUID)
+    private String numeroRecepcion;
 }
 

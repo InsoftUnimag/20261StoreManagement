@@ -5,7 +5,6 @@ import com.distribuidoras.inventario.domain.model.Producto;
 import com.distribuidoras.inventario.domain.repository.PedidoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoPedidoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoRepository;
-import com.distribuidoras.inventario.domain.repository.LoteRepository;
 import com.distribuidoras.inventario.domain.repository.ClienteServicePort;
 import com.distribuidoras.inventario.domain.model.Cliente;
 import com.distribuidoras.inventario.infrastructure.messaging.config.RabbitMQConfig;
@@ -15,6 +14,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -40,7 +40,6 @@ public class SolicitudRutaProducer {
     private final ProductoPedidoRepository productoPedidoRepository;
     private final ProductoRepository productoRepository;
     private final ClienteServicePort clienteServicePort;
-    private final LoteRepository loteRepository;
 
     @Value("${rabbitmq.exchange.solicitud-ruta:inventario.logistica}")
     private String exchange;
@@ -48,14 +47,14 @@ public class SolicitudRutaProducer {
     @Value("${rabbitmq.routing-key.solicitud-ruta:solicitud.ruta}")
     private String routingKey;
 
-    private final com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository stockGlobalSkuRepository;
+    private final StockGlobalSkuJpaRepository stockGlobalSkuRepository;
 
     public SolicitudRutaProducer(RabbitTemplate rabbitTemplate,
             PedidoRepository pedidoRepository,
             ProductoPedidoRepository productoPedidoRepository,
             ProductoRepository productoRepository,
             ClienteServicePort clienteServicePort,
-            com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository stockGlobalSkuRepository) {
+            StockGlobalSkuJpaRepository stockGlobalSkuRepository) {
         this.rabbitTemplate = rabbitTemplate;
         this.pedidoRepository = pedidoRepository;
         this.productoPedidoRepository = productoPedidoRepository;
@@ -115,13 +114,14 @@ public class SolicitudRutaProducer {
         }
 
         // Construir mensaje explícitamente con lo que exige Módulo 2
+        // Spec 13: id_pedido, id_cliente, total_pedido, direccion, peso_total
         Map<String, Object> mensaje = new HashMap<>();
         mensaje.put("id_pedido", pedido.getPedidoId().toString());
         mensaje.put("id_cliente", pedido.getClienteCc());
         mensaje.put("total_pedido", precioTotal.doubleValue());
+        mensaje.put("direccion", direccionEntrega);
         mensaje.put("peso_logistico_kg", pesoTotal.doubleValue());
-        mensaje.put("direccion_entrega", direccionEntrega);
-
+        
         // Enviar a RabbitMQ (fire-and-forget)
         try {
             rabbitTemplate.convertAndSend(RabbitMQConfig.INVENTARIO_PEDIDOS_EXCHANGE,

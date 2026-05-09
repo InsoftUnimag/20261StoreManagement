@@ -70,9 +70,9 @@ Como **Operario de Recepción**, necesito reportar una excepción cuando la cant
    - **And** el Supervisor de Inventario recibe notificación
  
 
- ### User Story 3 - Operario de picking reporta avería o vencimiento detectado durante picking (Priority: P1)
+### User Story 3 - Operario de picking o despacho reporta avería o vencimiento (Priority: P1)
 
-Como **Operario de Despacho**, necesito reportar una excepción cuando al ejecutar el picking encuentro que un producto está físicamente dañado o ha vencido, para que el inventario del sistema se corrija y el pedido afectado sea gestionado correctamente.
+Como **Operario de Picking o Despacho**, necesito reportar una excepción cuando al ejecutar el picking encuentro que un producto está físicamente dañado o ha vencido, para que el inventario del sistema se corrija y el pedido afectado sea gestionado correctamente.
 
 **Why this priority**: Este reporte es el último filtro de calidad antes de que el producto salga. Garantizar que solo el inventario apto llegue al cliente, optimiza el flujo del Módulo 2 al evitar despachos fallidos.
 
@@ -81,21 +81,21 @@ Como **Operario de Despacho**, necesito reportar una excepción cuando al ejecut
 **Acceptance Scenarios**:
 
 1. **Scenario**: Unidades averiadas detectadas durante el picking
- - **Given** el Operario de picking está ejecutando el picking de un pedido que esta listo para despacho.
+ - **Given** el Operario de picking o despacho está ejecutando el picking de un pedido que esta listo para despacho.
  - **And**  detecta unidades físicamente dañadas en un lote.
- - **When** el Operario de picking reporta la excepción con tipo "Avería", lote afectado, cantidad dañada y descripción del daño
+ - **When** el Operario reporta la excepción con tipo "Avería", lote afectado, cantidad dañada y descripción del daño
  - **Then** el stock del lote se descuenta en la cantidad averiada
  - **And** se registra un MovimientoInventario negativo tipo "BAJA_AVERIA"
  - **And** el sistema busca automáticamente existencias en otros lotes y le indica al operario de qué lote específico tomar las unidades faltantes para completar el pedido.
  - **And** si la avería es total, la cantidad del lote llega a cero y queda inhabilitado para nuevos pedidos.
  - **And** el Supervisor de Inventario recibe notificación
- - **And** el Operario de Despacho continúa el proceso de picking con las unidades reasignadas y las no afectadas.
+ - **And** el Operario continúa el proceso de picking con las unidades reasignadas y las no afectadas.
 
 
 2. **Scenario**: Lote vencido detectado durante el picking
- - **Given** el Operario de picking está ejecutando el picking de un pedido que esta listo para despacho.
+ - **Given** el Operario de picking o despacho está ejecutando el picking de un pedido que esta listo para despacho.
  - **And** detecta que un lote comprometido tiene la fecha de vencimiento superada
- - **When** el Operario de picking reporta la excepción con tipo "Vencimiento" sobre ese lote
+ - **When** el Operario reporta la excepción con tipo "Vencimiento" sobre ese lote
  - **Then** el sistema fuerza la cantidad del lote completo a cero y lo bloquea para cualquier transacción futura.
  -**and** el sistema retira automáticamente este lote de todos los pedidos comprometidos que lo tenían asignado en el sistema.
  - **And** el stock del SKU se descuenta por la cantidad del lote
@@ -128,6 +128,8 @@ Como **Operario de Despacho**, necesito reportar una excepción cuando al ejecut
 - **FR-032**: El sistema DEBE ejecutar un proceso automático diario de detección y baja de lotes vencidos.
 
 - **FR-033**: El sistema DEBE notificar al Supervisor de Inventario ante cada excepción registrada.
+
+- **FR-034**: El sistema DEBE permitir reportar excepciones por Operarios de Recepción, Picking, Despacho y por Supervisor de Inventario.
 
  
 ### Key Entities

@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -14,7 +13,6 @@ import java.util.List;
 @AllArgsConstructor
 public class CrearManifiestoRequest {
     private String numeroManifiesto;
-    private LocalDate fechaEmision;
     private String proveedor;
     private List<LineaManifiestoRequest> lineas;
 

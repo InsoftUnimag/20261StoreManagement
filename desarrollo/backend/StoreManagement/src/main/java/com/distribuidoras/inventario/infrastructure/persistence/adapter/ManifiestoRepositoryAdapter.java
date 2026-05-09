@@ -29,15 +29,20 @@ public class ManifiestoRepositoryAdapter implements ManifiestoRepository {
     @Override public List<Manifiesto> findByFechaEmisionBetweenWithLimit(LocalDate desde, LocalDate hasta, int limit) {
         return jpa.findTop100ByFechaEmisionBetweenOrderByFechaEmisionDesc(desde, hasta).stream().map(this::toDomain).toList();
     }
+    @Override public Optional<Integer> findMaxNumeroManifiestoByFecha(LocalDate fecha) {
+        return jpa.findMaxNumeroManifiestoByFecha(fecha);
+    }
     @Override public Manifiesto save(Manifiesto m) { return toDomain(jpa.save(Objects.requireNonNull(toEntity(m)))); }
 
     private ManifiestoJpaEntity toEntity(Manifiesto m) {
         return ManifiestoJpaEntity.builder().manifiestoId(m.getManifiestoId())
                 .numeroManifiesto(m.getNumeroManifiesto()).fechaEmision(m.getFechaEmision())
-                .proveedor(m.getProveedor()).estado(m.getEstado().name()).build();
+                .proveedor(m.getProveedor()).estado(m.getEstado().name())
+                .creadoEl(m.getCreadoEl())
+                .build();
     }
     private Manifiesto toDomain(ManifiestoJpaEntity e) {
         return new Manifiesto(e.getManifiestoId(), e.getNumeroManifiesto(), e.getFechaEmision(),
-                e.getProveedor(), EstadoManifiesto.valueOf(e.getEstado()));
+                e.getProveedor(), EstadoManifiesto.valueOf(e.getEstado()), e.getCreadoEl());
     }
 }

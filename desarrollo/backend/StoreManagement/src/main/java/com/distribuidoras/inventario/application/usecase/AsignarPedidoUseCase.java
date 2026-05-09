@@ -28,18 +28,35 @@ public class AsignarPedidoUseCase {
                 .orElseThrow(() -> new PedidoNotFoundException(pedidoId.toString()));
 
         if (operarioPickingId != null) {
+            if (pedido.getEstado() != EstadoPedido.COMPROMETIDO) {
+                throw new IllegalStateException(
+                        "Solo se pueden asignar pedidos a picking en estado COMPROMETIDO. Estado actual: " + pedido.getEstado()
+                );
+            }
+            if (pedido.getOperarioPickingId() != null) {
+                throw new IllegalStateException(
+                        "El pedido ya tiene operario de picking asignado: " + pedido.getOperarioPickingId()
+                );
+            }
             pedido.setOperarioPickingId(operarioPickingId);
         }
+
         if (operarioDespachoId != null) {
+            if (pedido.getEstado() != EstadoPedido.PICKUP) {
+                throw new IllegalStateException(
+                        "Solo se puede asignar operario de despacho desde estado PICKUP. Estado actual: " + pedido.getEstado()
+                );
+            }
+            if (pedido.getOperarioDespachoId() != null) {
+                throw new IllegalStateException(
+                        "El pedido ya tiene operario de despacho asignado: " + pedido.getOperarioDespachoId()
+                );
+            }
             pedido.setOperarioDespachoId(operarioDespachoId);
         }
 
-        if (pedido.getOperarioPickingId() != null || pedido.getOperarioDespachoId() != null) {
-            if (pedido.getEstado() == EstadoPedido.ESPERANDO_RUTA) {
-                pedido.setEstado(EstadoPedido.COMPROMETIDO);
-                log.info("Pedido {} actualizado a estado COMPROMETIDO", pedidoId);
-            }
-        }
+        log.info("Pedido {} asignado exitosamente (Picking: {}, Despacho: {})", 
+                pedidoId, pedido.getOperarioPickingId(), pedido.getOperarioDespachoId());
 
         pedidoRepository.update(pedido);
         return pedido;

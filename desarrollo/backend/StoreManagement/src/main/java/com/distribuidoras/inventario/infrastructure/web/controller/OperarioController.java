@@ -38,7 +38,7 @@ public class OperarioController {
 
     private OperarioDTO toDTO(Operario operario) {
         return OperarioDTO.builder()
-                .id(operario.getId())
+                .id(operario.getOperarioId())
                 .nombre(operario.getNombre())
                 .cedula(operario.getCedula())
                 .rol(operario.getRol() != null ? operario.getRol().name() : null)

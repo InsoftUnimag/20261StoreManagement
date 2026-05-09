@@ -67,6 +67,7 @@ CREATE TABLE stock_global_sku (
     disponibles     INTEGER         NOT NULL DEFAULT 0,
     comprometidos   INTEGER         NOT NULL DEFAULT 0,
     fisico_total    INTEGER         NOT NULL DEFAULT 0,
+    precio          DECIMAL(15,2)   DEFAULT 0.00,
 
     CONSTRAINT fk_stock_global_producto FOREIGN KEY (sku_id)
         REFERENCES producto (sku_id)

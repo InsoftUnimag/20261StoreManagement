@@ -5,11 +5,13 @@ import com.distribuidoras.inventario.domain.repository.ProductoRepository;
 import com.distribuidoras.inventario.infrastructure.persistence.entity.ProductoJpaEntity;
 import com.distribuidoras.inventario.infrastructure.persistence.repository.ProductoJpaRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
 import java.util.stream.Collectors;
 
 /**
@@ -47,7 +49,7 @@ public class ProductoRepositoryAdapter implements ProductoRepository {
     }
 
     @Override
-    public org.springframework.data.domain.Page<Producto> findAllWithPagination(org.springframework.data.domain.Pageable pageable) {
+    public Page<Producto> findAllWithPagination(org.springframework.data.domain.Pageable pageable) {
         return jpaRepository.findAllActivos(Objects.requireNonNull(pageable)).map(this::toDomain);
     }
 
@@ -61,7 +63,7 @@ public class ProductoRepositoryAdapter implements ProductoRepository {
     }
 
     @Override
-    public org.springframework.data.domain.Page<Producto> findByBusquedaWithPagination(String busqueda, org.springframework.data.domain.Pageable pageable) {
+    public Page<Producto> findByBusquedaWithPagination(String busqueda, org.springframework.data.domain.Pageable pageable) {
         return jpaRepository
                 .findByBusquedaAll(busqueda, pageable)
                 .map(this::toDomain);

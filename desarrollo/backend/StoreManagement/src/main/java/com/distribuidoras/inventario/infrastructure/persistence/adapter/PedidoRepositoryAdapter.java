@@ -122,6 +122,8 @@ public class PedidoRepositoryAdapter implements PedidoRepository {
                 .rutaId(p.getRutaId())
                 .fechaCompromiso(p.getFechaCompromiso())
                 .asesorId(p.getAsesorId())
+                .operarioPickingId(p.getOperarioPickingId())
+                .operarioDespachoId(p.getOperarioDespachoId())
                 .build();
     }
     
@@ -136,6 +138,8 @@ public class PedidoRepositoryAdapter implements PedidoRepository {
                 .rutaId(e.getRutaId())
                 .fechaCompromiso(e.getFechaCompromiso())
                 .asesorId(e.getAsesorId())
+                .operarioPickingId(e.getOperarioPickingId())
+                .operarioDespachoId(e.getOperarioDespachoId())
                 .build();
     }
 }

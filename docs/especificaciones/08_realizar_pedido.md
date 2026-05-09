@@ -1,7 +1,7 @@
 # FEAT-008: Realizar Pedido
 **Created**: 03/03/2026 
 
-> ⚠️ **Nota de flujo**: El pedido se crea en estado "Esperando Ruta" **sin comprometer lotes**. Los lotes se comprometen únicamente cuando el logística de transporte (Módulo 2) envía la señal de asignación de ruta.
+> ⚠️ **Nota de flujo**: El pedido se crea en estado "Esperando Ruta" **sin comprometer lotes**. Los lotes se comprometen únicamente cuando el logística de transporte (Módulo 2) envía la señal de asignación de ruta. Al crear el pedido, el sistema descuenta el stock disponible.
 
 > ⚠️ **Nota de flujo**: El pedido requiere saber datos del cliente (Cedula/id, dirección de entrega) para poder realizar el pedido y enviarse a la logística de transporte.
 
@@ -14,7 +14,7 @@ Como **Asesor Comercial**, necesito realizar un pedido para que el sistema regis
 
 **Why this priority**: La creación del pedido es el punto de activación de toda la operación logística. Priorizar esta funcionalidad asegura que la solicitud quede registrada de forma inmediata y veraz, permitiendo a logística de transporte planificar la ruta antes de comprometer el inventario.
 
-**Independent Test**: Crear pedido con stock suficiente, verificar que el pedido queda en "Esperando Ruta" SIN comprometer lotes, y que el stock disponible no cambia en este momento.
+**Independent Test**: Crear pedido con stock suficiente, verificar que el pedido queda en "Esperando Ruta" SIN comprometer lotes, y que el stock disponible se descuenta al crear el pedido.
 
 **Acceptance Scenarios**:
 
@@ -27,6 +27,7 @@ Como **Asesor Comercial**, necesito realizar un pedido para que el sistema regis
    - **And** genera número de pedido único
    - **And** pedido queda en estado "Esperando Ruta"
    - **And** los lotes NO son comprometidos en este momento
+   - **And** el stock disponible se descuenta al crear el pedido
    - **And** Asesor Comercial recibe confirmación con número y detalle del pedido
 
 2. **Scenario**: Pedido exitoso — Paso 2: Compromiso de inventario activado (ruta asignada)

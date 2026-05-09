@@ -17,11 +17,16 @@ public class DetalleManifiestoRepositoryAdapter implements DetalleManifiestoRepo
         return jpa.findByManifiestoId(id).stream().map(this::toDomain).toList();
     }
     @Override public DetalleManifiesto save(DetalleManifiesto d) { return toDomain(jpa.save(Objects.requireNonNull(toEntity(d)))); }
+    @Override public java.util.Map<UUID, List<DetalleManifiesto>> findByManifiestoIds(List<UUID> ids) {
+        return jpa.findByManifiestoIdIn(ids).stream()
+                .map(this::toDomain)
+                .collect(java.util.stream.Collectors.groupingBy(DetalleManifiesto::getManifiestoId));
+    }
 
     private DetalleManifiestoJpaEntity toEntity(DetalleManifiesto d) {
         return DetalleManifiestoJpaEntity.builder()
                 .detalleId(d.getDetalleId())
-                .manifiestoId(d.getManifistoId())
+                .manifiestoId(d.getManifiestoId())
                 .skuId(d.getSkuId())
                 .cantidadEsperada(d.getCantidadEsperada())
                 .cantidadRecibida(d.getCantidadRecibida())
@@ -30,7 +35,7 @@ public class DetalleManifiestoRepositoryAdapter implements DetalleManifiestoRepo
     private DetalleManifiesto toDomain(DetalleManifiestoJpaEntity e) {
         return DetalleManifiesto.builder()
                 .detalleId(e.getDetalleId())
-                .manifistoId(e.getManifiestoId())
+                .manifiestoId(e.getManifiestoId())
                 .skuId(e.getSkuId())
                 .cantidadEsperada(e.getCantidadEsperada())
                 .cantidadRecibida(e.getCantidadRecibida())

@@ -1,7 +1,7 @@
 # Plan de Implementación: Gestión de Pedidos - Backend
 
 **Date**: 2026-04-03  
-**Specs**: 07_consultar_datos_cliente.md · 08_realizar_pedido.md · 09_consultar_detalle_pedido.md · 10_consultar_lista_pedidos.md  
+**Specs**: 07_consultar_datos_cliente.md · 08_realizar_pedido.md · 09_consultar_detalle_pedido.md · 10_listar_pedidos_comprometidos.md  
 **Module**: Módulo 1 - Inventario  
 **Layer**: Backend  
 **Priority**: P1 (Núcleo comercial del módulo)
@@ -10,7 +10,7 @@
 
 ## Summary
 
-Núcleo comercial del módulo. Permite consultar clientes (Módulo Usuarios), crear pedidos sin comprometer inventario (estado Esperando Ruta), comprometer lotes FEFO cuando Módulo 2 asigna ruta, y consultar pedidos. Integración crítica: consume Módulo Usuarios (HTTP), consume Módulo 2 Logística (RabbitMQ), publica a Módulo 3 Financiero (RabbitMQ).
+Núcleo comercial del módulo. Permite consultar clientes (Módulo Usuarios), crear pedidos sin comprometer inventario (estado Esperando Ruta), comprometer lotes FEFO cuando Módulo 2 asigna ruta, consultar pedidos y asignar operarios en secuencia (picking y luego despacho). Integración crítica: consume Módulo Usuarios (HTTP), consume Módulo 2 Logística (RabbitMQ), publica a Módulo 3 Financiero (RabbitMQ).
 
 ---
 
@@ -106,6 +106,7 @@ La estructura específica para este componente implementada es:
 
 **External Dependencies**:
 - **Módulo de Usuarios** (HTTP REST): Consultar datos de cliente - SC-021 (≤ 2 seg)
+- **Módulo de Usuarios** (HTTP REST): Consultar operarios por rol (OPERARIO_PICKING, OPERARIO_DESPACHO)
 - **Módulo 2 Logística** (RabbitMQ Consumer): Recibir señal de ruta asignada
 - **Módulo 3 Financiero** (RabbitMQ Producer): Enviar datos de pedido creado
 
@@ -368,7 +369,38 @@ Para cada ProductoPedido:
 
 ---
 
+### UC-006: Asignar Operarios al Pedido (Spec 10)
+
+**Actor**: Supervisor de Inventario
+
+**Flujo Principal**:
+1. Supervisor consulta operarios de picking o despacho por rol.
+2. Supervisor asigna operario de picking a pedido en estado Comprometido.
+3. Sistema registra la asignacion y retorna el id de operario asignado.
+4. Luego de confirmar picking (pedido en estado En Picking), Supervisor asigna operario de despacho.
+
+**Business Logic**:
+- Asignacion de picking solo si Pedido.estado = Comprometido.
+- Asignacion de despacho solo si Pedido.estado = En Picking.
+- No permitir asignar picking y despacho en la misma operacion.
+
+**Validations**:
+- Pedido no existe → 404
+- Estado invalido → 409 con mensaje de estado
+- Asignacion simultanea → 400
+
+---
+
 ## Endpoints / API
+
+### GET /api/v1/operarios/picking
+**Purpose**: Listar operarios de picking desde Módulo Usuarios
+
+### GET /api/v1/operarios/despacho
+**Purpose**: Listar operarios de despacho desde Módulo Usuarios
+
+### PUT /api/v1/pedidos/{pedidoId}/asignar
+**Purpose**: Asignar operario a pedido (picking o despacho segun estado)
 
 ### GET /api/v1/clientes/{cedula}
 **Purpose**: Consultar datos de cliente (proxy a Módulo Usuarios)

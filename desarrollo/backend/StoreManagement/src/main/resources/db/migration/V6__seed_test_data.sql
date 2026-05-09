@@ -1,0 +1,260 @@
+-- V6: Datos de prueba completos para todas las pantallas
+-- Requiere V1-V5 aplicados. Usa ON CONFLICT para ser idempotente.
+
+-- ══════════════════════════════════════════════════════════════
+-- 1. PRODUCTOS (50 SKUs)
+-- ══════════════════════════════════════════════════════════════
+INSERT INTO producto (sku_id, marca, presentacion, contenido_ml, peso_logistico_kg, creado_el, activo) VALUES
+('SKU-001','Coca Cola','Botella Plástica',500,0.55,NOW(),true),
+('SKU-002','Coca Cola','Lata',355,0.38,NOW(),true),
+('SKU-003','Pepsi','Botella Plástica',600,0.62,NOW(),true),
+('SKU-004','Pepsi','Lata',350,0.37,NOW(),true),
+('SKU-005','Sprite','Botella Plástica',500,0.53,NOW(),true),
+('SKU-006','Sprite','Lata',355,0.375,NOW(),true),
+('SKU-007','Fanta','Botella Plástica',500,0.54,NOW(),true),
+('SKU-008','Fanta','Lata',355,0.38,NOW(),true),
+('SKU-009','Agua Cristal','Botella Vidrio',750,0.78,NOW(),true),
+('SKU-010','Agua Cristal','Botella Plástica',500,0.52,NOW(),true),
+('SKU-011','Red Bull','Lata',250,0.45,NOW(),true),
+('SKU-012','Monster','Lata',473,0.51,NOW(),true),
+('SKU-013','Powerade','Botella Plástica',600,0.63,NOW(),true),
+('SKU-014','Gatorade','Botella Plástica',591,0.62,NOW(),true),
+('SKU-015','Hit','Caja',1000,1.05,NOW(),true),
+('SKU-016','H2O','Botella Plástica',500,0.515,NOW(),true),
+('SKU-017','Pulp','Caja',1000,1.08,NOW(),true),
+('SKU-018','Del Valle','Caja',1000,1.10,NOW(),true),
+('SKU-019','Watts','Lata',355,0.39,NOW(),true),
+('SKU-020','Cerveza Poker','Lata',330,0.36,NOW(),true),
+('SKU-021','Cerveza Corona','Botella Vidrio',355,0.40,NOW(),true),
+('SKU-022','Cerveza Heineken','Botella Vidrio',330,0.38,NOW(),true),
+('SKU-023','Cerveza Stella','Botella Vidrio',330,0.385,NOW(),true),
+('SKU-024','Redds','Lata',269,0.32,NOW(),true),
+('SKU-025','Strongbow','Lata',330,0.37,NOW(),true),
+('SKU-026','Buque','Botella Vidrio',340,0.39,NOW(),true),
+('SKU-027','Pilsen','Lata',330,0.355,NOW(),true),
+('SKU-028','Club','Lata',330,0.36,NOW(),true),
+('SKU-029','Aguardiente Antioqueño','Botella Vidrio',750,0.85,NOW(),true),
+('SKU-030','Ron Medellín','Botella Vidrio',750,1.20,NOW(),true),
+('SKU-031','Vodka Smirnoff','Botella Vidrio',750,1.30,NOW(),true),
+('SKU-032','Whisky Johnnie Walker','Botella Vidrio',750,1.50,NOW(),true),
+('SKU-033','Tequila Don Julio','Botella Vidrio',750,1.45,NOW(),true),
+('SKU-034','Vino Tinto Santa Helena','Botella Vidrio',750,1.15,NOW(),true),
+('SKU-035','Vino Blanco Santa Helena','Botella Vidrio',750,1.14,NOW(),true),
+('SKU-036','Champagne Freixenet','Botella Vidrio',750,1.25,NOW(),true),
+('SKU-037','Cerveza Budweiser','Lata',330,0.365,NOW(),true),
+('SKU-038','Cerveza Andes','Lata',330,0.358,NOW(),true),
+('SKU-039','Cerveza Bavaria','Lata',330,0.36,NOW(),true),
+('SKU-040','Cerveza Costeña','Lata',330,0.355,NOW(),true),
+('SKU-041','Refresco Fruko','Botella Plástica',400,0.43,NOW(),true),
+('SKU-042','Jugos Hit','Caja',1000,1.06,NOW(),true),
+('SKU-043','Jugos Colombiana','Caja',1000,1.05,NOW(),true),
+('SKU-044','Yogurt Alpina','Botella Plástica',1000,1.05,NOW(),true),
+('SKU-045','Leche Alquería','Caja',1000,1.04,NOW(),true),
+('SKU-046','Café Juan Valdez','Bolsa',500,0.52,NOW(),true),
+('SKU-047','Chocolate Hersheys','Tableta',150,0.18,NOW(),true),
+('SKU-048','Galletas Oreo','Paquete',180,0.20,NOW(),true),
+('SKU-049','Papitas Margarita','Bolsa',180,0.19,NOW(),true),
+('SKU-050','Chocolates Jet','Paquete',120,0.15,NOW(),true)
+ON CONFLICT (sku_id) DO NOTHING;
+
+-- ══════════════════════════════════��═══════════════════════════
+-- 2. LOTES (con stock diverso y fechas FEFO)
+-- ══════════════════════════════════════════════════════════════
+INSERT INTO lote (codigo_lote, sku_id, cantidad, fecha_vencimiento, fecha_expedicion, disponible, flag_urgencia_fefo, costo_unitario_producto, recepcion_id, creado_el) VALUES
+('LOT-001-A','SKU-001',120,CURRENT_DATE+15,'2026-01-15',true,true,1.50,NULL,NOW()),
+('LOT-001-B','SKU-001',80,CURRENT_DATE+180,'2026-03-01',true,false,1.55,NULL,NOW()),
+('LOT-002-A','SKU-002',200,CURRENT_DATE+60,'2026-02-01',true,false,1.20,NULL,NOW()),
+('LOT-002-B','SKU-002',150,CURRENT_DATE+300,'2026-08-01',true,false,1.25,NULL,NOW()),
+('LOT-003-A','SKU-003',100,CURRENT_DATE+45,'2026-01-10',true,false,1.45,NULL,NOW()),
+('LOT-003-B','SKU-003',90,CURRENT_DATE+200,'2026-06-01',true,false,1.50,NULL,NOW()),
+('LOT-004-A','SKU-004',180,CURRENT_DATE+90,'2026-03-01',true,false,1.15,NULL,NOW()),
+('LOT-004-B','SKU-004',120,CURRENT_DATE+250,'2026-08-15',true,false,1.20,NULL,NOW()),
+('LOT-005-A','SKU-005',95,CURRENT_DATE+7,'2026-01-25',true,true,1.40,NULL,NOW()),
+('LOT-005-B','SKU-005',85,CURRENT_DATE+150,'2026-05-10',true,false,1.42,NULL,NOW()),
+('LOT-006-A','SKU-006',220,CURRENT_DATE+80,'2026-02-05',true,false,1.10,NULL,NOW()),
+('LOT-006-B','SKU-006',160,CURRENT_DATE+365,'2026-12-01',true,false,1.12,NULL,NOW()),
+('LOT-007-A','SKU-007',110,CURRENT_DATE+20,'2026-02-20',true,true,1.38,NULL,NOW()),
+('LOT-007-B','SKU-007',70,CURRENT_DATE+120,'2026-04-15',true,false,1.40,NULL,NOW()),
+('LOT-008-A','SKU-008',190,CURRENT_DATE+100,'2026-03-10',true,false,1.18,NULL,NOW()),
+('LOT-008-B','SKU-008',130,CURRENT_DATE+280,'2026-09-28',true,false,1.22,NULL,NOW()),
+('LOT-009-A','SKU-009',60,CURRENT_DATE+180,'2026-04-01',true,false,2.50,NULL,NOW()),
+('LOT-009-B','SKU-009',45,CURRENT_DATE+450,'2027-01-15',true,false,2.60,NULL,NOW()),
+('LOT-010-A','SKU-010',140,CURRENT_DATE+70,'2026-02-15',true,false,1.30,NULL,NOW()),
+('LOT-010-B','SKU-010',100,CURRENT_DATE+210,'2026-07-20',true,false,1.35,NULL,NOW()),
+('LOT-011-A','SKU-011',80,CURRENT_DATE+240,'2026-07-01',true,false,4.50,NULL,NOW()),
+('LOT-011-B','SKU-011',50,CURRENT_DATE+480,'2027-04-15',true,false,4.80,NULL,NOW()),
+('LOT-012-A','SKU-012',95,CURRENT_DATE+200,'2026-06-20',true,false,3.80,NULL,NOW()),
+('LOT-012-B','SKU-012',70,CURRENT_DATE+400,'2027-01-10',true,false,4.00,NULL,NOW()),
+('LOT-013-A','SKU-013',110,CURRENT_DATE+10,'2026-01-30',true,true,2.20,NULL,NOW()),
+('LOT-013-B','SKU-013',75,CURRENT_DATE+160,'2026-06-25',true,false,2.30,NULL,NOW()),
+('LOT-014-A','SKU-014',125,CURRENT_DATE+130,'2026-04-15',true,false,2.25,NULL,NOW()),
+('LOT-014-B','SKU-014',90,CURRENT_DATE+320,'2026-11-20',true,false,2.35,NULL,NOW()),
+('LOT-015-A','SKU-015',50,CURRENT_DATE+220,'2026-07-30',true,false,3.50,NULL,NOW()),
+('LOT-015-B','SKU-015',35,CURRENT_DATE+440,'2027-02-01',true,false,3.70,NULL,NOW()),
+('LOT-016-A','SKU-016',200,CURRENT_DATE+5,'2026-01-20',true,true,1.25,NULL,NOW()),
+('LOT-016-B','SKU-016',150,CURRENT_DATE+170,'2026-06-10',true,false,1.30,NULL,NOW()),
+('LOT-017-A','SKU-017',45,CURRENT_DATE+145,'2026-05-25',true,false,3.20,NULL,NOW()),
+('LOT-017-B','SKU-017',30,CURRENT_DATE+330,'2026-11-20',true,false,3.40,NULL,NOW()),
+('LOT-018-A','SKU-018',55,CURRENT_DATE+18,'2026-02-15',true,true,3.80,NULL,NOW()),
+('LOT-018-B','SKU-018',40,CURRENT_DATE+195,'2026-08-20',true,false,4.00,NULL,NOW()),
+('LOT-019-A','SKU-019',180,CURRENT_DATE+175,'2026-06-25',true,false,1.80,NULL,NOW()),
+('LOT-019-B','SKU-019',120,CURRENT_DATE+380,'2027-01-10',true,false,1.90,NULL,NOW()),
+('LOT-020-A','SKU-020',150,CURRENT_DATE+230,'2026-07-15',true,false,2.00,NULL,NOW()),
+('LOT-020-B','SKU-020',100,CURRENT_DATE+410,'2027-02-25',true,false,2.10,NULL,NOW()),
+('LOT-021-A','SKU-021',80,CURRENT_DATE+270,'2026-08-05',true,false,2.80,NULL,NOW()),
+('LOT-021-B','SKU-021',60,CURRENT_DATE+470,'2027-04-15',true,false,2.90,NULL,NOW()),
+('LOT-022-A','SKU-022',70,CURRENT_DATE+290,'2026-09-10',true,false,3.50,NULL,NOW()),
+('LOT-022-B','SKU-022',45,CURRENT_DATE+490,'2027-05-01',true,false,3.70,NULL,NOW()),
+('LOT-023-A','SKU-023',65,CURRENT_DATE+260,'2026-08-25',true,false,3.60,NULL,NOW()),
+('LOT-023-B','SKU-023',50,CURRENT_DATE+400,'2027-01-20',true,false,3.80,NULL,NOW()),
+('LOT-024-A','SKU-024',130,CURRENT_DATE+115,'2026-03-30',true,false,2.40,NULL,NOW()),
+('LOT-024-B','SKU-024',90,CURRENT_DATE+285,'2026-10-10',true,false,2.50,NULL,NOW()),
+('LOT-025-A','SKU-025',110,CURRENT_DATE+200,'2026-07-20',true,false,2.60,NULL,NOW()),
+('LOT-026-A','SKU-026',75,CURRENT_DATE+250,'2026-08-10',true,false,2.95,NULL,NOW()),
+('LOT-027-A','SKU-027',140,CURRENT_DATE+190,'2026-07-05',true,false,2.15,NULL,NOW()),
+('LOT-028-A','SKU-028',160,CURRENT_DATE+160,'2026-06-15',true,false,2.20,NULL,NOW()),
+('LOT-029-A','SKU-029',50,CURRENT_DATE+340,'2026-12-10',true,false,5.20,NULL,NOW()),
+('LOT-030-A','SKU-030',40,CURRENT_DATE+365,'2027-01-01',true,false,6.50,NULL,NOW()),
+('LOT-031-A','SKU-031',35,CURRENT_DATE+350,'2026-12-20',true,false,7.00,NULL,NOW()),
+('LOT-032-A','SKU-032',30,CURRENT_DATE+380,'2027-02-15',true,false,8.50,NULL,NOW()),
+('LOT-033-A','SKU-033',38,CURRENT_DATE+370,'2027-01-30',true,false,8.00,NULL,NOW()),
+('LOT-034-A','SKU-034',55,CURRENT_DATE+290,'2026-10-20',true,false,4.50,NULL,NOW()),
+('LOT-035-A','SKU-035',60,CURRENT_DATE+300,'2026-11-05',true,false,4.45,NULL,NOW()),
+('LOT-036-A','SKU-036',25,CURRENT_DATE+360,'2027-01-15',true,false,5.80,NULL,NOW()),
+('LOT-037-A','SKU-037',100,CURRENT_DATE+210,'2026-07-25',true,false,1.75,NULL,NOW()),
+('LOT-038-A','SKU-038',120,CURRENT_DATE+200,'2026-07-15',true,false,1.80,NULL,NOW()),
+('LOT-039-A','SKU-039',115,CURRENT_DATE+195,'2026-07-10',true,false,1.78,NULL,NOW()),
+('LOT-040-A','SKU-040',125,CURRENT_DATE+205,'2026-07-20',true,false,1.82,NULL,NOW()),
+('LOT-041-A','SKU-041',180,CURRENT_DATE+140,'2026-05-15',true,false,1.65,NULL,NOW()),
+('LOT-042-A','SKU-042',70,CURRENT_DATE+270,'2026-09-05',true,false,3.30,NULL,NOW()),
+('LOT-043-A','SKU-043',75,CURRENT_DATE+280,'2026-09-20',true,false,3.25,NULL,NOW()),
+('LOT-044-A','SKU-044',60,CURRENT_DATE+250,'2026-08-25',true,false,3.80,NULL,NOW()),
+('LOT-045-A','SKU-045',65,CURRENT_DATE+260,'2026-09-05',true,false,3.75,NULL,NOW()),
+('LOT-046-A','SKU-046',90,CURRENT_DATE+180,'2026-06-20',true,false,2.50,NULL,NOW()),
+('LOT-047-A','SKU-047',200,CURRENT_DATE+120,'2026-05-10',true,false,0.85,NULL,NOW()),
+('LOT-048-A','SKU-048',180,CURRENT_DATE+130,'2026-05-20',true,false,0.95,NULL,NOW()),
+('LOT-049-A','SKU-049',150,CURRENT_DATE+110,'2026-04-30',true,false,0.90,NULL,NOW()),
+('LOT-050-A','SKU-050',220,CURRENT_DATE+140,'2026-05-25',true,false,0.70,NULL,NOW())
+ON CONFLICT (codigo_lote) DO NOTHING;
+
+-- ══════════════════════════════════════════════════════════════
+-- 3. MANIFIESTOS Y DETALLES
+-- ══════════════════════════════════════════════════════════════
+INSERT INTO manifiesto (manifiesto_id, numero_manifiesto, fecha_emision, proveedor, estado) VALUES
+('a1000000-0000-0000-0000-000000000001','MAN-2026-001','2026-04-20','Distribuidora Bavaria S.A.','PENDIENTE'),
+('a1000000-0000-0000-0000-000000000002','MAN-2026-002','2026-04-22','Coca-Cola FEMSA Colombia','RECEPCIONADO_PARCIAL'),
+('a1000000-0000-0000-0000-000000000003','MAN-2026-003','2026-04-25','Postobon S.A.','RECEPCIONADO_TOTAL'),
+('a1000000-0000-0000-0000-000000000004','MAN-2026-004','2026-04-28','Diageo Colombia','PENDIENTE'),
+('a1000000-0000-0000-0000-000000000005','MAN-2026-005','2026-04-30','Pepsico Colombia','PENDIENTE')
+ON CONFLICT (manifiesto_id) DO NOTHING;
+
+INSERT INTO detalle_manifiesto (detalle_id, manifiesto_id, sku_id, cantidad_esperada, cantidad_recibida) VALUES
+('b1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000001','SKU-020',200,0),
+('b1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000001','SKU-021',100,0),
+('b1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000002','SKU-001',150,120),
+('b1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000002','SKU-002',200,200),
+('b1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000003','SKU-003',100,100),
+('b1000000-0000-0000-0000-000000000006','a1000000-0000-0000-0000-000000000004','SKU-029',80,0),
+('b1000000-0000-0000-0000-000000000007','a1000000-0000-0000-0000-000000000004','SKU-030',60,0),
+('b1000000-0000-0000-0000-000000000008','a1000000-0000-0000-0000-000000000005','SKU-003',120,0),
+('b1000000-0000-0000-0000-000000000009','a1000000-0000-0000-0000-000000000005','SKU-004',180,0)
+ON CONFLICT (detalle_id) DO NOTHING;
+
+-- ══════════════════════════════════════════════════════════════
+-- 4. STOCK GLOBAL SKU
+-- ══════════════════════════════════════════════════════════════
+INSERT INTO stock_global_sku (sku_id, disponibles, comprometidos, fisico_total, precio)
+SELECT
+    l.sku_id,
+    SUM(l.cantidad) AS disponibles,
+    0 AS comprometidos,
+    SUM(l.cantidad) AS fisico_total,
+    MAX(l.costo_unitario_producto) AS precio
+FROM lote l
+WHERE l.disponible = true
+GROUP BY l.sku_id
+ON CONFLICT (sku_id) DO UPDATE SET
+    disponibles = EXCLUDED.disponibles,
+    fisico_total = EXCLUDED.fisico_total,
+    precio = EXCLUDED.precio;
+
+-- ══════════════════════════════════════════════════════════════
+-- 5. EXCEPCIONES DE INVENTARIO
+-- ══════════════════════════════════════════════════════════════
+INSERT INTO excepcion_inventario (excepcion_id, tipo_excepcion, codigo_lote, sku_id, cantidad_afectada, fecha_registro, operario_id, descripcion, evidencia_url) VALUES
+('e1000000-0000-0000-0000-000000000001','AVERIA','LOT-001-A','SKU-001',5,NOW()-INTERVAL'3 days',NULL,'Botellas rotas durante manipulación en bodega',NULL),
+('e1000000-0000-0000-0000-000000000002','VENCIMIENTO','LOT-005-A','SKU-005',8,NOW()-INTERVAL'2 days',NULL,'Lote próximo a vencer detectado en revisión FEFO',NULL),
+('e1000000-0000-0000-0000-000000000003','DIFERENCIA','LOT-002-A','SKU-002',12,NOW()-INTERVAL'1 day',NULL,'Diferencia detectada al comparar físico vs manifiesto MAN-2026-002',NULL),
+('e1000000-0000-0000-0000-000000000004','FALTANTE','LOT-007-A','SKU-007',3,NOW()-INTERVAL'12 hours',NULL,'Unidades faltantes al confirmar picking',NULL),
+('e1000000-0000-0000-0000-000000000005','AVERIA','LOT-013-A','SKU-013',2,NOW()-INTERVAL'2 hours',NULL,'Empaques dañados por humedad en zona de almacenamiento',NULL)
+ON CONFLICT (excepcion_id) DO NOTHING;
+
+-- ══════════════════════════════════════════════════════════════
+-- 6. MOVIMIENTOS DE INVENTARIO
+-- ══════════════════════════════════════════════════════════════
+INSERT INTO movimiento_inventario (movimiento_id, codigo_lote, tipo_movimiento, cantidad, fecha_movimiento, pedido_id, excepcion_id, operario_id, observaciones) VALUES
+('f1000000-0000-0000-0000-000000000001','LOT-001-A','ENTRADA',120,NOW()-INTERVAL'15 days',NULL,NULL,NULL,'Ingreso inicial lote LOT-001-A'),
+('f1000000-0000-0000-0000-000000000002','LOT-001-B','ENTRADA',80,NOW()-INTERVAL'15 days',NULL,NULL,NULL,'Ingreso inicial lote LOT-001-B'),
+('f1000000-0000-0000-0000-000000000003','LOT-002-A','ENTRADA',200,NOW()-INTERVAL'14 days',NULL,NULL,NULL,'Ingreso lote LOT-002-A'),
+('f1000000-0000-0000-0000-000000000004','LOT-003-A','ENTRADA',100,NOW()-INTERVAL'13 days',NULL,NULL,NULL,'Ingreso lote LOT-003-A'),
+('f1000000-0000-0000-0000-000000000005','LOT-001-A','BAJA_AVERIA',5,NOW()-INTERVAL'3 days',NULL,'e1000000-0000-0000-0000-000000000001',NULL,'Avería registrada'),
+('f1000000-0000-0000-0000-000000000006','LOT-005-A','BAJA_VENCIMIENTO',8,NOW()-INTERVAL'2 days',NULL,'e1000000-0000-0000-0000-000000000002',NULL,'Baja por vencimiento'),
+('f1000000-0000-0000-0000-000000000007','LOT-003-A','COMPROMISO',30,NOW()-INTERVAL'4 days','c1000000-0000-0000-0000-000000000002',NULL,NULL,'Compromiso pedido PED-2026-002'),
+('f1000000-0000-0000-0000-000000000008','LOT-009-A','PICKING',10,NOW()-INTERVAL'2 days','c1000000-0000-0000-0000-000000000004',NULL,NULL,'Picking confirmado PED-2026-004'),
+('f1000000-0000-0000-0000-000000000009','LOT-011-A','SALIDA',6,NOW()-INTERVAL'1 day','c1000000-0000-0000-0000-000000000005',NULL,NULL,'Despacho confirmado PED-2026-005'),
+('f1000000-0000-0000-0000-000000000010','LOT-002-A','FALTANTE',12,NOW()-INTERVAL'1 day',NULL,'e1000000-0000-0000-0000-000000000003',NULL,'Diferencia manifiesto')
+ON CONFLICT (movimiento_id) DO NOTHING;
+
+-- ══════════════════════════════════════════════════════════════
+-- 7. PEDIDOS, PRODUCTOS_PEDIDO Y LOTES_COMPROMETIDOS
+-- ══════════════════════════════════════════════════════
+INSERT INTO pedidos (pedido_id, numero_pedido, cliente_cc, fecha_creacion, estado, ruta_id, fecha_compromiso, asesor_id, operario_picking_id, operario_despacho_id) VALUES
+('c1000000-0000-0000-0000-000000000001','PED-2026-001','1234567890',NOW()-INTERVAL'5 days','ESPERANDO_RUTA',NULL,NULL,NULL,NULL,NULL),
+('c1000000-0000-0000-0000-000000000002','PED-2026-002','9876543210',NOW()-INTERVAL'4 days','COMPROMETIDO',NULL,NULL,NULL,NULL,NULL),
+('c1000000-0000-0000-0000-000000000003','PED-2026-003','5555555555',NOW()-INTERVAL'3 days','COMPROMETIDO',NULL,NULL,NULL,NULL,NULL),
+('c1000000-0000-0000-0000-000000000004','PED-2026-004','1111111111',NOW()-INTERVAL'2 days','EN_PICKING',NULL,NULL,NULL,NULL,NULL),
+('c1000000-0000-0000-0000-000000000005','PED-2026-005','2222222222',NOW()-INTERVAL'1 day','DESPACHADO',NULL,NULL,NULL,NULL,NULL),
+('c1000000-0000-0000-0000-000000000006','PED-2026-006','3333333333',NOW()-INTERVAL'6 hours','ENTREGADO',NULL,NULL,NULL,NULL,NULL),
+('c1000000-0000-0000-0000-000000000007','PED-2026-007','4444444444',NOW()-INTERVAL'3 hours','ESPERANDO_RUTA',NULL,NULL,NULL,NULL,NULL),
+('c1000000-0000-0000-0000-000000000008','PED-2026-008','6666666666',NOW()-INTERVAL'1 hour','COMPROMETIDO',NULL,NULL,NULL,NULL,NULL)
+ON CONFLICT (pedido_id) DO NOTHING;
+
+INSERT INTO productos_pedido (producto_pedido_id, pedido_id, sku_id, cantidad_solicitada, cantidad_confirmada) VALUES
+('d1000000-0000-0000-0000-000000000001','c1000000-0000-0000-0000-000000000001','SKU-001',24,0),
+('d1000000-0000-0000-0000-000000000002','c1000000-0000-0000-0000-000000000001','SKU-002',12,0),
+('d1000000-0000-0000-0000-000000000003','c1000000-0000-0000-0000-000000000002','SKU-003',30,30),
+('d1000000-0000-0000-0000-000000000004','c1000000-0000-0000-0000-000000000002','SKU-005',20,20),
+('d1000000-0000-0000-0000-000000000005','c1000000-0000-0000-0000-000000000003','SKU-007',15,15),
+('d1000000-0000-0000-0000-000000000006','c1000000-0000-0000-0000-000000000003','SKU-008',36,36),
+('d1000000-0000-0000-0000-000000000007','c1000000-0000-0000-0000-000000000004','SKU-009',10,10),
+('d1000000-0000-0000-0000-000000000008','c1000000-0000-0000-0000-000000000005','SKU-011',6,6),
+('d1000000-0000-0000-0000-000000000009','c1000000-0000-0000-0000-000000000007','SKU-013',18,0),
+('d1000000-0000-0000-0000-000000000010','c1000000-0000-0000-0000-000000000008','SKU-014',24,0)
+ON CONFLICT (producto_pedido_id) DO NOTHING;
+
+INSERT INTO lotes_comprometidos (compromiso_id, producto_pedido_id, codigo_lote, cantidad_comprometida, fecha_compromiso) VALUES
+('61000000-0000-0000-0000-000000000001','d1000000-0000-0000-0000-000000000003','LOT-003-A',30,NOW()-INTERVAL'4 days'),
+('62000000-0000-0000-0000-000000000002','d1000000-0000-0000-0000-000000000004','LOT-005-A',20,NOW()-INTERVAL'4 days'),
+('63000000-0000-0000-0000-000000000003','d1000000-0000-0000-0000-000000000005','LOT-007-A',15,NOW()-INTERVAL'3 days'),
+('64000000-0000-0000-0000-000000000004','d1000000-0000-0000-0000-000000000006','LOT-008-A',36,NOW()-INTERVAL'3 days'),
+('65000000-0000-0000-0000-000000000005','d1000000-0000-0000-0000-000000000007','LOT-009-A',10,NOW()-INTERVAL'2 days'),
+('66000000-0000-0000-0000-000000000006','d1000000-0000-0000-0000-000000000008','LOT-011-A',6,NOW()-INTERVAL'1 day')
+ON CONFLICT (compromiso_id) DO NOTHING;
+
+-- ══════════════════════════════════════════════════════════════
+-- 8. REGISTROS DE PICKING
+-- ══════════════════════════════════════════════════════════════
+INSERT INTO registro_picking (registro_picking_id, pedido_id, operario_id, fecha_picking, observaciones) VALUES
+('51000000-0000-0000-0000-000000000001','c1000000-0000-0000-0000-000000000002','81000000-0000-0000-0000-000000000001',NOW()-INTERVAL'2 days','Picking completado'),
+('52000000-0000-0000-0000-000000000002','c1000000-0000-0000-0000-000000000003','82000000-0000-0000-0000-000000000001',NOW()-INTERVAL'1 day','Picking completado'),
+('53000000-0000-0000-0000-000000000003','c1000000-0000-0000-0000-000000000004','83000000-0000-0000-0000-000000000001',NOW()-INTERVAL'12 hours','En proceso'),
+('54000000-0000-0000-0000-000000000004','c1000000-0000-0000-0000-000000000005','84000000-0000-0000-0000-000000000001',NOW()-INTERVAL'6 hours','Picking completado')
+ON CONFLICT (registro_picking_id) DO NOTHING;
+
+-- ══════════════════════════════════════════════════════════════
+-- 9. REGISTROS DE DESPACHO
+-- ══════════════════════════════════════════════════════════════
+INSERT INTO registro_despacho (registro_despacho_id, pedido_id, operario_id, transportista, placa_vehiculo, fecha_despacho, observaciones) VALUES
+('71000000-0000-0000-0000-000000000001','c1000000-0000-0000-0000-000000000005','81000000-0000-0000-0000-000000000002','Transportes Rápido','ABZ-123',NOW()-INTERVAL'2 days','Despacho confirmado'),
+('72000000-0000-0000-0000-000000000002','c1000000-0000-0000-0000-000000000006','82000000-0000-0000-0000-000000000002','Transportes Express','XYZ-456',NOW()-INTERVAL'1 day','Despacho confirmado')
+ON CONFLICT (registro_despacho_id) DO NOTHING;

@@ -40,6 +40,6 @@ public class ConsultarDetallesManifiestoUseCase {
         return new ManifiestoDetalleResult(m.getManifiestoId(), m.getNumeroManifiesto(), lineas);
     }
 
-    public record ManifiestoDetalleResult(UUID manifistoId, String numeroManifiesto, List<LineaManifiestoResult> lineas) {}
+    public record ManifiestoDetalleResult(UUID manifiestoId, String numeroManifiesto, List<LineaManifiestoResult> lineas) {}
     public record LineaManifiestoResult(UUID detalleId, String skuId, String marca, String presentacion, int cantidadEsperada, int cantidadRecibida) {}
 }

@@ -7,13 +7,18 @@
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 — Confirmar salida física del pedido de bodega (Priority: P1)
-Como **Operario de Despacho**, necesito confirmar que el pedido fue cargado al vehículo y salió físicamente de la bodega, para actualizar el inventario, cerrar el ciclo del stock en el Módulo 1.
+Como **Operario de Despacho**, necesito confirmar que el pedido asignado fue cargado al vehículo y salió físicamente de la bodega, para actualizar el inventario, cerrar el ciclo del stock en el Módulo 1.
 
 **Why this priority**: Es el último punto de control del inventario físico en bodega. Sin esta confirmación, el inventario lógico permanece en estado "En Picking" indefinidamente, generando inconsistencias entre módulos.
 
 **Independent Test**: Tomar un pedido en estado "En Picking", confirmar despacho, verificar que el pedido cambian a "Despachado", se registra MovimientoInventario tipo "Salida" por pedido.
 
 **Acceptance Scenarios**:
+
+0. **Scenario**: Ver mis pedidos asignados
+   - **Given** el Supervisor asigno pedidos al Operario de Despacho
+   - **When** el Operario consulta su lista de pedidos asignados
+   - **Then** el sistema muestra solo los pedidos asignados a su id
 
 1. **Scenario**: Despacho exitoso de pedido completo
    - **Given** existe un pedido en estado "En Picking" con todos sus productos en estado "Picking"
