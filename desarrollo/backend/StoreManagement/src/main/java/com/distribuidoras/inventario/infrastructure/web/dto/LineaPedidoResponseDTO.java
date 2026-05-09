@@ -11,6 +11,7 @@ public record LineaPedidoResponseDTO(
         ProductoInfoDTO producto,
         Integer cantidadSolicitada,
         Integer cantidadConfirmada,
+        String skuId,
         List<LoteComprometidoDTO> lotesComprometidos
 ) {
     public static Builder builder() {
@@ -22,10 +23,16 @@ public record LineaPedidoResponseDTO(
         private ProductoInfoDTO producto;
         private Integer cantidadSolicitada;
         private Integer cantidadConfirmada;
+        private String skuId;
         private List<LoteComprometidoDTO> lotesComprometidos;
 
         public Builder productoPedidoId(UUID productoPedidoId) {
             this.productoPedidoId = productoPedidoId;
+            return this;
+        }
+
+        public Builder skuId(String skuId) {
+            this.skuId = skuId;
             return this;
         }
 
@@ -55,8 +62,8 @@ public record LineaPedidoResponseDTO(
                     producto,
                     cantidadSolicitada,
                     cantidadConfirmada,
-                    lotesComprometidos
-            );
+                    skuId,
+                    lotesComprometidos);
         }
     }
 }

@@ -3,6 +3,7 @@ package com.distribuidoras.inventario.infrastructure.persistence.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import org.springframework.lang.NonNull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -24,6 +25,7 @@ import java.time.LocalDateTime;
 public class ProductoJpaEntity {
 
     @Id
+    @NonNull
     @Column(name = "sku_id", updatable = false, nullable = false, length = 20)
     private String skuId;
 

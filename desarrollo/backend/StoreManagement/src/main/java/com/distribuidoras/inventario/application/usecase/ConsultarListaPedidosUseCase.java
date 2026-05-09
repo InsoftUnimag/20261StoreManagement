@@ -13,10 +13,9 @@ import com.distribuidoras.inventario.infrastructure.web.dto.PedidoResumenDTO;
 import com.distribuidoras.inventario.infrastructure.web.dto.PedidosListResponseDTO;
 import com.distribuidoras.inventario.infrastructure.web.dto.LineaResumenDTO;
 import com.distribuidoras.inventario.infrastructure.web.dto.LoteResumenDTO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +23,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.distribuidoras.inventario.domain.model.Cliente;
+
 
 /**
  * Use Case: Consultar Lista de Pedidos con filtros.
@@ -33,24 +32,19 @@ import com.distribuidoras.inventario.domain.model.Cliente;
 @Service
 public class ConsultarListaPedidosUseCase {
 
-        private static final Logger log = LoggerFactory.getLogger(ConsultarListaPedidosUseCase.class);
-
         private final PedidoRepository pedidoRepository;
         private final ProductoPedidoRepository productoPedidoRepository;
         private final ProductoRepository productoRepository;
         private final LoteComprometidoRepository loteComprometidoRepository;
-        private final ConsultarClienteUseCase consultarClienteUseCase;
 
         public ConsultarListaPedidosUseCase(PedidoRepository pedidoRepository,
                         ProductoPedidoRepository productoPedidoRepository,
                         ProductoRepository productoRepository,
-                        LoteComprometidoRepository loteComprometidoRepository,
-                        ConsultarClienteUseCase consultarClienteUseCase) {
+                        LoteComprometidoRepository loteComprometidoRepository) {
                 this.pedidoRepository = pedidoRepository;
                 this.productoPedidoRepository = productoPedidoRepository;
                 this.productoRepository = productoRepository;
                 this.loteComprometidoRepository = loteComprometidoRepository;
-                this.consultarClienteUseCase = consultarClienteUseCase;
         }
 
         public record FiltrosDTO(
@@ -72,7 +66,7 @@ public class ConsultarListaPedidosUseCase {
 
         @Transactional(readOnly = true)
         public PedidosListResponseDTO ejecutar(FiltrosDTO filtros) {
-                PageRequest pageable = PageRequest.of(filtros.page(), filtros.size());
+                PageRequest pageable = PageRequest.of(filtros.page(), filtros.size(), Sort.by("fechaCreacion").descending());
 
                 Page<Pedido> page = pedidoRepository.findByFilters(
                                 filtros.estado(),
@@ -116,16 +110,11 @@ public class ConsultarListaPedidosUseCase {
                                 .map(this::toLineaResumenDTO)
                                 .collect(Collectors.toList());
 
-                String clienteNombre = "Cliente";
+                String clienteNombre = pedido.getClienteNombre() != null ? pedido.getClienteNombre() : "Cliente no disponible";
                 String clienteDireccion = null;
-                try {
-                        Cliente cliente = consultarClienteUseCase.ejecutar(pedido.getClienteCc());
-                        if (cliente != null) {
-                                clienteNombre = cliente.getNombre();
-                                clienteDireccion = cliente.getDireccion();
-                        }
-                } catch (Exception e) {
-                        log.warn("No se pudo obtener nombre del cliente {}: {}", pedido.getClienteCc(), e.getMessage());
+                // Si falta la dirección o el nombre, intentamos cargar para completar (opcional, priorizamos performance)
+                if (pedido.getDireccionEntrega() != null) {
+                        clienteDireccion = pedido.getDireccionEntrega();
                 }
 
                 return PedidoResumenDTO.builder()

@@ -22,10 +22,10 @@ public interface ExcepcionInventarioJpaRepository extends JpaRepository<Excepcio
     List<ExcepcionInventarioJpaEntity> findByFechaRegistroAfter(@Param("fecha") LocalDateTime fecha);
     
     @Query("SELECT e FROM ExcepcionInventarioJpaEntity e WHERE " +
-            "(:tipo IS NULL OR e.tipoExcepcion = :tipo) AND " +
-            "(:skuId IS NULL OR e.skuId = :skuId) AND " +
-            "(:desde IS NULL OR e.fechaRegistro >= :desde) AND " +
-            "(:hasta IS NULL OR e.fechaRegistro <= :hasta)")
+            "(CAST(:tipo AS string) IS NULL OR e.tipoExcepcion = :tipo) AND " +
+            "(CAST(:skuId AS string) IS NULL OR e.skuId = :skuId) AND " +
+            "(e.fechaRegistro >= CAST(:desde AS LocalDateTime)) AND " +
+            "(e.fechaRegistro <= CAST(:hasta AS LocalDateTime))")
     Page<ExcepcionInventarioJpaEntity> findByFiltersWithPagination(
             @Param("tipo") String tipo,
             @Param("skuId") String skuId,

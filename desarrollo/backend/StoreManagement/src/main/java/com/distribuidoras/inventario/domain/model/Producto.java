@@ -1,5 +1,6 @@
 package com.distribuidoras.inventario.domain.model;
 
+import org.springframework.lang.NonNull;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -20,6 +21,7 @@ import java.time.LocalDateTime;
 public class Producto {
 
     @EqualsAndHashCode.Include
+    @NonNull
     @NotBlank(message = "El SKU no puede estar vacío")
     @Size(max = 20, message = "El SKU no puede exceder 20 caracteres")
     private String skuId;

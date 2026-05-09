@@ -32,6 +32,9 @@ public class PedidoJpaEntity {
     
     @Column(name = "cliente_cc", nullable = false, length = 50)
     private String clienteCc;
+
+    @Column(name = "cliente_nombre", length = 200)
+    private String clienteNombre;
     
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
@@ -54,4 +57,13 @@ public class PedidoJpaEntity {
     
     @Column(name = "operario_despacho_id")
     private UUID operarioDespachoId;
+
+    @Column(name = "direccion_entrega", length = 255)
+    private String direccionEntrega;
+
+    @Column(name = "fecha_entrega")
+    private LocalDateTime fechaEntrega;
+
+    @Column(name = "observaciones", length = 500)
+    private String observaciones;
 }

@@ -63,8 +63,14 @@ public class ExcepcionInventarioRepositoryAdapter implements ExcepcionInventario
             LocalDateTime desde, LocalDateTime hasta,
             Pageable pageable) {
         String tipoStr = tipo != null ? tipo.name() : null;
+        
+        // GAP-08: PostgreSQL fix para "could not determine data type of parameter"
+        // Usamos fechas extremas por defecto para evitar la ambigüedad de tipos al enviar NULL
+        LocalDateTime desdeFinal = desde != null ? desde : LocalDateTime.of(1970, 1, 1, 0, 0);
+        LocalDateTime hastaFinal = hasta != null ? hasta : LocalDateTime.of(2099, 12, 31, 23, 59);
+
         Page<ExcepcionInventarioJpaEntity> result = jpa.findByFiltersWithPagination(
-                tipoStr, skuId, desde, hasta, pageable);
+                tipoStr, skuId, desdeFinal, hastaFinal, pageable);
         return result.map(this::toDomain);
     }
 

@@ -3,8 +3,6 @@ package com.distribuidoras.inventario.application.usecase;
 import com.distribuidoras.inventario.domain.model.ExcepcionInventario;
 import com.distribuidoras.inventario.domain.model.enums.TipoExcepcion;
 import com.distribuidoras.inventario.domain.repository.ExcepcionInventarioRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -48,8 +46,8 @@ public class ConsultarExcepcionesUseCase {
 
     @Transactional(readOnly = true)
     public Page<ExcepcionInventario> ejecutarConPaginacion(
-            TipoExcepcion tipo, String skuId, 
-            LocalDateTime desde, LocalDateTime hasta, 
+            TipoExcepcion tipo, String skuId,
+            LocalDateTime desde, LocalDateTime hasta,
             Pageable pageable) {
         return excepcionRepository.findByFiltersWithPagination(tipo, skuId, desde, hasta, pageable);
     }
