@@ -16,6 +16,6 @@ public interface ManifiestoJpaRepository extends JpaRepository<ManifiestoJpaEnti
     List<ManifiestoJpaEntity> findByFechaEmisionBetweenOrderByFechaEmisionDesc(LocalDate desde, LocalDate hasta);
     List<ManifiestoJpaEntity> findTop100ByFechaEmisionBetweenOrderByFechaEmisionDesc(LocalDate desde, LocalDate hasta);
     
-    @Query(value = "SELECT CAST(SUBSTRING_INDEX(numero_manifiesto, '-', -1) AS UNSIGNED) FROM manifiesto WHERE fecha_emision = :fecha ORDER BY numero_manifiesto DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT CAST(regexp_replace(numero_manifiesto, '^.*-', '') AS INTEGER) FROM manifiesto WHERE fecha_emision = :fecha ORDER BY numero_manifiesto DESC LIMIT 1", nativeQuery = true)
     Optional<Integer> findMaxNumeroManifiestoByFecha(@Param("fecha") LocalDate fecha);
 }

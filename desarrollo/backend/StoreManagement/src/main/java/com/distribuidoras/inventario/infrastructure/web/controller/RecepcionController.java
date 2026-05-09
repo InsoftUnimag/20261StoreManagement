@@ -2,6 +2,7 @@ package com.distribuidoras.inventario.infrastructure.web.controller;
 
 import com.distribuidoras.inventario.application.usecase.RegistrarRecepcionUseCase;
 import com.distribuidoras.inventario.application.usecase.RegistrarRecepcionUseCase.*;
+import com.distribuidoras.inventario.application.usecase.ListarRecepcionesUseCase;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.slf4j.Logger;
@@ -20,9 +21,17 @@ public class RecepcionController {
 
     private static final Logger log = LoggerFactory.getLogger(RecepcionController.class);
     private final RegistrarRecepcionUseCase registrarRecepcionUseCase;
+    private final ListarRecepcionesUseCase listarRecepcionesUseCase;
 
-    public RecepcionController(RegistrarRecepcionUseCase registrarRecepcionUseCase) {
+    public RecepcionController(RegistrarRecepcionUseCase registrarRecepcionUseCase,
+                               ListarRecepcionesUseCase listarRecepcionesUseCase) {
         this.registrarRecepcionUseCase = registrarRecepcionUseCase;
+        this.listarRecepcionesUseCase = listarRecepcionesUseCase;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<com.distribuidoras.inventario.domain.model.Recepcion>> listarRecepciones() {
+        return ResponseEntity.ok(listarRecepcionesUseCase.ejecutar());
     }
 
     /**
@@ -63,11 +72,12 @@ public class RecepcionController {
         public String codigoLote;
         @NotNull(message = "La fecha de vencimiento es obligatoria")
         public LocalDate fechaVencimiento;
+        @NotNull(message = "La fecha de fabricación (expedición) es obligatoria")
         public LocalDate fechaFabricacion;
         @Positive(message = "La cantidad debe ser mayor a cero")
         public int cantidadRecibida;
         
-        @NotNull(message = "El costo unitario es obligatorio")
+        @NotNull(message = "El costo unitario COP es obligatorio")
         public java.math.BigDecimal costoUnitarioProducto;
     }
 }

@@ -27,16 +27,31 @@ public class AsignarPedidoUseCase {
         Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new PedidoNotFoundException(pedidoId.toString()));
 
-        if (pedido.getEstado() != EstadoPedido.COMPROMETIDO) {
-            throw new IllegalStateException(
-                    "Solo se pueden asignar pedidos en estado COMPROMETIDO. Estado actual: " + pedido.getEstado()
-            );
-        }
-
         if (operarioPickingId != null) {
+            if (pedido.getEstado() != EstadoPedido.COMPROMETIDO) {
+                throw new IllegalStateException(
+                        "Solo se pueden asignar pedidos a picking en estado COMPROMETIDO. Estado actual: " + pedido.getEstado()
+                );
+            }
+            if (pedido.getOperarioPickingId() != null) {
+                throw new IllegalStateException(
+                        "El pedido ya tiene operario de picking asignado: " + pedido.getOperarioPickingId()
+                );
+            }
             pedido.setOperarioPickingId(operarioPickingId);
         }
+
         if (operarioDespachoId != null) {
+            if (pedido.getEstado() != EstadoPedido.PICKUP) {
+                throw new IllegalStateException(
+                        "Solo se puede asignar operario de despacho desde estado PICKUP. Estado actual: " + pedido.getEstado()
+                );
+            }
+            if (pedido.getOperarioDespachoId() != null) {
+                throw new IllegalStateException(
+                        "El pedido ya tiene operario de despacho asignado: " + pedido.getOperarioDespachoId()
+                );
+            }
             pedido.setOperarioDespachoId(operarioDespachoId);
         }
 

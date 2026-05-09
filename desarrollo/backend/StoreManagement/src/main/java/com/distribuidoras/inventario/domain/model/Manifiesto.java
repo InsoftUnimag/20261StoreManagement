@@ -34,4 +34,6 @@ public class Manifiesto {
 
     @NotNull(message = "El estado del manifiesto no puede ser nulo")
     private EstadoManifiesto estado;
+
+    private java.time.LocalDateTime creadoEl;
 }

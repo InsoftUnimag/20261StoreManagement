@@ -7,8 +7,13 @@ import com.distribuidoras.inventario.domain.repository.*;
 import com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.MediaType;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -29,19 +34,25 @@ public class RegistrarExcepcionUseCase {
     private final ProductoRepository productoRepository;
     private final StockGlobalSkuJpaRepository stockGlobalSkuRepository;
     private final LoteComprometidoRepository loteComprometidoRepository;
+    private final RestTemplate restTemplate;
+
+    @Value("${app.notificaciones.supervisor.excepciones.url:#{null}}")
+    private String supervisorExcepcionesUrl;
 
     public RegistrarExcepcionUseCase(ExcepcionInventarioRepository excepcionRepository,
                                      LoteRepository loteRepository,
                                      MovimientoInventarioRepository movimientoRepository,
                                      ProductoRepository productoRepository,
                                      StockGlobalSkuJpaRepository stockGlobalSkuRepository,
-                                     LoteComprometidoRepository loteComprometidoRepository) {
+                                     LoteComprometidoRepository loteComprometidoRepository,
+                                     RestTemplate restTemplate) {
         this.excepcionRepository = excepcionRepository;
         this.loteRepository = loteRepository;
         this.movimientoRepository = movimientoRepository;
         this.productoRepository = productoRepository;
         this.stockGlobalSkuRepository = stockGlobalSkuRepository;
         this.loteComprometidoRepository = loteComprometidoRepository;
+        this.restTemplate = restTemplate;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -137,6 +148,9 @@ public class RegistrarExcepcionUseCase {
                     command.tipoExcepcion(), command.skuId());
         }
 
+        // Notificar al supervisor sobre la excepción
+        notificarSupervisorExcepcion(excepcion);
+
         return new ExcepcionResultado(
                 excepcion.getExcepcionId(), excepcion.getTipoExcepcion().name(),
                 excepcion.getFechaRegistro(),
@@ -198,4 +212,35 @@ public class RegistrarExcepcionUseCase {
                                       LocalDateTime fechaRegistro, MovimientoInfo movimientoGenerado) {}
 
     public record MovimientoInfo(UUID movimientoId, String tipoMovimiento, int cantidad) {}
+
+    private void notificarSupervisorExcepcion(ExcepcionInventario excepcion) {
+        if (supervisorExcepcionesUrl == null || supervisorExcepcionesUrl.isBlank()) {
+            log.warn("URL de notificación al supervisor para excepciones no configurada. Excepción registrada: {}",
+                    excepcion.getExcepcionId());
+            return;
+        }
+
+        try {
+            java.util.Map<String, Object> payload = new java.util.HashMap<>();
+            payload.put("excepcionId", excepcion.getExcepcionId().toString());
+            payload.put("tipo", excepcion.getTipoExcepcion().name());
+            payload.put("skuId", excepcion.getSkuId());
+            payload.put("codigoLote", excepcion.getCodigoLote());
+            payload.put("cantidadAfectada", excepcion.getCantidadAfectada());
+            payload.put("fechaRegistro", excepcion.getFechaRegistro().toString());
+            payload.put("operarioId", excepcion.getOperarioId() != null ? excepcion.getOperarioId().toString() : null);
+            payload.put("descripcion", excepcion.getDescripcion());
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<java.util.Map<String, Object>> entity = new HttpEntity<>(payload, headers);
+
+            restTemplate.postForEntity(Objects.requireNonNull(supervisorExcepcionesUrl), entity, String.class);
+            log.info("Notificación de excepción enviada al supervisor: id={}, tipo={}",
+                    excepcion.getExcepcionId(), excepcion.getTipoExcepcion());
+        } catch (Exception e) {
+            log.error("Error al notificar al supervisor sobre excepción {}: {}",
+                    excepcion.getExcepcionId(), e.getMessage());
+        }
+    }
 }

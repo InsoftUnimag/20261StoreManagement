@@ -32,7 +32,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/webjars/**").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, "/api/v1/productos").hasAnyRole("ASESOR_COMERCIAL", "SUPERVISOR_INVENTARIO")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/productos", "/api/v1/productos/**").hasAnyRole("ASESOR_COMERCIAL", "SUPERVISOR_INVENTARIO", "OPERARIO_RECEPCION")
                         .requestMatchers(HttpMethod.GET, "/api/v1/productos/*/bitacora").hasRole("SUPERVISOR_INVENTARIO")
                         .requestMatchers("/api/v1/productos/**").hasRole("SUPERVISOR_INVENTARIO")
 
@@ -50,12 +50,12 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/v1/recepciones/**", "/api/v1/recepcion/**").hasAnyRole("SUPERVISOR_INVENTARIO", "OPERARIO_RECEPCION")
 
-                        .requestMatchers(HttpMethod.POST, "/api/v1/manifiestos/**", "/api/v1/manifiesto/**").hasRole("SUPERVISOR_INVENTARIO")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/manifiestos/**", "/api/v1/manifiesto/**", "/api/v1/manifiestos", "/api/v1/manifiesto").hasAnyRole("SUPERVISOR_INVENTARIO", "ASESOR_COMERCIAL", "OPERARIO_RECEPCION")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/manifiestos/**", "/api/v1/manifiesto/**", "/api/v1/manifiestos", "/api/v1/manifiesto").hasRole("SUPERVISOR_INVENTARIO")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/manifiestos/**", "/api/v1/manifiesto/**").hasRole("SUPERVISOR_INVENTARIO")
-                        .requestMatchers("/api/v1/manifiestos/**", "/api/v1/manifiesto/**").hasAnyRole("SUPERVISOR_INVENTARIO", "ASESOR_COMERCIAL", "OPERARIO_RECEPCION")
 
                         .requestMatchers("/api/v1/inventario/**").hasAnyRole("SUPERVISOR_INVENTARIO", "ASESOR_COMERCIAL")
-                        .requestMatchers("/api/v1/excepciones/**", "/api/v1/excepcion/**").hasAnyRole("SUPERVISOR_INVENTARIO", "OPERARIO_PICKING", "OPERARIO_DESPACHO", "OPERARIO_RECEPCION")
+                        .requestMatchers("/api/v1/excepciones", "/api/v1/excepciones/**", "/api/v1/excepcion/**").hasAnyRole("SUPERVISOR_INVENTARIO", "OPERARIO_PICKING", "OPERARIO_DESPACHO", "OPERARIO_RECEPCION")
                         .requestMatchers("/api/v1/operarios/**").hasRole("SUPERVISOR_INVENTARIO")
 
                         .anyRequest().authenticated()

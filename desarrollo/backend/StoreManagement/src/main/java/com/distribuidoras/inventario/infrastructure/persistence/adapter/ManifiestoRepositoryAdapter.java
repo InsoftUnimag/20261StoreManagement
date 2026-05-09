@@ -37,10 +37,12 @@ public class ManifiestoRepositoryAdapter implements ManifiestoRepository {
     private ManifiestoJpaEntity toEntity(Manifiesto m) {
         return ManifiestoJpaEntity.builder().manifiestoId(m.getManifiestoId())
                 .numeroManifiesto(m.getNumeroManifiesto()).fechaEmision(m.getFechaEmision())
-                .proveedor(m.getProveedor()).estado(m.getEstado().name()).build();
+                .proveedor(m.getProveedor()).estado(m.getEstado().name())
+                .creadoEl(m.getCreadoEl())
+                .build();
     }
     private Manifiesto toDomain(ManifiestoJpaEntity e) {
         return new Manifiesto(e.getManifiestoId(), e.getNumeroManifiesto(), e.getFechaEmision(),
-                e.getProveedor(), EstadoManifiesto.valueOf(e.getEstado()));
+                e.getProveedor(), EstadoManifiesto.valueOf(e.getEstado()), e.getCreadoEl());
     }
 }

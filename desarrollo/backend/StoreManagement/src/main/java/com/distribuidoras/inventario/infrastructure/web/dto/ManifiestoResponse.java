@@ -13,7 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ManifiestoResponse {
-    private UUID manifistoId;
+    private UUID manifiestoId;
     private String numeroManifiesto;
     private LocalDate fechaEmision;
     private String proveedor;

@@ -20,7 +20,7 @@ public class DetalleManifiesto {
     private UUID detalleId;
 
     @NotNull(message = "El ID del manifiesto no puede ser nulo")
-    private UUID manifistoId;
+    private UUID manifiestoId;
 
     @NotBlank(message = "El SKU no puede estar vacío")
     @Size(max = 20, message = "El SKU no puede exceder 20 caracteres")

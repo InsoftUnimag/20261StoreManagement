@@ -46,6 +46,9 @@ public class ExternalPedidosController {
      * @param pedidoId UUID del pedido
      * @param modulo Módulo solicitante (transporte|financiero)
      * @return PedidoExternalDTO con datos según el módulo
+     * 
+     * Spec 09 FR-094: Módulo 2 recibe: cliente, dirección entrega, SKUs, cantidades despachadas, peso logístico total
+     * Spec 09 FR-095: Módulo 3 recibe: cliente, NIT, SKUs, cantidad solicitada, cantidad despachada, indicador Completo/Parcial
      */
     @GetMapping("/{pedidoId}")
     public ResponseEntity<PedidoExternalDTO> obtenerPedidoParaModulo(
@@ -59,21 +62,24 @@ public class ExternalPedidosController {
         
         List<ProductoPedido> lineas = productoPedidoRepository.findByPedidoId(pedido.getPedidoId());
         
-        // Obtener datos del cliente
         ClienteExternalDTO clienteInfo = obtenerClienteInfo(pedido.getClienteCc());
         
-        // Construir líneas con información de producto
+        boolean esTransporte = "transporte".equalsIgnoreCase(modulo);
+        
         List<LineaExternalDTO> lineasDTO = lineas.stream()
-                .map(this::toLineaExternalDTO)
+                .map(linea -> toLineaExternalDTO(linea, esTransporte))
                 .toList();
         
-        // Calcular peso logístico total
         BigDecimal pesoTotal = lineasDTO.stream()
                 .map(LineaExternalDTO::pesoLogisticoTotal)
                 .filter(p -> p != null)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         
-        // Construir respuesta
+        String indicadorParcial = lineas.stream()
+                .anyMatch(l -> l.getCantidadConfirmada() != null && l.getCantidadSolicitada() != null 
+                        && !l.getCantidadConfirmada().equals(l.getCantidadSolicitada()))
+                ? "Parcial" : "Completo";
+        
         PedidoExternalDTO response = PedidoExternalDTO.builder()
                 .pedidoId(pedido.getPedidoId().toString())
                 .numeroPedido(pedido.getNumeroPedido())
@@ -83,8 +89,9 @@ public class ExternalPedidosController {
                 .rutaId(pedido.getRutaId() != null ? pedido.getRutaId().toString() : null)
                 .cliente(clienteInfo)
                 .lineas(lineasDTO)
-                .pesoLogisticoTotal(pesoTotal)
-                .precioTotal(BigDecimal.ZERO)  // Placeholder - se calcularía con precios de producto
+                .pesoLogisticoTotal(esTransporte ? pesoTotal : null)
+                .indicadorParcial(esTransporte ? null : indicadorParcial)
+                .precioTotal(BigDecimal.ZERO)
                 .build();
         
         return ResponseEntity.ok(response);
@@ -110,14 +117,19 @@ public class ExternalPedidosController {
     }
 
     /**
-     * Transforma ProductoPedido a LineaExternalDTO.
+     * Transforma ProductoPedido a LineaExternalDTO diferenciando por módulo.
+     * Transporte: retorna cantidadConfirmada (despachada) y peso logístico
+     * Financiero: retorna cantidadSolicitada y cantidadConfirmada para indicador parcial
      */
-    private LineaExternalDTO toLineaExternalDTO(ProductoPedido linea) {
+    private LineaExternalDTO toLineaExternalDTO(ProductoPedido linea, boolean esTransporte) {
         Producto producto = productoRepository.findById(linea.getSkuId()).orElse(null);
         
         BigDecimal pesoUnitario = producto != null ? producto.getPesoLogisticoKg() : BigDecimal.ZERO;
+        int cantidad = esTransporte 
+                ? (linea.getCantidadConfirmada() != null ? linea.getCantidadConfirmada() : 0)
+                : (linea.getCantidadConfirmada() != null ? linea.getCantidadConfirmada() : 0);
         BigDecimal pesoTotal = pesoUnitario != null ? 
-                pesoUnitario.multiply(BigDecimal.valueOf(linea.getCantidadConfirmada() != null ? linea.getCantidadConfirmada() : 0)) : 
+                pesoUnitario.multiply(BigDecimal.valueOf(cantidad)) : 
                 BigDecimal.ZERO;
         
         return LineaExternalDTO.builder()
@@ -126,8 +138,8 @@ public class ExternalPedidosController {
                 .presentacion(producto != null ? producto.getPresentacion() : "N/A")
                 .cantidadSolicitada(linea.getCantidadSolicitada())
                 .cantidadConfirmada(linea.getCantidadConfirmada())
-                .pesoLogisticoUnitario(pesoUnitario)
-                .pesoLogisticoTotal(pesoTotal)
+                .pesoLogisticoUnitario(esTransporte ? pesoUnitario : null)
+                .pesoLogisticoTotal(esTransporte ? pesoTotal : null)
                 .build();
     }
 }

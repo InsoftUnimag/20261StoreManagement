@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -32,6 +33,7 @@ class RegistrarExcepcionUseCaseTest {
     @Mock private ProductoRepository productoRepository;
     @Mock private StockGlobalSkuJpaRepository stockGlobalSkuRepository;
     @Mock private LoteComprometidoRepository loteComprometidoRepository;
+    @Mock private RestTemplate restTemplate;
 
     private RegistrarExcepcionUseCase useCase;
 
@@ -47,7 +49,8 @@ class RegistrarExcepcionUseCaseTest {
                 movimientoRepository, 
                 productoRepository, 
                 stockGlobalSkuRepository, 
-                loteComprometidoRepository);
+                loteComprometidoRepository,
+                restTemplate);
     }
 
     @Test

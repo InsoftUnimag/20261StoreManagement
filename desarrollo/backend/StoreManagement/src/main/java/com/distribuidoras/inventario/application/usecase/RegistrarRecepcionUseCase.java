@@ -11,9 +11,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.MediaType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -23,37 +29,46 @@ import java.math.BigDecimal;
  * Caso de uso: Registrar Recepción de Mercancía.
  * Spec: 04_registrar_ingreso_productos.md
  * FR-021: Operación ATÓMICA (Lote + MovimientoInventario + stock en una transacción).
+ * FR-024: Generar número de recepción secuencial y notificar al supervisor en caso de discrepancias.
  */
 @Service
 public class RegistrarRecepcionUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(RegistrarRecepcionUseCase.class);
+    private static final DateTimeFormatter NUM_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     private final RecepcionRepository recepcionRepository;
     private final LoteRepository loteRepository;
     private final MovimientoInventarioRepository movimientoRepository;
     private final ProductoRepository productoRepository;
-    private final ManifiestoRepository manifistoRepository;
+    private final ManifiestoRepository manifiestoRepository;
     private final DetalleManifiestoRepository detalleManifiestoRepository;
     private final ExcepcionInventarioRepository excepcionRepository;
     private final StockGlobalSkuJpaRepository stockGlobalSkuRepository;
+    private final RestTemplate restTemplate;
+
+    @Value("${app.notificaciones.supervisor.url:#{null}}")
+    private String supervisorNotificationUrl;
+
 
     public RegistrarRecepcionUseCase(RecepcionRepository recepcionRepository,
                                      LoteRepository loteRepository,
                                      MovimientoInventarioRepository movimientoRepository,
                                      ProductoRepository productoRepository,
-                                     ManifiestoRepository manifistoRepository,
+                                     ManifiestoRepository manifiestoRepository,
                                      DetalleManifiestoRepository detalleManifiestoRepository,
                                      ExcepcionInventarioRepository excepcionRepository,
-                                     StockGlobalSkuJpaRepository stockGlobalSkuRepository) {
+                                     StockGlobalSkuJpaRepository stockGlobalSkuRepository,
+                                     RestTemplate restTemplate) {
         this.recepcionRepository = recepcionRepository;
         this.loteRepository = loteRepository;
         this.movimientoRepository = movimientoRepository;
         this.productoRepository = productoRepository;
-        this.manifistoRepository = manifistoRepository;
+        this.manifiestoRepository = manifiestoRepository;
         this.detalleManifiestoRepository = detalleManifiestoRepository;
         this.excepcionRepository = excepcionRepository;
         this.stockGlobalSkuRepository = stockGlobalSkuRepository;
+        this.restTemplate = restTemplate;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -70,13 +85,15 @@ public class RegistrarRecepcionUseCase {
             }
         });
 
-        // 2. Crear Recepción (FR-024)
+        // 2. Crear Recepción (FR-024) con número de recepción secuencial
+        String numeroRecepcion = generarNumeroRecepcion();
         Recepcion recepcion = Recepcion.builder()
                 .recepcionId(UUID.randomUUID())
                 .manifiestoId(command.manifiestoId())
                 .operarioId(command.operarioId())
                 .fechaRecepcion(LocalDateTime.now())
                 .notas(command.notas())
+                .numeroRecepcion(numeroRecepcion)
                 .build();
         recepcionRepository.save(recepcion);
 
@@ -105,7 +122,7 @@ public class RegistrarRecepcionUseCase {
             // FR-023: Calcular flag de urgencia FEFO
             boolean esUrgente = InventarioMapper.esLoteUrgente(linea.fechaVencimiento(), 30); // Usando 30 dias por ejemplo, o como requiera el mapper
             if (esUrgente) {
-                log.warn("ALERTA: Producto crí­tico por vencimiento proximo. Lote {} del SKU {}", linea.codigoLote(), linea.skuId());
+                log.warn("ALERTA: Producto crítico por vencimiento proximo. Lote {} del SKU {}", linea.codigoLote(), linea.skuId());
             }
 
             lote = Lote.builder()
@@ -173,11 +190,17 @@ public class RegistrarRecepcionUseCase {
             actualizarEstadoManifiesto(command.manifiestoId());
         }
 
-        log.info("Recepción registrada: id={}, lotes={}, excepciones={}",
-                recepcion.getRecepcionId(), lotesCreados.size(), excepcionesGeneradas.size());
+        // FR-025: Notificar al supervisor si hay excepciones
+        if (!excepcionesGeneradas.isEmpty()) {
+            notificarSupervisorDiscrepancias(recepcion.getNumeroRecepcion(), excepcionesGeneradas);
+        }
 
-        return new RecepcionResult(recepcion.getRecepcionId(), recepcion.getFechaRecepcion(),
-                lotesCreados, excepcionesGeneradas);
+        log.info("Recepción registrada: id={}, numero={}, lotes={}, excepciones={}",
+                recepcion.getRecepcionId(), recepcion.getNumeroRecepcion(),
+                lotesCreados.size(), excepcionesGeneradas.size());
+
+        return new RecepcionResult(recepcion.getRecepcionId(), recepcion.getNumeroRecepcion(),
+                recepcion.getFechaRecepcion(), lotesCreados, excepcionesGeneradas);
     }
 
     private void actualizarEstadoManifiesto(UUID manifiestoId) {
@@ -187,13 +210,13 @@ public class RegistrarRecepcionUseCase {
         boolean algunoRecibido = detalles.stream()
                 .anyMatch(d -> d.getCantidadRecibida() > 0);
 
-manifistoRepository.findById(manifiestoId).ifPresent(m -> {
+        manifiestoRepository.findById(manifiestoId).ifPresent(m -> {
             if (todosCompletos) {
                 m.setEstado(EstadoManifiesto.RECEPCIONADO_TOTAL);
             } else if (algunoRecibido) {
                 m.setEstado(EstadoManifiesto.RECEPCIONADO_PARCIAL);
             }
-            manifistoRepository.save(m);
+            manifiestoRepository.save(m);
         });
     }
 
@@ -206,7 +229,7 @@ manifistoRepository.findById(manifiestoId).ifPresent(m -> {
                                          LocalDate fechaVencimiento, LocalDate fechaFabricacion,
                                          int cantidadRecibida, BigDecimal costoUnitarioProducto) {}
 
-    public record RecepcionResult(UUID recepcionId, LocalDateTime fechaRecepcion,
+    public record RecepcionResult(UUID recepcionId, String numeroRecepcion, LocalDateTime fechaRecepcion,
                                    List<LoteResult> lotesCreados,
                                    List<ExcepcionResult> excepcionesGeneradas) {}
 
@@ -241,6 +264,49 @@ manifistoRepository.findById(manifiestoId).ifPresent(m -> {
             stockGlobalSkuRepository.save(stock);
             log.info("Stock global creado para {}: fisico_total={}, disponibles={}, precio={}",
                     skuId, cantidadEntrante, cantidadEntrante, stock.getPrecio());
+        }
+    }
+
+    private String generarNumeroRecepcion() {
+        LocalDate hoy = LocalDate.now();
+        String fechaHoy = hoy.format(NUM_FORMAT);
+        
+        int siguiente = recepcionRepository.findMaxNumeroRecepcionByFecha(hoy)
+                .map(max -> max + 1)
+                .orElse(1);
+        
+        return String.format("REC-%s-%04d", fechaHoy, siguiente);
+    }
+
+    private void notificarSupervisorDiscrepancias(String numeroRecepcion, List<ExcepcionResult> excepciones) {
+        if (supervisorNotificationUrl == null || supervisorNotificationUrl.isBlank()) {
+            log.warn("URL de notificación al supervisor no configurada. Discrepancias detectadas en recepción: {}",
+                    numeroRecepcion);
+            return;
+        }
+
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("numeroRecepcion", numeroRecepcion);
+            payload.put("fecha", LocalDateTime.now().toString());
+            payload.put("excepciones", excepciones.stream()
+                    .map(e -> Map.of(
+                            "tipo", e.tipo(),
+                            "cantidadAfectada", e.cantidadAfectada(),
+                            "descripcion", e.descripcion()
+                    ))
+                    .collect(Collectors.toList()));
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(payload, headers);
+
+            restTemplate.postForEntity(Objects.requireNonNull(supervisorNotificationUrl), entity, String.class);
+            log.info("Notificación enviada al supervisor para recepción {} con {} excepciones",
+                    numeroRecepcion, excepciones.size());
+        } catch (Exception e) {
+            log.error("Error al notificar al supervisor sobre discrepancias en recepción {}: {}",
+                    numeroRecepcion, e.getMessage());
         }
     }
 }

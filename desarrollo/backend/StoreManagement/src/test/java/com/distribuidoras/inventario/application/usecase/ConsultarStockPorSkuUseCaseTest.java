@@ -50,8 +50,9 @@ class ConsultarStockPorSkuUseCaseTest {
     @BeforeEach
     void setUp() {
         skuId = "SKU-001";
-        lenient().when(stockGlobalSkuRepository.findById(Objects.requireNonNull(anyString()))).thenReturn(Optional.empty());
-        
+        lenient().when(stockGlobalSkuRepository.findById(Objects.requireNonNull(anyString())))
+                .thenReturn(Optional.empty());
+
         producto = Producto.builder()
                 .skuId(skuId)
                 .marca("Pilsen")
@@ -95,11 +96,11 @@ class ConsultarStockPorSkuUseCaseTest {
         assertEquals(skuId, resultado.sku().skuId());
         assertEquals("Pilsen", resultado.sku().marca());
         assertEquals(420, resultado.fisicoTotal());
-        
+
         assertEquals(2, resultado.lotes().size());
         assertEquals("LOT-2026-002", resultado.lotes().get(0).codigoLote());
         assertTrue(resultado.lotes().get(0).urgente());
-        
+
         assertNotNull(resultado.proximoVencimiento());
         assertEquals("LOT-2026-002", resultado.proximoVencimiento().codigoLote());
         assertEquals(5, resultado.proximoVencimiento().diasRestantes());

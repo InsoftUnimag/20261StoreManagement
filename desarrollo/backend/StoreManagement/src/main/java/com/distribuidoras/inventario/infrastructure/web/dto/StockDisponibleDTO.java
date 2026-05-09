@@ -13,7 +13,8 @@ public record StockDisponibleDTO(
         Integer disponibles,
         Integer comprometidos,
         List<LoteStockDTO> lotes,
-        ProximoVencimientoInfo proximoVencimiento
+        ProximoVencimientoInfo proximoVencimiento,
+        Boolean filtrosAplicados
 ) {
     public static Builder builder() {
         return new Builder();
@@ -26,6 +27,7 @@ public record StockDisponibleDTO(
         private Integer comprometidos;
         private List<LoteStockDTO> lotes;
         private ProximoVencimientoInfo proximoVencimiento;
+        private Boolean filtrosAplicados = false;
 
         public Builder sku(ProductoInfo sku) {
             this.sku = sku;
@@ -57,6 +59,11 @@ public record StockDisponibleDTO(
             return this;
         }
 
+        public Builder filtrosAplicados(Boolean filtrosAplicados) {
+            this.filtrosAplicados = filtrosAplicados;
+            return this;
+        }
+
         public StockDisponibleDTO build() {
             return new StockDisponibleDTO(
                     sku,
@@ -64,7 +71,8 @@ public record StockDisponibleDTO(
                     disponibles,
                     comprometidos,
                     lotes,
-                    proximoVencimiento
+                    proximoVencimiento,
+                    filtrosAplicados
             );
         }
     }

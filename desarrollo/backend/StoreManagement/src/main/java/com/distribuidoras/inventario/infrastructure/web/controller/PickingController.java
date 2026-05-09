@@ -4,6 +4,7 @@ import com.distribuidoras.inventario.application.usecase.ConfirmarPickingUseCase
 import com.distribuidoras.inventario.application.usecase.ConfirmarPickingUseCase.*;
 import com.distribuidoras.inventario.application.usecase.ListarPedidosPickingUseCase;
 import com.distribuidoras.inventario.application.usecase.ListarPedidosAsignadosUseCase;
+import com.distribuidoras.inventario.application.usecase.IniciarPickingUseCase;
 import com.distribuidoras.inventario.domain.model.Pedido;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,14 +28,36 @@ public class PickingController {
     private final ConfirmarPickingUseCase confirmarPickingUseCase;
     private final ListarPedidosPickingUseCase listarPedidosPickingUseCase;
     private final ListarPedidosAsignadosUseCase listarPedidosAsignadosUseCase;
+    private final IniciarPickingUseCase iniciarPickingUseCase;
 
     public PickingController(ConfirmarPickingUseCase confirmarPickingUseCase,
                               ListarPedidosPickingUseCase listarPedidosPickingUseCase,
-                              ListarPedidosAsignadosUseCase listarPedidosAsignadosUseCase) {
+                              ListarPedidosAsignadosUseCase listarPedidosAsignadosUseCase,
+                              IniciarPickingUseCase iniciarPickingUseCase) {
         this.confirmarPickingUseCase = confirmarPickingUseCase;
         this.listarPedidosPickingUseCase = listarPedidosPickingUseCase;
         this.listarPedidosAsignadosUseCase = listarPedidosAsignadosUseCase;
+        this.iniciarPickingUseCase = iniciarPickingUseCase;
     }
+
+    /**
+     * POST /api/v1/picking/iniciar
+     * Inicia el proceso de picking, pasando el pedido de COMPROMETIDO a EN_PICKING.
+     */
+    @PostMapping("/iniciar")
+    public ResponseEntity<Map<String, Object>> iniciarPicking(
+            @RequestBody IniciarPickingRequestDTO request) {
+        log.info("REST: Iniciando picking para pedido {} por operario {}", request.pedidoId(), request.operarioId());
+        
+        Pedido pedido = iniciarPickingUseCase.ejecutar(request.pedidoId(), request.operarioId());
+        
+        return ResponseEntity.ok(Map.of(
+                "pedido_id", pedido.getPedidoId(),
+                "nuevo_estado", pedido.getEstado().name()
+        ));
+    }
+
+    public record IniciarPickingRequestDTO(UUID pedidoId, UUID operarioId) {}
 
     /**
      * GET /api/v1/picking/pedidos

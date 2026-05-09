@@ -5,7 +5,6 @@ import com.distribuidoras.inventario.domain.model.Producto;
 import com.distribuidoras.inventario.domain.repository.PedidoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoPedidoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoRepository;
-import com.distribuidoras.inventario.domain.repository.LoteRepository;
 import com.distribuidoras.inventario.domain.repository.ClienteServicePort;
 import com.distribuidoras.inventario.domain.model.Cliente;
 import com.distribuidoras.inventario.infrastructure.messaging.config.RabbitMQConfig;
@@ -115,13 +114,14 @@ public class SolicitudRutaProducer {
         }
 
         // Construir mensaje explícitamente con lo que exige Módulo 2
+        // Spec 13: id_pedido, id_cliente, total_pedido, direccion, peso_total
         Map<String, Object> mensaje = new HashMap<>();
         mensaje.put("id_pedido", pedido.getPedidoId().toString());
         mensaje.put("id_cliente", pedido.getClienteCc());
         mensaje.put("total_pedido", precioTotal.doubleValue());
+        mensaje.put("direccion", direccionEntrega);
         mensaje.put("peso_logistico_kg", pesoTotal.doubleValue());
-        mensaje.put("direccion_entrega", direccionEntrega);
-
+        
         // Enviar a RabbitMQ (fire-and-forget)
         try {
             rabbitTemplate.convertAndSend(RabbitMQConfig.INVENTARIO_PEDIDOS_EXCHANGE,

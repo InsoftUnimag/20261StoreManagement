@@ -7,6 +7,9 @@ import java.util.List;
 /**
  * Response DTO for external modules (Transporte/Financiero) to query pedido details.
  * Per document_Api.yml: GET /api/v1/external/pedidos/{pedidoId}?modulo=transporte|financiero
+ * 
+ * FR-094 (Transporte): retorna cliente, dirección entrega, SKUs, cantidades despachadas, peso logístico total
+ * FR-095 (Financiero): retorna cliente, NIT, SKUs, cantidad solicitada, cantidad despachada, indicador Completo/Parcial
  */
 public record PedidoExternalDTO(
         String pedidoId,
@@ -18,8 +21,9 @@ public record PedidoExternalDTO(
         ClienteExternalDTO cliente,
         List<LineaExternalDTO> lineas,
         BigDecimal pesoLogisticoTotal,
-        BigDecimal precioTotal
-) {
+        BigDecimal precioTotal,
+        String indicadorParcial
+ ) {
     public static Builder builder() {
         return new Builder();
     }
@@ -35,6 +39,7 @@ public record PedidoExternalDTO(
         private List<LineaExternalDTO> lineas;
         private BigDecimal pesoLogisticoTotal;
         private BigDecimal precioTotal;
+        private String indicadorParcial;
 
         public Builder pedidoId(String pedidoId) { this.pedidoId = pedidoId; return this; }
         public Builder numeroPedido(String numeroPedido) { this.numeroPedido = numeroPedido; return this; }
@@ -46,9 +51,10 @@ public record PedidoExternalDTO(
         public Builder lineas(List<LineaExternalDTO> lineas) { this.lineas = lineas; return this; }
         public Builder pesoLogisticoTotal(BigDecimal pesoLogisticoTotal) { this.pesoLogisticoTotal = pesoLogisticoTotal; return this; }
         public Builder precioTotal(BigDecimal precioTotal) { this.precioTotal = precioTotal; return this; }
+        public Builder indicadorParcial(String indicadorParcial) { this.indicadorParcial = indicadorParcial; return this; }
 
         public PedidoExternalDTO build() {
-            return new PedidoExternalDTO(pedidoId, numeroPedido, estado, fechaCreacion, fechaCompromiso, rutaId, cliente, lineas, pesoLogisticoTotal, precioTotal);
+            return new PedidoExternalDTO(pedidoId, numeroPedido, estado, fechaCreacion, fechaCompromiso, rutaId, cliente, lineas, pesoLogisticoTotal, precioTotal, indicadorParcial);
         }
     }
 }

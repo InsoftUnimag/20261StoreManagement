@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -53,7 +54,23 @@ public class ConsultarStockPorSkuUseCase {
      */
     @Transactional(readOnly = true)
     public StockDisponibleDTO ejecutar(String skuId) {
-        log.info("Consultando stock para SKU: {}", skuId);
+        return ejecutarConFiltros(skuId, null, null, null);
+    }
+
+    /**
+     * Ejecuta el caso de uso de consulta de stock por SKU con filtros FEFO.
+     * 
+     * @param skuId String del producto (formato SKU-001, SKU-012, etc.)
+     * @param estadoFiltro Estado del lote (disponible, vencido, critico)
+     * @param fechaDesde Fecha de vencimiento desde
+     * @param fechaHasta Fecha de vencimiento hasta
+     * @return StockDisponibleDTO con información filtrada
+     */
+    @Transactional(readOnly = true)
+    public StockDisponibleDTO ejecutarConFiltros(String skuId, String estadoFiltro, 
+                                                 LocalDate fechaDesde, LocalDate fechaHasta) {
+        log.info("Consultando stock para SKU: {} con filtros: estado={}, fechaDesde={}, fechaHasta={}", 
+                skuId, estadoFiltro, fechaDesde, fechaHasta);
 
         // 1. Buscar Producto por sku_id (404 si no existe)
         Producto producto = productoRepository.findById(skuId)
@@ -62,8 +79,44 @@ public class ConsultarStockPorSkuUseCase {
         // 2. Buscar Lotes con cantidad > 0, ordenados por fecha_vencimiento ASC (FEFO)
         List<Lote> lotes = loteRepository.findBySkuIdWithStock(skuId);
 
-        // 3. Calcular fisico_total = SUM(cantidad) - Functional approach
-        Integer fisicoTotal = lotes.stream()
+        // 3. Aplicar filtros FEFO según parámetros
+        List<Lote> lotesFiltrados = lotes.stream()
+                .filter(lote -> {
+                    boolean cumpleFiltro = true;
+                    
+                    // Filtro por estado
+                    if (estadoFiltro != null && !estadoFiltro.isBlank()) {
+                        switch (estadoFiltro.toLowerCase()) {
+                            case "disponible":
+                                cumpleFiltro = lote.getDisponible() && lote.getCantidad() > 0;
+                                break;
+                            case "critico":
+                                cumpleFiltro = lote.getFlagUrgenciaFefo();
+                                break;
+                            case "vencido":
+                                cumpleFiltro = lote.getFechaVencimiento().isBefore(LocalDate.now());
+                                break;
+                            case "proximoa_vencer":
+                                cumpleFiltro = lote.getFechaVencimiento().isAfter(LocalDate.now()) &&
+                                              lote.getFechaVencimiento().isBefore(LocalDate.now().plusDays(30));
+                                break;
+                        }
+                    }
+                    
+                    // Filtro por rango de fechas de vencimiento
+                    if (fechaDesde != null) {
+                        cumpleFiltro = cumpleFiltro && !lote.getFechaVencimiento().isBefore(fechaDesde);
+                    }
+                    if (fechaHasta != null) {
+                        cumpleFiltro = cumpleFiltro && !lote.getFechaVencimiento().isAfter(fechaHasta);
+                    }
+                    
+                    return cumpleFiltro;
+                })
+                .toList();
+
+        // 4. Calcular fisico_total = SUM(cantidad) de lotes filtrados
+        Integer fisicoTotal = lotesFiltrados.stream()
                 .mapToInt(Lote::getCantidad)
                 .sum();
                 
@@ -72,13 +125,13 @@ public class ConsultarStockPorSkuUseCase {
         Integer disponibles = stockGlobalOpt.map(StockGlobalSkuJpaEntity::getDisponibles).orElse(fisicoTotal);
         Integer comprometidos = stockGlobalOpt.map(StockGlobalSkuJpaEntity::getComprometidos).orElse(0);
 
-        // 4. Transformar lotes a DTOs usando mapper funcional
-        List<LoteStockDTO> lotesDTO = lotes.stream()
+        // 5. Transformar lotes a DTOs usando mapper funcional
+        List<LoteStockDTO> lotesDTO = lotesFiltrados.stream()
                 .map(InventarioMapper.toLoteStockDTO())
                 .toList();
 
-        // 5. Identificar proximo_vencimiento (primer lote en lista FEFO)
-        StockDisponibleDTO.ProximoVencimientoInfo proximoVencimiento = lotes.stream()
+        // 6. Identificar proximo_vencimiento (primer lote en lista FEFO filtrada)
+        StockDisponibleDTO.ProximoVencimientoInfo proximoVencimiento = lotesFiltrados.stream()
                 .findFirst()
                 .map(lote -> StockDisponibleDTO.ProximoVencimientoInfo.builder()
                         .codigoLote(lote.getCodigoLote())
@@ -87,7 +140,7 @@ public class ConsultarStockPorSkuUseCase {
                         .build())
                 .orElse(null);
 
-        // 6. Construir resultado usando builder pattern
+        // 7. Construir resultado usando builder pattern
         StockDisponibleDTO resultado = StockDisponibleDTO.builder()
                 .sku(InventarioMapper.toProductoInfo().apply(producto))
                 .fisicoTotal(fisicoTotal)
@@ -95,9 +148,10 @@ public class ConsultarStockPorSkuUseCase {
                 .comprometidos(comprometidos)
                 .lotes(lotesDTO)
                 .proximoVencimiento(proximoVencimiento)
+                .filtrosAplicados(estadoFiltro != null || fechaDesde != null || fechaHasta != null)
                 .build();
 
-        log.info("SKU {} - Stock total: {}, Lotes: {}", skuId, fisicoTotal, lotesDTO.size());
+        log.info("SKU {} - Stock total: {}, Lotes filtrados: {}", skuId, fisicoTotal, lotesDTO.size());
 
         return resultado;
     }

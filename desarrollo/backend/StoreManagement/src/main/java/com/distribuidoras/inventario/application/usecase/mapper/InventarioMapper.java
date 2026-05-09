@@ -34,6 +34,7 @@ public final class InventarioMapper {
                     .diasHastaVencimiento(diasHastaVencimiento)
                     .urgente(urgente)
                     .estado(estado)
+                    .costoUnitarioProducto(lote.getCostoUnitarioProducto())
                     .build();
         };
     }

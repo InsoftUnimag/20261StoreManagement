@@ -10,7 +10,7 @@
 
 ## Summary
 
-Implementación de procesos operativos de almacén: picking (recolección de productos) y despacho (salida de mercancía). Los operarios consultan pedidos comprometidos, confirman recolección (sin cambiar stock, ya estaba comprometido), y confirman despacho (reduce stock, genera MovimientoInventario tipo Salida). Estados: Comprometido → En Picking → Despachado.
+Implementación de procesos operativos de almacén: picking (recolección de productos) y despacho (salida de mercancía). Los operarios consultan pedidos comprometidos/asignados, confirman recolección (sin cambiar stock, ya estaba comprometido), y confirman despacho (reduce stock, genera MovimientoInventario tipo Salida). Estados: Comprometido → En Picking → Despachado. Asignacion de despacho ocurre despues de confirmar picking.
 
 ---
 
@@ -167,6 +167,15 @@ Nuevo tipo de movimiento:
 **Performance**:
 - Consulta de pedidos para picking ≤ 2 seg
 
+### UC-001B: Consultar Mis Pedidos Asignados (Picking)
+
+**Actor**: Operario de Picking
+
+**Flujo**:
+1. Operario solicita lista de pedidos asignados a su id
+2. Sistema consulta Pedidos con operario_picking_id = operarioId
+3. Sistema retorna lista de pedidos asignados
+
 ### UC-002: Confirmar Picking (Spec 12)
 
 **Actor**: Operario de Picking
@@ -217,6 +226,15 @@ Nuevo tipo de movimiento:
 
 **Performance**:
 - Consulta de pedidos para despacho ≤ 2 seg
+
+### UC-003B: Consultar Mis Pedidos Asignados (Despacho)
+
+**Actor**: Operario de Despacho
+
+**Flujo**:
+1. Operario solicita lista de pedidos asignados a su id
+2. Sistema consulta Pedidos con operario_despacho_id = operarioId
+3. Sistema retorna lista de pedidos asignados
 
 ### UC-004: Confirmar Despacho (Spec 14)
 
@@ -329,6 +347,9 @@ Nuevo tipo de movimiento:
 }
 ```
 
+### GET /api/v1/picking/mis-pedidos/{operarioId}
+**Purpose**: Listar pedidos asignados a un operario de picking
+
 ### POST /api/v1/picking/confirmar
 **Purpose**: Confirmar picking de un pedido
 
@@ -403,6 +424,9 @@ Nuevo tipo de movimiento:
   }
 }
 ```
+
+### GET /api/v1/despacho/mis-pedidos/{operarioId}
+**Purpose**: Listar pedidos asignados a un operario de despacho
 
 ### POST /api/v1/despacho/confirmar
 **Purpose**: Confirmar despacho de un pedido

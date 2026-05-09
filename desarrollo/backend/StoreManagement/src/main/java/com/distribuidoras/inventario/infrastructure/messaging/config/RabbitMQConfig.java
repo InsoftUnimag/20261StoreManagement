@@ -22,12 +22,15 @@ public class RabbitMQConfig {
     public static final String RUTA_ASIGNADA_DLQ_QUEUE = "inventario.ruta-asignada.dlq";
     public static final String RUTA_SOLICITAR_QUEUE = "inventario.ruta-solicitar";
     public static final String ALERTA_INVENTARIO_QUEUE = "inventario.alertas-supervisor";
+    public static final String ENTREGA_CONFIRMADA_QUEUE = "inventario.entrega-confirmada";
+    public static final String ENTREGA_CONFIRMADA_DLQ_QUEUE = "inventario.entrega-confirmada.dlq";
 
     // ===== Routing keys =====
     public static final String RUTA_SOLICITAR_KEY = "ruta.solicitar";
     public static final String RUTA_ASIGNADA_KEY = "ruta.asignada";
     public static final String PEDIDO_CREADO_KEY = "pedido.creado";
     public static final String ALERTA_INVENTARIO_KEY = "alerta.inventario";
+    public static final String ENTREGA_CONFIRMADA_KEY = "entrega.confirmada";
 
     // ===== Exchanges =====
 
@@ -71,6 +74,19 @@ public class RabbitMQConfig {
         return QueueBuilder.durable(ALERTA_INVENTARIO_QUEUE).build();
     }
 
+    @Bean
+    public Queue entregaConfirmadaQueue() {
+        return QueueBuilder.durable(ENTREGA_CONFIRMADA_QUEUE)
+                .withArgument("x-dead-letter-exchange", "")
+                .withArgument("x-dead-letter-routing-key", ENTREGA_CONFIRMADA_DLQ_QUEUE)
+                .build();
+    }
+
+    @Bean
+    public Queue entregaConfirmadaDlqQueue() {
+        return QueueBuilder.durable(ENTREGA_CONFIRMADA_DLQ_QUEUE).build();
+    }
+
     // ===== Bindings =====
 
     @Bean
@@ -92,5 +108,12 @@ public class RabbitMQConfig {
         return BindingBuilder.bind(alertaInventarioQueue())
                 .to(inventarioAlertasExchange())
                 .with(ALERTA_INVENTARIO_KEY);
+    }
+
+    @Bean
+    public Binding entregaConfirmadaBinding() {
+        return BindingBuilder.bind(entregaConfirmadaQueue())
+                .to(logisticaEventosExchange())
+                .with(ENTREGA_CONFIRMADA_KEY);
     }
 }

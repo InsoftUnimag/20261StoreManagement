@@ -115,16 +115,16 @@ public class ManifiestoController {
 
     @PostMapping
     public ResponseEntity<ManifiestoResponse> crearManifiesto(@Valid @RequestBody CrearManifiestoRequest request) {
-        log.info("REST: Creando manifisto {}", request.getNumeroManifiesto());
+        log.info("REST: Creando manifiesto {}", request.getNumeroManifiesto());
 
-        Manifiesto manifisto = crearManifiestoUseCase.ejecutar(request);
+        Manifiesto manifiesto = crearManifiestoUseCase.ejecutar(request);
 
         ManifiestoResponse response = ManifiestoResponse.builder()
-                .manifistoId(manifisto.getManifiestoId())
-                .numeroManifiesto(manifisto.getNumeroManifiesto())
-                .fechaEmision(manifisto.getFechaEmision())
-                .proveedor(manifisto.getProveedor())
-                .estado(manifisto.getEstado().name())
+                .manifiestoId(manifiesto.getManifiestoId())
+                .numeroManifiesto(manifiesto.getNumeroManifiesto())
+                .fechaEmision(manifiesto.getFechaEmision())
+                .proveedor(manifiesto.getProveedor())
+                .estado(manifiesto.getEstado().name())
                 .build();
 
         return ResponseEntity.status(201).body(response);

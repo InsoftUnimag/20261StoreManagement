@@ -21,4 +21,7 @@ public class RecepcionJpaEntity {
     @Column(name = "operario_id", nullable = false) private UUID operarioId;
     @Column(name = "fecha_recepcion", nullable = false) private LocalDateTime fechaRecepcion;
     @Column(name = "notas") private String notas;
+    @Column(name = "numero_recepcion", unique = true)
+    private String numeroRecepcion;
 }
+

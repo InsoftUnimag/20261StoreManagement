@@ -20,36 +20,37 @@ public class CrearManifiestoUseCase {
 
     private static final Logger log = LoggerFactory.getLogger(CrearManifiestoUseCase.class);
 
-    private final ManifiestoRepository manifistoRepository;
+    private final ManifiestoRepository manifiestoRepository;
     private final DetalleManifiestoRepository detalleRepository;
     private final ProductoRepository productoRepository;
 
     public CrearManifiestoUseCase(
-            ManifiestoRepository manifistoRepository,
+            ManifiestoRepository manifiestoRepository,
             DetalleManifiestoRepository detalleRepository,
             ProductoRepository productoRepository) {
-        this.manifistoRepository = manifistoRepository;
+        this.manifiestoRepository = manifiestoRepository;
         this.detalleRepository = detalleRepository;
         this.productoRepository = productoRepository;
     }
 
     public Manifiesto ejecutar(CrearManifiestoRequest request) {
-        log.info("Creando manifisto {}", request.getNumeroManifiesto());
+        log.info("Creando manifiesto {}", request.getNumeroManifiesto());
 
         String numero = request.getNumeroManifiesto();
         if (numero == null || numero.isBlank()) {
             numero = generarNumeroManifiesto();
         }
 
-        Manifiesto manifisto = Manifiesto.builder()
+        Manifiesto manifiesto = Manifiesto.builder()
                 .manifiestoId(UUID.randomUUID())
                 .numeroManifiesto(numero)
                 .fechaEmision(LocalDate.now())
                 .proveedor(request.getProveedor())
                 .estado(EstadoManifiesto.PENDIENTE)
+                .creadoEl(java.time.LocalDateTime.now())
                 .build();
 
-        manifisto = manifistoRepository.save(manifisto);
+        manifiesto = manifiestoRepository.save(manifiesto);
 
         if (request.getLineas() != null && !request.getLineas().isEmpty()) {
             for (CrearManifiestoRequest.LineaManifiestoRequest linea : request.getLineas()) {
@@ -57,7 +58,7 @@ public class CrearManifiestoUseCase {
                 if (producto != null) {
                     DetalleManifiesto detalle = DetalleManifiesto.builder()
                             .detalleId(UUID.randomUUID())
-                            .manifistoId(manifisto.getManifiestoId())
+                            .manifiestoId(manifiesto.getManifiestoId())
                             .skuId(linea.getSkuId())
                             .cantidadEsperada(linea.getCantidadEsperada())
                             .cantidadRecibida(0)
@@ -68,14 +69,14 @@ public class CrearManifiestoUseCase {
         }
 
         log.info("Manifiesto {} creado exitosamente", numero);
-        return manifisto;
+        return manifiesto;
     }
 
     private String generarNumeroManifiesto() {
         java.time.LocalDate hoy = java.time.LocalDate.now();
         String fecha = hoy.toString().replace("-", "");
         
-        int siguienteNumero = manifistoRepository.findMaxNumeroManifiestoByFecha(hoy)
+        int siguienteNumero = manifiestoRepository.findMaxNumeroManifiestoByFecha(hoy)
                 .map(max -> max + 1)
                 .orElse(1);
         

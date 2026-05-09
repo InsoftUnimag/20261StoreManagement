@@ -1,6 +1,6 @@
 package com.distribuidoras.inventario.infrastructure.web.controller;
 
-import com.distribuidoras.inventario.application.usecase.ConsultarClienteUseCase;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -18,10 +18,7 @@ public class ClienteController {
 
     private static final Logger log = LoggerFactory.getLogger(ClienteController.class);
 
-    private final ConsultarClienteUseCase consultarClienteUseCase;
-
-    public ClienteController(ConsultarClienteUseCase consultarClienteUseCase) {
-        this.consultarClienteUseCase = consultarClienteUseCase;
+    public ClienteController() {
     }
 
     /**

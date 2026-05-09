@@ -5,13 +5,18 @@
 ## User Scenarios & Testing *(mandatory)*
  
 ### User Story 1 - Confirmar preparación física del pedido (Priority: P1)
-Como **Operario de Picking**, necesito confirmar que recogí físicamente los productos de bodega. Si detecto "Averias", debo reportarlo como excepción.
+Como **Operario de Picking**, necesito confirmar que recogí físicamente los productos de bodega de pedidos asignados por el Supervisor. Si detecto "Averias", debo reportarlo como excepción.
  
 **Why this priority**: Esta validación asegura la integridad entre el inventario lógico y el físico. Al confirmar el picking en tiempo real, el sistema garantiza que solo productos aptos y disponibles salgan.
 
 **Independent Test**: Tomar pedido que estan en estado comprometido, confirmar "En picking" completo, verificar que los productos del pedido pasan a "Picking". Luego probar "Averias" activando Reportar Excepción.
  
 **Acceptance Scenarios**:
+
+0. **Scenario**: Ver mis pedidos asignados
+  - **Given** el Supervisor asigno pedidos al Operario de Picking
+  - **When** el Operario consulta su lista de pedidos asignados
+  - **Then** el sistema muestra solo los pedidos asignados a su id
  
 1. **Scenario**: Picking completo sin novedades
    - **Given** Operario de Picking selecciona pedido en estado "comprometidos"
