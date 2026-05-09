@@ -11,5 +11,6 @@ public enum TipoMovimiento {
     SALIDA,
     BAJA_AVERIA,
     BAJA_VENCIMIENTO,
-    FALTANTE
+    FALTANTE,
+    REASIGNACION
 }

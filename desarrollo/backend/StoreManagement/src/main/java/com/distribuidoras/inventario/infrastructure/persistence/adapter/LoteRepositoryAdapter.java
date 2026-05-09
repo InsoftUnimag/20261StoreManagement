@@ -67,6 +67,11 @@ public class LoteRepositoryAdapter implements LoteRepository {
         return jpa.findByFechaVencimientoBeforeAndCantidadGreaterThan(fechaLimite, cantidadMinima).stream().map(this::toDomain).toList();
     }
 
+    @Override
+    public List<Lote> findLotesProximosAVencerSinFlag(LocalDate fechaLimite) {
+        return jpa.findLotesProximosAVencerSinFlag(fechaLimite).stream().map(this::toDomain).toList();
+    }
+
     private LoteJpaEntity toEntity(Lote l) {
         return LoteJpaEntity.builder()
                 .codigoLote(l.getCodigoLote())

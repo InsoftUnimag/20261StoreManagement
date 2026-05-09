@@ -5,11 +5,13 @@ import com.distribuidoras.inventario.domain.repository.ProductoRepository;
 import com.distribuidoras.inventario.infrastructure.persistence.entity.ProductoJpaEntity;
 import com.distribuidoras.inventario.infrastructure.persistence.repository.ProductoJpaRepository;
 import org.springframework.stereotype.Component;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
 import java.util.stream.Collectors;
 
 /**
@@ -41,14 +43,14 @@ public class ProductoRepositoryAdapter implements ProductoRepository {
 
     @Override
     public List<Producto> findAll() {
-        return jpaRepository.findAll().stream()
+        return jpaRepository.findAllActivos().stream()
                 .map(this::toDomain)
                 .toList();
     }
 
     @Override
-    public org.springframework.data.domain.Page<Producto> findAllWithPagination(org.springframework.data.domain.Pageable pageable) {
-        return jpaRepository.findAll(Objects.requireNonNull(pageable)).map(this::toDomain);
+    public Page<Producto> findAllWithPagination(org.springframework.data.domain.Pageable pageable) {
+        return jpaRepository.findAllActivos(Objects.requireNonNull(pageable)).map(this::toDomain);
     }
 
     @Override
@@ -61,7 +63,8 @@ public class ProductoRepositoryAdapter implements ProductoRepository {
     }
 
     @Override
-    public org.springframework.data.domain.Page<Producto> findByBusquedaWithPagination(String busqueda, org.springframework.data.domain.Pageable pageable) {
+    public Page<Producto> findByBusquedaWithPagination(String busqueda,
+            org.springframework.data.domain.Pageable pageable) {
         return jpaRepository
                 .findByBusquedaAll(busqueda, pageable)
                 .map(this::toDomain);
@@ -81,7 +84,7 @@ public class ProductoRepositoryAdapter implements ProductoRepository {
     public void deleteById(String skuId) {
         jpaRepository.deleteById(Objects.requireNonNull(skuId));
     }
-    
+
     @Override
     public Map<String, Producto> findByIds(List<String> skuIds) {
         // Functional approach: convert list to map
@@ -89,7 +92,7 @@ public class ProductoRepositoryAdapter implements ProductoRepository {
                 .map(this::toDomain)
                 .collect(Collectors.toMap(Producto::getSkuId, p -> p));
     }
-    
+
     @Override
     public Integer countActiveSkus() {
         return Optional.ofNullable(jpaRepository.countActiveSkus()).orElse(0);
@@ -110,17 +113,19 @@ public class ProductoRepositoryAdapter implements ProductoRepository {
                 .contenidoMl(domain.getContenidoMl())
                 .pesoLogisticoKg(domain.getPesoLogisticoKg())
                 .creadoEl(domain.getCreadoEl())
+                .activo(domain.isActivo())
                 .build();
     }
 
     private Producto toDomain(ProductoJpaEntity entity) {
         return Producto.builder()
-                .skuId(entity.getSkuId())
+                .skuId(Objects.requireNonNull(entity.getSkuId()))
                 .marca(entity.getMarca())
                 .presentacion(entity.getPresentacion())
                 .contenidoMl(entity.getContenidoMl())
                 .pesoLogisticoKg(entity.getPesoLogisticoKg())
                 .creadoEl(entity.getCreadoEl())
+                .activo(entity.isActivo())
                 .build();
     }
 }

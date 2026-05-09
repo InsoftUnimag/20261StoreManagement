@@ -7,12 +7,14 @@ import com.distribuidoras.inventario.domain.repository.ProductoPedidoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoRepository;
 import com.distribuidoras.inventario.domain.repository.ClienteServicePort;
 import com.distribuidoras.inventario.domain.model.Cliente;
+import com.distribuidoras.inventario.infrastructure.messaging.config.RabbitMQConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -45,16 +47,20 @@ public class SolicitudRutaProducer {
     @Value("${rabbitmq.routing-key.solicitud-ruta:solicitud.ruta}")
     private String routingKey;
 
+    private final StockGlobalSkuJpaRepository stockGlobalSkuRepository;
+
     public SolicitudRutaProducer(RabbitTemplate rabbitTemplate,
-                                  PedidoRepository pedidoRepository,
-                                  ProductoPedidoRepository productoPedidoRepository,
-                                  ProductoRepository productoRepository,
-                                  ClienteServicePort clienteServicePort) {
+            PedidoRepository pedidoRepository,
+            ProductoPedidoRepository productoPedidoRepository,
+            ProductoRepository productoRepository,
+            ClienteServicePort clienteServicePort,
+            StockGlobalSkuJpaRepository stockGlobalSkuRepository) {
         this.rabbitTemplate = rabbitTemplate;
         this.pedidoRepository = pedidoRepository;
         this.productoPedidoRepository = productoPedidoRepository;
         this.productoRepository = productoRepository;
         this.clienteServicePort = clienteServicePort;
+        this.stockGlobalSkuRepository = stockGlobalSkuRepository;
     }
 
     /**
@@ -74,11 +80,25 @@ public class SolicitudRutaProducer {
         // GAP-04: Calcular peso logístico total multiplicando por cantidad solicitada
         BigDecimal pesoTotal = lineas.stream()
                 .map(linea -> {
-                    Optional<Producto> prod = productoRepository.findById(linea.getSkuId());
+                    Optional<Producto> prod = productoRepository.findById(Objects.requireNonNull(linea.getSkuId()));
                     BigDecimal peso = prod.map(Producto::getPesoLogisticoKg)
                             .filter(Objects::nonNull)
                             .orElse(BigDecimal.ZERO);
                     return peso.multiply(BigDecimal.valueOf(linea.getCantidadSolicitada()));
+                })
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // Calcular costo total del pedido (total_pedido) usando el precio en
+        // StockGlobalSku
+        BigDecimal precioTotal = lineas.stream()
+                .map(linea -> {
+                    BigDecimal costoUnitario = stockGlobalSkuRepository.findById(Objects.requireNonNull(linea.getSkuId()))
+                            .map(com.distribuidoras.inventario.infrastructure.persistence.entity.StockGlobalSkuJpaEntity::getPrecio)
+                            .orElse(BigDecimal.ZERO);
+                    if (costoUnitario == null)
+                        costoUnitario = BigDecimal.ZERO;
+
+                    return costoUnitario.multiply(BigDecimal.valueOf(linea.getCantidadSolicitada()));
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -93,20 +113,21 @@ public class SolicitudRutaProducer {
             log.warn("No se pudo obtener dirección del cliente {}: {}", pedido.getClienteCc(), e.getMessage());
         }
 
-        // Construir mensaje
+        // Construir mensaje explícitamente con lo que exige Módulo 2
+        // Spec 13: id_pedido, id_cliente, total_pedido, direccion, peso_total
         Map<String, Object> mensaje = new HashMap<>();
-        mensaje.put("pedido_id", pedido.getPedidoId().toString());
-        mensaje.put("numero_pedido", pedido.getNumeroPedido());
-        mensaje.put("cliente_cc", pedido.getClienteCc());
+        mensaje.put("id_pedido", pedido.getPedidoId().toString());
+        mensaje.put("id_cliente", pedido.getClienteCc());
+        mensaje.put("total_pedido", precioTotal.doubleValue());
+        mensaje.put("direccion", direccionEntrega);
         mensaje.put("peso_logistico_kg", pesoTotal.doubleValue());
-        mensaje.put("total_lineas", lineas.size());
-        mensaje.put("fecha_solicitud", java.time.LocalDateTime.now().toString());
-        mensaje.put("direccion_entrega", direccionEntrega);
-
+        
         // Enviar a RabbitMQ (fire-and-forget)
         try {
-            rabbitTemplate.convertAndSend(exchange, routingKey, mensaje);
-            log.info("Solicitud de ruta enviada para pedido {}: peso={}kg, lineas={}", 
+            rabbitTemplate.convertAndSend(RabbitMQConfig.INVENTARIO_PEDIDOS_EXCHANGE,
+                    RabbitMQConfig.RUTA_SOLICITAR_KEY,
+                    mensaje);
+            log.info("Solicitud de ruta enviada para pedido {}: peso={}kg, lineas={}",
                     pedidoId, pesoTotal, lineas.size());
         } catch (Exception e) {
             log.error("Error enviando solicitud de ruta para pedido {}: {}", pedidoId, e.getMessage());

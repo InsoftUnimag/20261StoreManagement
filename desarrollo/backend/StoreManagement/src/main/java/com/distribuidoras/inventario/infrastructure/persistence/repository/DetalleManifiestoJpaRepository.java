@@ -9,4 +9,5 @@ import java.util.UUID;
 @Repository
 public interface DetalleManifiestoJpaRepository extends JpaRepository<DetalleManifiestoJpaEntity, UUID> {
     List<DetalleManifiestoJpaEntity> findByManifiestoId(UUID manifiestoId);
+    List<DetalleManifiestoJpaEntity> findByManifiestoIdIn(List<UUID> manifiestoIds);
 }

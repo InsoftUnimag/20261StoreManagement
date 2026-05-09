@@ -17,6 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class LoteComprometido {
 
+    @NotNull(message = "El ID del compromiso no puede ser nulo")
     private UUID compromisoId;
     
     @NotNull(message = "El ID del producto pedido no puede ser nulo")

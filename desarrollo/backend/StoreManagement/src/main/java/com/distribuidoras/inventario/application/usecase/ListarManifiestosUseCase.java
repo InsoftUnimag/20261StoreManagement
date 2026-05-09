@@ -21,10 +21,6 @@ import java.util.stream.Collectors;
 /**
  * Use Case: Listar Manifiestos disponibles.
  * Spec 12: Listar Manifiesto
- * 
- * FR-025: Listar manifiestos con su información
- * FR-091: Filtrar manifiestos por fecha
- * FR-092: Ver información detallada de cada manifiesto
  */
 @Service
 public class ListarManifiestosUseCase {
@@ -36,8 +32,8 @@ public class ListarManifiestosUseCase {
     private final ProductoRepository productoRepository;
 
     public ListarManifiestosUseCase(ManifiestoRepository manifiestoRepository,
-                                     DetalleManifiestoRepository detalleManifiestoRepository,
-                                     ProductoRepository productoRepository) {
+            DetalleManifiestoRepository detalleManifiestoRepository,
+            ProductoRepository productoRepository) {
         this.manifiestoRepository = manifiestoRepository;
         this.detalleManifiestoRepository = detalleManifiestoRepository;
         this.productoRepository = productoRepository;
@@ -47,14 +43,9 @@ public class ListarManifiestosUseCase {
             LocalDate fechaDesde,
             LocalDate fechaHasta,
             String estado,
-            boolean incluirHistorico
-    ) {}
+            boolean incluirHistorico) {
+    }
 
-    /**
-     * Lista manifiestos con filtros opcionales.
-     * GAP-08: Si incluirHistorico=true, trae últimos 100 manifiestos (historial paginado).
-     * Si incluirHistorico=false, solo trae pendientes.
-     */
     @Transactional(readOnly = true)
     public List<ManifiestoResumenDTO> ejecutar(FiltrosManifiestoDTO filtros) {
         log.info("Listando manifiestos con filtros: fechaDesde={}, fechaHasta={}, estado={}, incluirHistorico={}",
@@ -62,44 +53,38 @@ public class ListarManifiestosUseCase {
 
         List<Manifiesto> manifiestos;
 
-        // GAP-08: Si hay filtros de fecha o se pide historial, traer con límite
         if (filtros.incluirHistorico() || filtros.fechaDesde() != null || filtros.fechaHasta() != null) {
             if (filtros.fechaDesde() != null && filtros.fechaHasta() != null) {
-                // Por seguridad, siempre con límite al buscar por fecha
                 manifiestos = manifiestoRepository.findByFechaEmisionBetweenWithLimit(
                         filtros.fechaDesde(), filtros.fechaHasta(), 100);
             } else {
-                // Sin fecha = últimos 100
                 LocalDate hoy = LocalDate.now();
                 manifiestos = manifiestoRepository.findByFechaEmisionBetweenWithLimit(
                         hoy.minusMonths(1), hoy, 100);
             }
         } else {
-            // Por defecto solo pendientes
             manifiestos = manifiestoRepository.findPendientes();
         }
 
-        // Aplicar filtros funcionales
+        List<UUID> ids = manifiestos.stream().map(Manifiesto::getManifiestoId).toList();
+        Map<UUID, List<DetalleManifiesto>> detallesMap = detalleManifiestoRepository.findByManifiestoIds(ids);
+
         return manifiestos.stream()
                 .filter(m -> filtros.estado() == null || m.getEstado().name().equals(filtros.estado()))
                 .sorted((m1, m2) -> m2.getFechaEmision().compareTo(m1.getFechaEmision()))
-                .map(this::toManifiestoResumenDTO)
+                .map(m -> toManifiestoResumenDTO(m, detallesMap.get(m.getManifiestoId())))
                 .toList();
     }
 
-    /**
-     * Obtiene detalle completo de un manifiesto.
-     */
     @Transactional(readOnly = true)
     public ManifiestoDetalleDTO obtenerDetalle(UUID manifiestoId) {
         log.info("Obteniendo detalle del manifiesto: {}", manifiestoId);
 
         Manifiesto manifiesto = manifiestoRepository.findById(manifiestoId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Manifiesto no encontrado: " + manifiestoId));
+                .orElseThrow(() -> new IllegalArgumentException("Manifiesto no encontrado: " + manifiestoId));
 
         List<DetalleManifiesto> detalles = detalleManifiestoRepository.findByManifiestoId(manifiestoId);
-        
+
         Map<String, Producto> productos = detalles.stream()
                 .map(DetalleManifiesto::getSkuId)
                 .distinct()
@@ -121,14 +106,21 @@ public class ListarManifiestosUseCase {
                 .build();
     }
 
-    private ManifiestoResumenDTO toManifiestoResumenDTO(Manifiesto m) {
-        return ManifiestoResumenDTO.builder()
-                .manifiestoId(m.getManifiestoId().toString())
-                .numeroManifiesto(m.getNumeroManifiesto())
-                .fechaEmision(m.getFechaEmision().atStartOfDay())
-                .proveedor(m.getProveedor())
-                .estado(m.getEstado().name())
-                .build();
+    private ManifiestoResumenDTO toManifiestoResumenDTO(Manifiesto m, List<DetalleManifiesto> detalles) {
+        int total = detalles != null ? detalles.size() : 0;
+        int recibidas = detalles != null
+                ? (int) detalles.stream().filter(d -> d.getCantidadRecibida() >= d.getCantidadEsperada()).count()
+                : 0;
+
+        return new ManifiestoResumenDTO(
+                m.getManifiestoId().toString(),
+                m.getNumeroManifiesto(),
+                m.getFechaEmision().atStartOfDay(),
+                m.getProveedor(),
+                m.getEstado().name(),
+                total,
+                recibidas,
+                m.getCreadoEl());
     }
 
     private DetalleManifiestoLineaDTO toDetalleLineaDTO(DetalleManifiesto detalle, Producto producto) {
@@ -147,29 +139,10 @@ public class ListarManifiestosUseCase {
             String numeroManifiesto,
             LocalDateTime fechaEmision,
             String proveedor,
-            String estado
-    ) {
-        public static Builder builder() {
-            return new Builder();
-        }
-
-        public static class Builder {
-            private String manifiestoId;
-            private String numeroManifiesto;
-            private java.time.LocalDateTime fechaEmision;
-            private String proveedor;
-            private String estado;
-
-            public Builder manifiestoId(String manifiestoId) { this.manifiestoId = manifiestoId; return this; }
-            public Builder numeroManifiesto(String numeroManifiesto) { this.numeroManifiesto = numeroManifiesto; return this; }
-            public Builder fechaEmision(java.time.LocalDateTime fechaEmision) { this.fechaEmision = fechaEmision; return this; }
-            public Builder proveedor(String proveedor) { this.proveedor = proveedor; return this; }
-            public Builder estado(String estado) { this.estado = estado; return this; }
-
-            public ManifiestoResumenDTO build() {
-                return new ManifiestoResumenDTO(manifiestoId, numeroManifiesto, fechaEmision, proveedor, estado);
-            }
-        }
+            String estado,
+            int totalLineas,
+            int lineasRecibidas,
+            LocalDateTime creadoEl) {
     }
 
     public record ManifiestoDetalleDTO(
@@ -178,8 +151,7 @@ public class ListarManifiestosUseCase {
             LocalDateTime fechaEmision,
             String proveedor,
             String estado,
-            List<DetalleManifiestoLineaDTO> lineas
-    ) {
+            List<DetalleManifiestoLineaDTO> lineas) {
         public static Builder builder() {
             return new Builder();
         }
@@ -192,15 +164,39 @@ public class ListarManifiestosUseCase {
             private String estado;
             private List<DetalleManifiestoLineaDTO> lineas;
 
-            public Builder manifiestoId(String manifiestoId) { this.manifiestoId = manifiestoId; return this; }
-            public Builder numeroManifiesto(String numeroManifiesto) { this.numeroManifiesto = numeroManifiesto; return this; }
-            public Builder fechaEmision(LocalDateTime fechaEmision) { this.fechaEmision = fechaEmision; return this; }
-            public Builder proveedor(String proveedor) { this.proveedor = proveedor; return this; }
-            public Builder estado(String estado) { this.estado = estado; return this; }
-            public Builder lineas(List<DetalleManifiestoLineaDTO> lineas) { this.lineas = lineas; return this; }
+            public Builder manifiestoId(String id) {
+                this.manifiestoId = id;
+                return this;
+            }
+
+            public Builder numeroManifiesto(String n) {
+                this.numeroManifiesto = n;
+                return this;
+            }
+
+            public Builder fechaEmision(LocalDateTime f) {
+                this.fechaEmision = f;
+                return this;
+            }
+
+            public Builder proveedor(String p) {
+                this.proveedor = p;
+                return this;
+            }
+
+            public Builder estado(String e) {
+                this.estado = e;
+                return this;
+            }
+
+            public Builder lineas(List<DetalleManifiestoLineaDTO> l) {
+                this.lineas = l;
+                return this;
+            }
 
             public ManifiestoDetalleDTO build() {
-                return new ManifiestoDetalleDTO(manifiestoId, numeroManifiesto, fechaEmision, proveedor, estado, lineas);
+                return new ManifiestoDetalleDTO(manifiestoId, numeroManifiesto, fechaEmision, proveedor, estado,
+                        lineas);
             }
         }
     }
@@ -211,8 +207,7 @@ public class ListarManifiestosUseCase {
             String marca,
             String presentacion,
             Integer cantidadEsperada,
-            Integer cantidadRecibida
-    ) {
+            Integer cantidadRecibida) {
         public static Builder builder() {
             return new Builder();
         }
@@ -225,15 +220,39 @@ public class ListarManifiestosUseCase {
             private Integer cantidadEsperada;
             private Integer cantidadRecibida;
 
-            public Builder detalleId(String detalleId) { this.detalleId = detalleId; return this; }
-            public Builder skuId(String skuId) { this.skuId = skuId; return this; }
-            public Builder marca(String marca) { this.marca = marca; return this; }
-            public Builder presentacion(String presentacion) { this.presentacion = presentacion; return this; }
-            public Builder cantidadEsperada(Integer cantidadEsperada) { this.cantidadEsperada = cantidadEsperada; return this; }
-            public Builder cantidadRecibida(Integer cantidadRecibida) { this.cantidadRecibida = cantidadRecibida; return this; }
+            public Builder detalleId(String id) {
+                this.detalleId = id;
+                return this;
+            }
+
+            public Builder skuId(String s) {
+                this.skuId = s;
+                return this;
+            }
+
+            public Builder marca(String m) {
+                this.marca = m;
+                return this;
+            }
+
+            public Builder presentacion(String p) {
+                this.presentacion = p;
+                return this;
+            }
+
+            public Builder cantidadEsperada(Integer c) {
+                this.cantidadEsperada = c;
+                return this;
+            }
+
+            public Builder cantidadRecibida(Integer c) {
+                this.cantidadRecibida = c;
+                return this;
+            }
 
             public DetalleManifiestoLineaDTO build() {
-                return new DetalleManifiestoLineaDTO(detalleId, skuId, marca, presentacion, cantidadEsperada, cantidadRecibida);
+                return new DetalleManifiestoLineaDTO(detalleId, skuId, marca, presentacion, cantidadEsperada,
+                        cantidadRecibida);
             }
         }
     }

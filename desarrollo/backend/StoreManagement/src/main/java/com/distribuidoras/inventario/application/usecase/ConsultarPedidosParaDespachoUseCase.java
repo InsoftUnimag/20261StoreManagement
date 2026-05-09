@@ -36,8 +36,8 @@ public class ConsultarPedidosParaDespachoUseCase {
 
     @Transactional(readOnly = true)
     public List<PedidoResumenDTO> ejecutar() {
-        log.info("Consultando pedidos para despacho (EN_PICKING)");
-        List<Pedido> pedidos = pedidoRepository.findByEstadoWithPickingOrderByFechaPickingAsc(EstadoPedido.EN_PICKING);
+        log.info("Consultando pedidos para despacho (PICKUP)");
+        List<Pedido> pedidos = pedidoRepository.findByEstadoWithPickingOrderByFechaPickingAsc(EstadoPedido.PICKUP);
         
         return pedidos.stream().map(this::toPedidoResumenDTO).toList();
     }

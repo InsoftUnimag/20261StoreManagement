@@ -32,4 +32,8 @@ public interface PedidoJpaRepository extends JpaRepository<PedidoJpaEntity, UUID
      * Find orders by status ordered by compromise date ASC (FIFO).
      */
     List<PedidoJpaEntity> findByEstadoOrderByFechaCompromisoAsc(EstadoPedido estado);
+
+    List<PedidoJpaEntity> findByOperarioPickingId(UUID operarioPickingId);
+
+    List<PedidoJpaEntity> findByOperarioDespachoId(UUID operarioDespachoId);
 }

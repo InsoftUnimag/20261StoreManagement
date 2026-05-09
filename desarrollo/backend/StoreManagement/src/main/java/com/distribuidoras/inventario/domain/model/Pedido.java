@@ -22,29 +22,42 @@ public class Pedido {
 
     @EqualsAndHashCode.Include
     private UUID pedidoId;
-    
+
     @NotBlank(message = "El número de pedido no puede estar vacío")
     @Size(max = 50, message = "El número de pedido no puede exceder 50 caracteres")
     private String numeroPedido;
-    
+
     @NotBlank(message = "La cédula del cliente no puede estar vacía")
     @Size(max = 50, message = "La cédula no puede exceder 50 caracteres")
     private String clienteCc;
 
     @Size(max = 200, message = "El nombre del cliente no puede exceder 200 caracteres")
     private String clienteNombre;
-    
+
     @NotNull(message = "La fecha de creación no puede ser nula")
     private LocalDateTime fechaCreacion;
-    
+
     @NotNull(message = "El estado del pedido no puede ser nulo")
     private EstadoPedido estado;
-    
+
     private UUID rutaId;
-    
+
     private LocalDateTime fechaCompromiso;
-    
+
+    @NotNull(message = "El asesorId no puede ser nulo")
     private UUID asesorId;
+
+    private UUID operarioPickingId;
+
+    private UUID operarioDespachoId;
+
+    private LocalDateTime fechaEntrega;
+
+    @Size(max = 255, message = "La dirección de entrega no puede exceder 255 caracteres")
+    private String direccionEntrega;
+
+    @Size(max = 500, message = "Las observaciones no pueden exceder 500 caracteres")
+    private String observaciones;
 
     /**
      * Validates that the order can transition to the next state.
@@ -53,7 +66,8 @@ public class Pedido {
         return switch (this.estado) {
             case ESPERANDO_RUTA -> nuevoEstado == EstadoPedido.COMPROMETIDO;
             case COMPROMETIDO -> nuevoEstado == EstadoPedido.EN_PICKING;
-            case EN_PICKING -> nuevoEstado == EstadoPedido.DESPACHADO;
+            case EN_PICKING -> nuevoEstado == EstadoPedido.PICKUP;
+            case PICKUP -> nuevoEstado == EstadoPedido.DESPACHADO;
             case DESPACHADO -> nuevoEstado == EstadoPedido.ENTREGADO;
             case ENTREGADO -> false;
         };

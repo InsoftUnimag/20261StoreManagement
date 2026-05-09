@@ -4,6 +4,7 @@ import com.distribuidoras.inventario.domain.exception.ProductoConLotesActivosExc
 import com.distribuidoras.inventario.domain.exception.ProductoNotFoundException;
 import com.distribuidoras.inventario.domain.model.Producto;
 import com.distribuidoras.inventario.domain.repository.LoteRepository;
+import com.distribuidoras.inventario.domain.repository.MovimientoInventarioRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,7 +16,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
@@ -33,11 +36,14 @@ class EliminarProductoUseCaseTest {
     @Mock
     private LoteRepository loteRepository;
 
+    @Mock
+    private MovimientoInventarioRepository movimientoRepository;
+
     private EliminarProductoUseCase useCase;
 
     @BeforeEach
     void setUp() {
-        useCase = new EliminarProductoUseCase(productoRepository, loteRepository);
+        useCase = new EliminarProductoUseCase(productoRepository, loteRepository, movimientoRepository);
     }
 
     @Test
@@ -53,11 +59,14 @@ class EliminarProductoUseCaseTest {
                 .creadoEl(LocalDateTime.now())
                 .build();
         when(productoRepository.findById(skuId)).thenReturn(Optional.of(producto));
-        when(loteRepository.existsBySkuIdAndCantidadGreaterThan(skuId, 0)).thenReturn(false);
+        when(loteRepository.findBySkuIdWithStock(skuId)).thenReturn(List.of());
+        when(loteRepository.findBySkuIdOrderByFechaVencimientoAsc(skuId)).thenReturn(List.of());
+        when(movimientoRepository.countByFilters(skuId, null, null, null, null)).thenReturn(0L);
 
         useCase.ejecutar(skuId);
 
-        verify(productoRepository).deleteById(skuId);
+        verify(productoRepository).save(producto);
+        assertThat(producto.isActivo()).isFalse();
     }
 
     @Test
@@ -85,7 +94,7 @@ class EliminarProductoUseCaseTest {
                 .creadoEl(LocalDateTime.now())
                 .build();
         when(productoRepository.findById(skuId)).thenReturn(Optional.of(producto));
-        when(loteRepository.existsBySkuIdAndCantidadGreaterThan(skuId, 0)).thenReturn(true);
+        when(loteRepository.findBySkuIdWithStock(skuId)).thenReturn(List.of(mock(com.distribuidoras.inventario.domain.model.Lote.class)));
 
         assertThatThrownBy(() -> useCase.ejecutar(skuId))
                 .isInstanceOf(ProductoConLotesActivosException.class);

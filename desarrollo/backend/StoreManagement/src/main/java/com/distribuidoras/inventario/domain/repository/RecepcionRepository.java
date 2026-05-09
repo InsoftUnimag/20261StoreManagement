@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface RecepcionRepository {
     Recepcion save(Recepcion recepcion);
     Optional<Recepcion> findById(UUID recepcionId);
+    Optional<Integer> findMaxNumeroRecepcionByFecha(java.time.LocalDate fecha);
+    java.util.List<Recepcion> findAll();
 }

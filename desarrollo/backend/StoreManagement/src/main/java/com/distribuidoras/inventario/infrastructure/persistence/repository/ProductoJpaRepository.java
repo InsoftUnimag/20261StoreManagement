@@ -15,10 +15,10 @@ import java.util.List;
 @Repository
 public interface ProductoJpaRepository extends JpaRepository<ProductoJpaEntity, String> {
 
-    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM ProductoJpaEntity p WHERE LOWER(p.marca) = LOWER(:marca) AND LOWER(p.presentacion) = LOWER(:presentacion)")
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM ProductoJpaEntity p WHERE p.activo = true AND LOWER(p.marca) = LOWER(:marca) AND LOWER(p.presentacion) = LOWER(:presentacion)")
     boolean existsByMarcaAndPresentacion(@Param("marca") String marca, @Param("presentacion") String presentacion);
 
-    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM ProductoJpaEntity p WHERE LOWER(p.marca) = LOWER(:marca) AND LOWER(p.presentacion) = LOWER(:presentacion) AND p.skuId <> :skuId")
+    @Query("SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END FROM ProductoJpaEntity p WHERE p.activo = true AND LOWER(p.marca) = LOWER(:marca) AND LOWER(p.presentacion) = LOWER(:presentacion) AND p.skuId <> :skuId")
     boolean existsByMarcaAndPresentacionAndSkuIdNot(@Param("marca") String marca, @Param("presentacion") String presentacion, @Param("skuId") String skuId);
 
     List<ProductoJpaEntity> findByMarcaContainingIgnoreCaseOrPresentacionContainingIgnoreCase(
@@ -30,12 +30,18 @@ public interface ProductoJpaRepository extends JpaRepository<ProductoJpaEntity, 
     /**
      * Búsqueda que incluye skuId además de marca y presentación.
      */
-    @Query("SELECT p FROM ProductoJpaEntity p WHERE LOWER(p.skuId) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR LOWER(p.marca) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR LOWER(p.presentacion) LIKE LOWER(CONCAT('%', :busqueda, '%'))")
+    @Query("SELECT p FROM ProductoJpaEntity p WHERE p.activo = true AND (LOWER(p.skuId) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR LOWER(p.marca) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR LOWER(p.presentacion) LIKE LOWER(CONCAT('%', :busqueda, '%')))")
     List<ProductoJpaEntity> findByBusquedaAll(@Param("busqueda") String busqueda);
 
-    @Query("SELECT p FROM ProductoJpaEntity p WHERE LOWER(p.skuId) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR LOWER(p.marca) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR LOWER(p.presentacion) LIKE LOWER(CONCAT('%', :busqueda, '%'))")
+    @Query("SELECT p FROM ProductoJpaEntity p WHERE p.activo = true AND (LOWER(p.skuId) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR LOWER(p.marca) LIKE LOWER(CONCAT('%', :busqueda, '%')) OR LOWER(p.presentacion) LIKE LOWER(CONCAT('%', :busqueda, '%')))")
     org.springframework.data.domain.Page<ProductoJpaEntity> findByBusquedaAll(@Param("busqueda") String busqueda, org.springframework.data.domain.Pageable pageable);
     
+    @Query("SELECT p FROM ProductoJpaEntity p WHERE p.activo = true")
+    List<ProductoJpaEntity> findAllActivos();
+
+    @Query("SELECT p FROM ProductoJpaEntity p WHERE p.activo = true")
+    org.springframework.data.domain.Page<ProductoJpaEntity> findAllActivos(org.springframework.data.domain.Pageable pageable);
+
     /**
      * Find multiple products by their IDs (batch query).
      */

@@ -11,6 +11,7 @@ import jakarta.persistence.criteria.Root;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import java.util.Objects;
 
@@ -54,7 +55,7 @@ public class PedidoRepositoryAdapter implements PedidoRepository {
     
 @Override
     public Page<Pedido> findByFilters(EstadoPedido estado, String clienteCc, String numeroPedido,
-                                       LocalDate fechaDesde, LocalDate fechaHasta, Pageable pageable) {
+                                       LocalDate fechaDesde, LocalDate fechaHasta, @NonNull Pageable pageable) {
         
         Specification<PedidoJpaEntity> spec = (Root<PedidoJpaEntity> root, jakarta.persistence.criteria.CriteriaQuery<?> query, CriteriaBuilder cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -63,6 +64,10 @@ public class PedidoRepositoryAdapter implements PedidoRepository {
             if (numeroPedido != null) predicates.add(cb.like(root.get("numeroPedido"), "%" + numeroPedido + "%"));
             if (fechaDesde != null) predicates.add(cb.greaterThanOrEqualTo(root.get("fechaCreacion"), fechaDesde.atStartOfDay()));
             if (fechaHasta != null) predicates.add(cb.lessThanOrEqualTo(root.get("fechaCreacion"), fechaHasta.atTime(23, 59, 59)));
+            
+            // Forzamos el ordenamiento por fecha de creación descendente
+            query.orderBy(cb.desc(root.get("fechaCreacion")));
+            
             return cb.and(predicates.toArray(new Predicate[0]));
         };
         
@@ -95,6 +100,20 @@ public class PedidoRepositoryAdapter implements PedidoRepository {
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Pedido> findByOperarioPickingId(UUID operarioPickingId) {
+        return jpa.findByOperarioPickingId(operarioPickingId).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Pedido> findByOperarioDespachoId(UUID operarioDespachoId) {
+        return jpa.findByOperarioDespachoId(operarioDespachoId).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
     
     // Functional mapper to Entity
     private PedidoJpaEntity toEntity(Pedido p) {
@@ -102,11 +121,15 @@ public class PedidoRepositoryAdapter implements PedidoRepository {
                 .pedidoId(p.getPedidoId())
                 .numeroPedido(p.getNumeroPedido())
                 .clienteCc(p.getClienteCc())
+                .clienteNombre(p.getClienteNombre())
                 .fechaCreacion(p.getFechaCreacion())
                 .estado(p.getEstado())
                 .rutaId(p.getRutaId())
                 .fechaCompromiso(p.getFechaCompromiso())
                 .asesorId(p.getAsesorId())
+                .operarioPickingId(p.getOperarioPickingId())
+                .operarioDespachoId(p.getOperarioDespachoId())
+                .direccionEntrega(p.getDireccionEntrega())
                 .build();
     }
     
@@ -116,11 +139,15 @@ public class PedidoRepositoryAdapter implements PedidoRepository {
                 .pedidoId(e.getPedidoId())
                 .numeroPedido(e.getNumeroPedido())
                 .clienteCc(e.getClienteCc())
+                .clienteNombre(e.getClienteNombre())
                 .fechaCreacion(e.getFechaCreacion())
                 .estado(e.getEstado())
                 .rutaId(e.getRutaId())
                 .fechaCompromiso(e.getFechaCompromiso())
                 .asesorId(e.getAsesorId())
+                .operarioPickingId(e.getOperarioPickingId())
+                .operarioDespachoId(e.getOperarioDespachoId())
+                .direccionEntrega(e.getDireccionEntrega())
                 .build();
     }
 }

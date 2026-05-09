@@ -1,6 +1,7 @@
 package com.distribuidoras.inventario.infrastructure.web.controller;
 
 import com.distribuidoras.inventario.application.usecase.RegistrarRecepcionUseCase;
+import com.distribuidoras.inventario.infrastructure.security.JwtAuthenticationFilter;
 import com.distribuidoras.inventario.domain.exception.ProductoNotFoundException;
 import com.distribuidoras.inventario.infrastructure.config.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,10 +27,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(RecepcionController.class)
 @Import(SecurityConfig.class)
+@WithMockUser(roles = "SUPERVISOR_INVENTARIO")
 class RecepcionControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @MockitoBean private RegistrarRecepcionUseCase registrarRecepcionUseCase;
+    @MockitoBean private JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Test
     @DisplayName("POST /api/v1/recepciones exitoso → 201")
@@ -38,7 +42,7 @@ class RecepcionControllerTest {
 
         when(registrarRecepcionUseCase.ejecutar(any())).thenReturn(
                 new RegistrarRecepcionUseCase.RecepcionResult(
-                        recId, LocalDateTime.now(),
+                        recId, "REC-20260507-0001", LocalDateTime.now(),
                         Objects.requireNonNull(List.of(new RegistrarRecepcionUseCase.LoteResult("LOT-001", skuId, "LOT-001", 240))),
                         Objects.requireNonNull(List.of())));
 

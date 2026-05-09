@@ -7,8 +7,10 @@ import com.distribuidoras.inventario.domain.model.enums.TipoMovimiento;
 import com.distribuidoras.inventario.domain.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -24,7 +26,10 @@ public class ConfirmarDespachoUseCase {
         private final RegistroDespachoRepository registroDespachoRepository;
         private final LoteComprometidoRepository loteComprometidoRepository;
         private final LoteRepository loteRepository;
-        private final com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository stockGlobalSkuRepository;
+        private final StockGlobalSkuJpaRepository stockGlobalSkuRepository;
+
+        @Value("${app.modulo.transporte.notificacion.url:#{null}}")
+        private String transporteNotificationUrl;
 
         public ConfirmarDespachoUseCase(PedidoRepository pedidoRepository,
                         ProductoPedidoRepository productoPedidoRepository,
@@ -32,7 +37,7 @@ public class ConfirmarDespachoUseCase {
                         RegistroDespachoRepository registroDespachoRepository,
                         LoteComprometidoRepository loteComprometidoRepository,
                         LoteRepository loteRepository,
-                        com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository stockGlobalSkuRepository) {
+                        StockGlobalSkuJpaRepository stockGlobalSkuRepository) {
                 this.pedidoRepository = pedidoRepository;
                 this.productoPedidoRepository = productoPedidoRepository;
                 this.movimientoRepository = movimientoRepository;
@@ -69,8 +74,8 @@ public class ConfirmarDespachoUseCase {
                                 .orElseThrow(() -> new IllegalArgumentException(
                                                 "Pedido no encontrado: " + command.pedidoId()));
 
-                // 2. Validar estado (FR-081): Solo EN_PICKING puede pasar a DESPACHADO
-                if (pedido.getEstado() != EstadoPedido.EN_PICKING) {
+                // 2. Validar estado (FR-081): Solo pedidos en estado PICKUP pueden ser despachados
+                if (pedido.getEstado() != EstadoPedido.PICKUP) {
                         throw new PedidoEstadoInvalidoException(
                                         pedido.getNumeroPedido(), pedido.getEstado().name());
                 }
@@ -128,9 +133,9 @@ public class ConfirmarDespachoUseCase {
                         // Registrar movimiento de SALIDA con codigoLote correcto (FR-083)
                         registrarMovimientoSalida(pedido, linea, cantidadDespachada, command.operarioId(), codigoLote);
 
-// Actualizar cantidad despachada en producto_pedido
-            linea.setCantidadDespachada(cantidadDespachada);
-            productoPedidoRepository.update(linea);
+                        // Actualizar cantidad despachada en producto_pedido
+                        linea.setCantidadDespachada(cantidadDespachada);
+                        productoPedidoRepository.update(linea);
                 }
 
                 // Crear registro de despacho

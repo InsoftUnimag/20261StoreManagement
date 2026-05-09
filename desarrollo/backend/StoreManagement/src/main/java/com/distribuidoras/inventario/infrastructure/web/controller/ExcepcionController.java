@@ -7,10 +7,14 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,6 +26,7 @@ public class ExcepcionController {
     private final RegistrarExcepcionUseCase registrarExcepcionUseCase;
     private final ConsultarExcepcionesUseCase consultarExcepcionesUseCase;
     private final ConsultarDetalleExcepcionUseCase consultarDetalleUseCase;
+    private volatile LocalDateTime ultimaExcepcionNotificada = LocalDateTime.MIN;
 
     public ExcepcionController(RegistrarExcepcionUseCase registrarExcepcionUseCase,
                                 ConsultarExcepcionesUseCase consultarExcepcionesUseCase,
@@ -42,19 +47,69 @@ public class ExcepcionController {
                 request.skuId, request.codigoLote, request.cantidadAfectada,
                 request.descripcion, request.evidenciaUrl, request.operarioId.toString());
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(registrarExcepcionUseCase.ejecutar(command));
+        RegistrarExcepcionUseCase.ExcepcionResultado resultado = registrarExcepcionUseCase.ejecutar(command);
+        
+        ultimaExcepcionNotificada = LocalDateTime.now();
+        
+        return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
     }
 
-    /** GET /api/v1/excepciones - Consultar excepciones con filtros */
     @GetMapping
-    public ResponseEntity<List<ExcepcionInventario>> consultarExcepciones(
+    public ResponseEntity<Page<ExcepcionInventario>> consultarExcepciones(
             @RequestParam(required = false) String tipo,
-            @RequestParam(required = false) String skuId) {
-        log.info("GET /api/v1/excepciones - tipo={}, sku={}", tipo, skuId);
+            @RequestParam(required = false) String skuId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) LocalDateTime desde,
+            @RequestParam(required = false) LocalDateTime hasta) {
+        log.info("GET /api/v1/excepciones - tipo={}, sku={}, page={}", tipo, skuId, page);
 
-        TipoExcepcion tipoEnum = tipo != null ? TipoExcepcion.valueOf(tipo) : null;
+        TipoExcepcion tipoEnum = (tipo != null && !tipo.isBlank()) 
+                ? TipoExcepcion.valueOf(tipo.toUpperCase()) 
+                : null;
+        
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fechaRegistro"));
 
-        return ResponseEntity.ok(consultarExcepcionesUseCase.ejecutar(tipoEnum, skuId));
+        Page<ExcepcionInventario> excepciones = consultarExcepcionesUseCase.ejecutarConPaginacion(
+                tipoEnum, skuId, desde, hasta, pageRequest);
+
+        return ResponseEntity.ok(excepciones);
+    }
+
+    /** GET /api/v1/excepciones/ultimas - Excepciones de los últimos N minutos (para polling) */
+    @GetMapping("/ultimas")
+    public ResponseEntity<List<ExcepcionInventario>> consultarUltimas(
+            @RequestParam(defaultValue = "60") int minutos) {
+        log.info("GET /api/v1/excepciones/ultimas - ultimos={} minutos", minutos);
+
+        List<ExcepcionInventario> excepciones = consultarExcepcionesUseCase.ejecutar(minutos);
+        return ResponseEntity.ok(excepciones);
+    }
+
+    /** GET /api/v1/excepciones/nuevas - Excepciones nuevas desde última consulta (long polling) */
+    @GetMapping("/nuevas")
+    public ResponseEntity<List<ExcepcionInventario>> consultarNuevas(
+            @RequestParam(required = false) String desde) {
+        log.info("GET /api/v1/excepciones/nuevas - ultimaNotificada={}", ultimaExcepcionNotificada);
+
+        LocalDateTime desdeTiempo = desde != null 
+                ? LocalDateTime.parse(desde) 
+                : ultimaExcepcionNotificada;
+        
+        if (desdeTiempo == null || desdeTiempo.equals(LocalDateTime.MIN)) {
+            desdeTiempo = LocalDateTime.now().minusMinutes(5);
+        }
+        
+        List<ExcepcionInventario> excepciones = consultarExcepcionesUseCase.ejecutar(desdeTiempo);
+        
+        if (!excepciones.isEmpty()) {
+            ultimaExcepcionNotificada = excepciones.stream()
+                    .map(ExcepcionInventario::getFechaRegistro)
+                    .max(LocalDateTime::compareTo)
+                    .orElse(ultimaExcepcionNotificada);
+        }
+        
+        return ResponseEntity.ok(excepciones);
     }
 
     /** GET /api/v1/excepciones/{id} - Ver detalle de excepción */

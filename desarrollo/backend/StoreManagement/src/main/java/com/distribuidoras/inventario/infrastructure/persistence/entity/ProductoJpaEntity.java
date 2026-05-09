@@ -1,9 +1,9 @@
 package com.distribuidoras.inventario.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import lombok.*;
 
+import org.springframework.lang.NonNull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 public class ProductoJpaEntity {
 
     @Id
+    @NonNull
     @Column(name = "sku_id", updatable = false, nullable = false, length = 20)
     private String skuId;
 
@@ -42,4 +43,8 @@ public class ProductoJpaEntity {
 
     @Column(name = "creado_el", nullable = false, updatable = false)
     private LocalDateTime creadoEl;
+
+    @Column(name = "activo", nullable = false)
+    @Builder.Default
+    private boolean activo = true;
 }

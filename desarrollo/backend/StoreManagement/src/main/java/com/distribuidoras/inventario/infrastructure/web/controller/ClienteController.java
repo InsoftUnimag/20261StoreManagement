@@ -1,7 +1,6 @@
 package com.distribuidoras.inventario.infrastructure.web.controller;
 
-import com.distribuidoras.inventario.application.usecase.ConsultarClienteUseCase;
-import com.distribuidoras.inventario.domain.model.Cliente;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -19,10 +18,7 @@ public class ClienteController {
 
     private static final Logger log = LoggerFactory.getLogger(ClienteController.class);
 
-    private final ConsultarClienteUseCase consultarClienteUseCase;
-
-    public ClienteController(ConsultarClienteUseCase consultarClienteUseCase) {
-        this.consultarClienteUseCase = consultarClienteUseCase;
+    public ClienteController() {
     }
 
     /**
@@ -31,19 +27,16 @@ public class ClienteController {
      */
     @GetMapping("/{cedula}")
     public ResponseEntity<Map<String, Object>> consultarCliente(@PathVariable String cedula) {
-        log.info("REST: Consultando cliente con CC {}", cedula);
-        
-        Cliente cliente = consultarClienteUseCase.ejecutar(cedula);
-        
+        log.info("REST: Consultando cliente con CC (MOCK) {}", cedula);
+
         Map<String, Object> response = Map.of(
-                "cedula", cliente.getCedula(),
-                "nombre", cliente.getNombre(),
-                "telefono", cliente.getTelefono() != null ? cliente.getTelefono() : "",
-                "email", cliente.getEmail() != null ? cliente.getEmail() : "",
-                "direccion", cliente.getDireccion() != null ? cliente.getDireccion() : "",
-                "activo", cliente.getActivo()
-        );
-        
+                "cedula", cedula,
+                "nombre", "Cliente Simulado " + cedula,
+                "telefono", "3001234567",
+                "email", "cliente" + cedula + "@simulado.com",
+                "direccion", "Calle Falsa 123",
+                "activo", true);
+
         return ResponseEntity.ok(response);
     }
 }

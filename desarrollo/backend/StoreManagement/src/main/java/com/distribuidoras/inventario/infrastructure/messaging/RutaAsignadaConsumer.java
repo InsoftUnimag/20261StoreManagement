@@ -30,7 +30,7 @@ public class RutaAsignadaConsumer {
      * Escucha mensajes de ruta asignada desde Módulo 2.
      * Message schema: {pedido_id, ruta_id, fecha_despacho}
      */
-    @RabbitListener(queues = "${rabbitmq.queue.ruta-asignada:ruta.asignada}")
+    @RabbitListener(queues = "inventario.ruta-asignada")
     public void recibirRutaAsignada(Map<String, String> mensaje) {
         String pedidoId = mensaje.get("pedido_id");
         String rutaId = mensaje.get("ruta_id");

@@ -8,4 +8,5 @@ import java.util.UUID;
 public interface DetalleManifiestoRepository {
     List<DetalleManifiesto> findByManifiestoId(UUID manifiestoId);
     DetalleManifiesto save(DetalleManifiesto detalle);
+    java.util.Map<UUID, List<DetalleManifiesto>> findByManifiestoIds(List<UUID> manifiestoIds);
 }

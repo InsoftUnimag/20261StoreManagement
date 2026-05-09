@@ -23,7 +23,7 @@ public final class InventarioMapper {
     public static Function<Lote, LoteStockDTO> toLoteStockDTO() {
         return lote -> {
             int diasHastaVencimiento = calcularDiasHastaVencimiento(lote.getFechaVencimiento());
-            boolean urgente = esLoteUrgente(lote.getFechaVencimiento(), 7); // 7 days threshold
+            boolean urgente = esLoteUrgente(lote.getFechaVencimiento(), 30); // 30 days threshold
             String estado = determinarEstadoLote(lote, diasHastaVencimiento);
 
             return LoteStockDTO.builder()
@@ -34,6 +34,7 @@ public final class InventarioMapper {
                     .diasHastaVencimiento(diasHastaVencimiento)
                     .urgente(urgente)
                     .estado(estado)
+                    .costoUnitarioProducto(lote.getCostoUnitarioProducto())
                     .build();
         };
     }
@@ -45,8 +46,8 @@ public final class InventarioMapper {
                 .marca(producto.getMarca())
                 .presentacion(producto.getPresentacion())
                 .contenidoMl(producto.getContenidoMl())
-                .pesoLogisticoKg(producto.getPesoLogisticoKg() != null ? 
-                        producto.getPesoLogisticoKg().doubleValue() : null)
+                .pesoLogisticoKg(
+                        producto.getPesoLogisticoKg() != null ? producto.getPesoLogisticoKg().doubleValue() : null)
                 .build();
     }
 

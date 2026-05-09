@@ -5,6 +5,11 @@ import com.distribuidoras.inventario.application.usecase.ListarManifiestosUseCas
 import com.distribuidoras.inventario.application.usecase.ListarManifiestosPendientesUseCase;
 import com.distribuidoras.inventario.application.usecase.ListarManifiestosPendientesUseCase.ManifiestoResumen;
 import com.distribuidoras.inventario.application.usecase.ConsultarDetallesManifiestoUseCase;
+import com.distribuidoras.inventario.application.usecase.CrearManifiestoUseCase;
+import com.distribuidoras.inventario.domain.model.Manifiesto;
+import com.distribuidoras.inventario.infrastructure.web.dto.CrearManifiestoRequest;
+import com.distribuidoras.inventario.infrastructure.web.dto.ManifiestoResponse;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -28,13 +33,16 @@ public class ManifiestoController {
     private final ListarManifiestosUseCase listarManifiestosUseCase;
     private final ListarManifiestosPendientesUseCase listarManifiestosPendientesUseCase;
     private final ConsultarDetallesManifiestoUseCase consultarDetallesManifiestoUseCase;
+    private final CrearManifiestoUseCase crearManifiestoUseCase;
 
     public ManifiestoController(ListarManifiestosUseCase listarManifiestosUseCase,
                                  ListarManifiestosPendientesUseCase listarManifiestosPendientesUseCase,
-                                 ConsultarDetallesManifiestoUseCase consultarDetallesManifiestoUseCase) {
+                                 ConsultarDetallesManifiestoUseCase consultarDetallesManifiestoUseCase,
+                                 CrearManifiestoUseCase crearManifiestoUseCase) {
         this.listarManifiestosUseCase = listarManifiestosUseCase;
         this.listarManifiestosPendientesUseCase = listarManifiestosPendientesUseCase;
         this.consultarDetallesManifiestoUseCase = consultarDetallesManifiestoUseCase;
+        this.crearManifiestoUseCase = crearManifiestoUseCase;
     }
 
     /**
@@ -103,5 +111,22 @@ public class ManifiestoController {
         var detalles = consultarDetallesManifiestoUseCase.ejecutar(UUID.fromString(id));
         
         return ResponseEntity.ok(detalles);
+    }
+
+    @PostMapping
+    public ResponseEntity<ManifiestoResponse> crearManifiesto(@Valid @RequestBody CrearManifiestoRequest request) {
+        log.info("REST: Creando manifiesto {}", request.getNumeroManifiesto());
+
+        Manifiesto manifiesto = crearManifiestoUseCase.ejecutar(request);
+
+        ManifiestoResponse response = ManifiestoResponse.builder()
+                .manifiestoId(manifiesto.getManifiestoId())
+                .numeroManifiesto(manifiesto.getNumeroManifiesto())
+                .fechaEmision(manifiesto.getFechaEmision())
+                .proveedor(manifiesto.getProveedor())
+                .estado(manifiesto.getEstado().name())
+                .build();
+
+        return ResponseEntity.status(201).body(response);
     }
 }

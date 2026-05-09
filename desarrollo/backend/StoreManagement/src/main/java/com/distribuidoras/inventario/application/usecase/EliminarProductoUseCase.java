@@ -3,6 +3,7 @@ package com.distribuidoras.inventario.application.usecase;
 import com.distribuidoras.inventario.domain.exception.ProductoConLotesActivosException;
 import com.distribuidoras.inventario.domain.exception.ProductoNotFoundException;
 import com.distribuidoras.inventario.domain.repository.LoteRepository;
+import com.distribuidoras.inventario.domain.repository.MovimientoInventarioRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,27 +26,58 @@ public class EliminarProductoUseCase {
 
     private final ProductoRepository productoRepository;
     private final LoteRepository loteRepository;
+    private final MovimientoInventarioRepository movimientoRepository;
 
     public EliminarProductoUseCase(ProductoRepository productoRepository,
-                                    LoteRepository loteRepository) {
+                                    LoteRepository loteRepository,
+                                    MovimientoInventarioRepository movimientoRepository) {
         this.productoRepository = productoRepository;
         this.loteRepository = loteRepository;
+        this.movimientoRepository = movimientoRepository;
     }
 
     @Transactional
     public void ejecutar(String skuId) {
         // Verificar que el producto existe
-        if (productoRepository.findById(skuId).isEmpty()) {
+        var productoOptional = productoRepository.findById(skuId);
+        if (productoOptional.isEmpty()) {
             throw new ProductoNotFoundException(skuId);
         }
+        
+        var producto = productoOptional.get();
 
-        // FR-011: Validar que no tenga lotes activos (stock > 0)
-        if (loteRepository.existsBySkuIdAndCantidadGreaterThan(skuId, 0)) {
+        // FR-011: Validar que no tenga historial completo (cualquier lote, incluso con stock 0)
+        // Esto incluye lotes activos (stock > 0) o lotes históricos (stock = 0 pero con registros de movimientos)
+        
+        // 1. Validar lotes activos (con stock > 0)
+        var lotesActivos = loteRepository.findBySkuIdWithStock(skuId);
+        if (!lotesActivos.isEmpty()) {
             throw new ProductoConLotesActivosException(skuId);
         }
+        
+        // 2. Validar cualquier lote asociado al producto (incluso con stock 0)
+        // Buscamos lotes por SKU sin importar la cantidad
+        var lotesPorSku = loteRepository.findBySkuIdOrderByFechaVencimientoAsc(skuId);
+        if (!lotesPorSku.isEmpty()) {
+            throw new ProductoConLotesActivosException(skuId + " - Producto tiene lotes históricos registrados");
+        }
+        
+        // 3. Validar movimientos de inventario asociados al producto
+        // Para esto necesitamos buscar lotes y verificar si tienen movimientos
+        // O buscar directamente movimientos por SKU si el repositorio lo soporta
+        // Asumimos que si hay lotes, ya están siendo validados arriba
+        
+        // 4. Verificar si hay movimientos registrados que hagan referencia al SKU
+        // Buscamos movimientos que puedan estar relacionados con este SKU
+        // (esto depende de cómo se implemente findMovimientosPorSkuId)
+        Long movimientosCount = movimientoRepository.countByFilters(skuId, null, null, null, null);
+        if (movimientosCount != null && movimientosCount > 0) {
+            throw new ProductoConLotesActivosException(skuId + " - Producto tiene movimientos de inventario registrados");
+        }
 
-        productoRepository.deleteById(skuId);
+        producto.setActivo(false);
+        productoRepository.save(producto);
 
-        log.info("Producto eliminado: SKU={}", skuId);
+        log.info("Producto desactivado (borrado lógico): SKU={}", skuId);
     }
 }

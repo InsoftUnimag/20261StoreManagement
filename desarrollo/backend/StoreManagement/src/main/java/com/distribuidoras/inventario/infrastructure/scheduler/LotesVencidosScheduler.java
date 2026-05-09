@@ -68,7 +68,7 @@ public class LotesVencidosScheduler {
                         .skuId(skuId)
                         .cantidadAfectada(cantidadBaja)
                         .fechaRegistro(LocalDateTime.now())
-                        .operarioId("SYSTEM")
+                        .operarioId(UUID.fromString("00000000-0000-0000-0000-000000000000"))
                         .descripcion("Proceso automático: Lote vencido el " + lote.getFechaVencimiento())
                         .build();
                 excepcionRepository.save(excepcion);
@@ -103,5 +103,34 @@ public class LotesVencidosScheduler {
         }
 
         log.info("Proceso automático de lotes vencidos completado: {} lotes procesados", lotesVencidos.size());
+    }
+
+    @Scheduled(cron = "0 30 1 * * *")
+    @Transactional(rollbackFor = Exception.class)
+    public void actualizarFlagsUrgencia() {
+        log.info("Iniciando proceso automático de actualización de flags de urgencia FEFO");
+
+        LocalDate limiteUrgencia = LocalDate.now().plusDays(30);
+        List<Lote> lotesProximos = loteRepository.findLotesProximosAVencerSinFlag(limiteUrgencia);
+
+        if (lotesProximos.isEmpty()) {
+            log.info("No hay lotes próximos a vencer para marcar como urgentes");
+            return;
+        }
+
+        log.info("Se encontraron {} lotes próximos a vencer (30 días o menos). Activando flag de urgencia.", lotesProximos.size());
+
+        for (Lote lote : lotesProximos) {
+            try {
+                lote.setFlagUrgenciaFefo(true);
+                loteRepository.save(lote);
+                log.info("Flag de urgencia activado para lote: código={}, SKU={}, fecha_vencimiento={}", 
+                        lote.getCodigoLote(), lote.getSkuId(), lote.getFechaVencimiento());
+            } catch (Exception e) {
+                log.error("Error actualizando flag para el lote {}: {}", lote.getCodigoLote(), e.getMessage());
+            }
+        }
+        
+        log.info("Proceso de actualización de flags completado: {} lotes marcados", lotesProximos.size());
     }
 }

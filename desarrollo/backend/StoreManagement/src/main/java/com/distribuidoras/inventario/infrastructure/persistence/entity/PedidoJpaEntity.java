@@ -2,7 +2,6 @@ package com.distribuidoras.inventario.infrastructure.persistence.entity;
 
 import com.distribuidoras.inventario.domain.model.enums.EstadoPedido;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -33,6 +32,9 @@ public class PedidoJpaEntity {
     
     @Column(name = "cliente_cc", nullable = false, length = 50)
     private String clienteCc;
+
+    @Column(name = "cliente_nombre", length = 200)
+    private String clienteNombre;
     
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion;
@@ -49,4 +51,19 @@ public class PedidoJpaEntity {
     
     @Column(name = "asesor_id")
     private UUID asesorId;
+    
+    @Column(name = "operario_picking_id")
+    private UUID operarioPickingId;
+    
+    @Column(name = "operario_despacho_id")
+    private UUID operarioDespachoId;
+
+    @Column(name = "direccion_entrega", length = 255)
+    private String direccionEntrega;
+
+    @Column(name = "fecha_entrega")
+    private LocalDateTime fechaEntrega;
+
+    @Column(name = "observaciones", length = 500)
+    private String observaciones;
 }

@@ -4,10 +4,12 @@ import com.distribuidoras.inventario.domain.model.Lote;
 import com.distribuidoras.inventario.domain.model.Producto;
 import com.distribuidoras.inventario.domain.repository.LoteRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoRepository;
+import com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,11 +33,14 @@ public class ConsultarCatalogoUseCase {
 
     private final ProductoRepository productoRepository;
     private final LoteRepository loteRepository;
+    private final StockGlobalSkuJpaRepository stockGlobalRepository;
 
     public ConsultarCatalogoUseCase(ProductoRepository productoRepository,
-                                     LoteRepository loteRepository) {
+            LoteRepository loteRepository,
+            StockGlobalSkuJpaRepository stockGlobalRepository) {
         this.productoRepository = productoRepository;
         this.loteRepository = loteRepository;
+        this.stockGlobalRepository = stockGlobalRepository;
     }
 
     @Transactional(readOnly = true)
@@ -44,10 +49,12 @@ public class ConsultarCatalogoUseCase {
 
         if (busqueda != null && !busqueda.isBlank()) {
             productos = productoRepository.findByBusquedaWithPagination(busqueda.trim(), pageable);
-            log.info("Consulta catálogo (paginado) con filtro '{}': {} resultados en la página", busqueda, productos.getNumberOfElements());
+            log.info("Consulta catálogo (paginado) con filtro '{}': {} resultados en la página", busqueda,
+                    productos.getNumberOfElements());
         } else {
             productos = productoRepository.findAllWithPagination(pageable);
-            log.info("Consulta catálogo completo (paginado): {} productos en la página", productos.getNumberOfElements());
+            log.info("Consulta catálogo completo (paginado): {} productos en la página",
+                    productos.getNumberOfElements());
         }
 
         return productos.map(this::mapConDisponibilidad);
@@ -70,22 +77,30 @@ public class ConsultarCatalogoUseCase {
                 .toList();
     }
 
-    private ProductoConDisponibilidad mapConDisponibilidad(Producto producto) {
-        // FR-049: Calcular stock basándose solo en lotes con stock_actual > 0
-        List<Lote> lotesDisponibles = loteRepository.findBySkuIdWithStock(producto.getSkuId());
-        int stockDisponible = lotesDisponibles.stream()
-                .mapToInt(Lote::getCantidad)
-                .sum();
+    private ProductoConDisponibilidad mapConDisponibilidad(@NonNull Producto producto) {
+        // FR-049: Obtener stock y precio desde StockGlobalSku para mayor consistencia
+        String skuId = producto.getSkuId();
+        var stockGlobalOpt = stockGlobalRepository.findById(skuId);
 
-        // GAP-07: Obtener costoCop del lote más reciente (último recibido)
-        BigDecimal costoCop = lotesDisponibles.stream()
-                .filter(l -> l.getCreadoEl() != null)
-                .max(Comparator.comparing(Lote::getCreadoEl))
-                .map(Lote::getCostoUnitarioProducto)
-                .orElse(null);
+        int stockDisponible = 0;
+        BigDecimal costoCop = null;
+
+        if (stockGlobalOpt.isPresent()) {
+            var stockGlobal = stockGlobalOpt.get();
+            stockDisponible = stockGlobal.getDisponibles() != null ? stockGlobal.getDisponibles() : 0;
+            costoCop = stockGlobal.getPrecio();
+        } else {
+            // Fallback a lotes si no hay registro global aún (poco probable pero posible)
+            List<Lote> lotesDisponibles = loteRepository.findBySkuIdWithStock(skuId);
+            stockDisponible = lotesDisponibles.stream().mapToInt(Lote::getCantidad).sum();
+            costoCop = lotesDisponibles.stream()
+                    .filter(l -> l.getCreadoEl() != null)
+                    .max(Comparator.comparing(Lote::getCreadoEl))
+                    .map(Lote::getCostoUnitarioProducto)
+                    .orElse(null);
+        }
 
         String disponibilidad = stockDisponible > 0 ? "Disponible" : "No disponible";
-
         return new ProductoConDisponibilidad(producto, stockDisponible, disponibilidad, costoCop);
     }
 
@@ -96,6 +111,6 @@ public class ConsultarCatalogoUseCase {
             Producto producto,
             int stockDisponible,
             String disponibilidad,
-            BigDecimal costoCop
-    ) {}
+            BigDecimal costoCop) {
+    }
 }

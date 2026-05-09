@@ -1,9 +1,9 @@
 package com.distribuidoras.inventario.infrastructure.persistence.entity;
 
-import com.distribuidoras.inventario.domain.model.enums.EstadoManifiesto;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -25,4 +25,6 @@ public class ManifiestoJpaEntity {
     @Column(name = "fecha_emision", nullable = false) private LocalDate fechaEmision;
     @Column(nullable = false) private String proveedor;
     @Column(nullable = false, length = 30) private String estado;
+    @Builder.Default
+    @Column(name = "creado_el", nullable = false) private LocalDateTime creadoEl = LocalDateTime.now();
 }

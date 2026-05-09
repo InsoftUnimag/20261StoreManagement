@@ -1,6 +1,7 @@
 package com.distribuidoras.inventario.infrastructure.web.dto;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 
 /**
  * DTO representing stock information for a single lot.
@@ -13,8 +14,8 @@ public record LoteStockDTO(
         Integer cantidad,
         Integer diasHastaVencimiento,
         Boolean urgente,
-        String estado
-) {
+        String estado,
+        BigDecimal costoUnitarioProducto) {
     public static Builder builder() {
         return new Builder();
     }
@@ -27,6 +28,7 @@ public record LoteStockDTO(
         private Integer diasHastaVencimiento;
         private Boolean urgente;
         private String estado;
+        private BigDecimal costoUnitarioProducto;
 
         public Builder codigoLote(String codigoLote) {
             this.codigoLote = codigoLote;
@@ -63,6 +65,11 @@ public record LoteStockDTO(
             return this;
         }
 
+        public Builder costoUnitarioProducto(java.math.BigDecimal costoUnitarioProducto) {
+            this.costoUnitarioProducto = costoUnitarioProducto;
+            return this;
+        }
+
         public LoteStockDTO build() {
             return new LoteStockDTO(
                     codigoLote,
@@ -71,8 +78,8 @@ public record LoteStockDTO(
                     cantidad,
                     diasHastaVencimiento,
                     urgente,
-                    estado
-            );
+                    estado,
+                    costoUnitarioProducto);
         }
     }
 }

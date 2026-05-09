@@ -10,13 +10,22 @@ CREATE TABLE pedidos (
     estado VARCHAR(30) NOT NULL DEFAULT 'ESPERANDO_RUTA',
     ruta_id UUID,
     fecha_compromiso TIMESTAMP,
-    asesor_id UUID
+    asesor_id UUID,
+    operario_picking_id UUID,
+    operario_despacho_id UUID,
+    fecha_entrega TIMESTAMP,
+    observaciones VARCHAR(500),
+    direccion_entrega VARCHAR(255),
+    cliente_nombre VARCHAR(200)
 );
 
 CREATE INDEX idx_pedidos_numero ON pedidos(numero_pedido);
 CREATE INDEX idx_pedidos_cliente ON pedidos(cliente_cc);
 CREATE INDEX idx_pedidos_estado ON pedidos(estado);
 CREATE INDEX idx_pedidos_fecha ON pedidos(fecha_creacion);
+CREATE INDEX idx_pedidos_operario_picking ON pedidos(operario_picking_id);
+CREATE INDEX idx_pedidos_operario_despacho ON pedidos(operario_despacho_id);
+CREATE INDEX idx_pedidos_fecha_entrega ON pedidos(fecha_entrega);
 
 -- Order lines table
 CREATE TABLE productos_pedido (
