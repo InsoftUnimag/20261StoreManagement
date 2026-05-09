@@ -29,9 +29,10 @@ CREATE TABLE detalle_manifiesto (
 -- Recepción: evento de recepción física de mercancía
 CREATE TABLE recepcion (
     recepcion_id     UUID            PRIMARY KEY,
-    manifiesto_id    UUID,
-    operario_id     UUID,
+    manifiesto_id    UUID            NOT NULL,
+    operario_id     UUID            NOT NULL,
     fecha_recepcion TIMESTAMP       NOT NULL DEFAULT NOW(),
+    numero_recepcion VARCHAR(50)    UNIQUE,
     notas            TEXT,
 
     CONSTRAINT fk_recepcion_manifiesto FOREIGN KEY (manifiesto_id)
