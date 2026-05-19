@@ -54,7 +54,7 @@ class ConsultarStockPorSkuUseCaseTest {
                 .thenReturn(Optional.empty());
 
         producto = Producto.builder()
-                .skuId(skuId)
+                .skuId(Objects.requireNonNull(skuId))
                 .marca("Pilsen")
                 .presentacion("Six-pack")
                 .contenidoMl(1980)

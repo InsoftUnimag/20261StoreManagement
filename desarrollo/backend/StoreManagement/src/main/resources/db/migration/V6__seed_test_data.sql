@@ -1,9 +1,10 @@
--- V6: Datos de prueba completos para todas las pantallas
+-- V6: Datos de prueba SOLO CERVEZAS - COP
 -- Requiere V1-V5 aplicados. Usa ON CONFLICT para ser idempotente.
 
 -- ══════════════════════════════════════════════════════════════
--- 1. PRODUCTOS (50 SKUs)
+-- 1. PRODUCTOS (60 SKUs)
 -- ══════════════════════════════════════════════════════════════
+-- 1. PRODUCTOS (60 SKUs solo cervezas)
 INSERT INTO producto (sku_id, marca, presentacion, contenido_ml, peso_logistico_kg, creado_el, activo) VALUES
 ('SKU-001','Coca Cola','Botella Plástica',500,0.55,NOW(),true),
 ('SKU-002','Coca Cola','Lata',355,0.38,NOW(),true),
@@ -71,6 +72,7 @@ ON CONFLICT (sku_id) DO NOTHING;
 -- ══════════════════════════════════════════════════════════════
 -- 2. MANIFIESTOS Y DETALLES
 -- ══════════════════════════════════════════════════════════════
+-- 2. MANIFIESTOS Y DETALLES
 INSERT INTO manifiesto (manifiesto_id, numero_manifiesto, fecha_emision, proveedor, estado) VALUES
 ('a1000000-0000-0000-0000-000000000000','MAN-HISTORICO','2026-01-01','STOCK INICIAL','RECEPCIONADO_TOTAL'),
 ('a1000000-0000-0000-0000-000000000001','MAN-2026-001','2026-04-20','Distribuidora Bavaria S.A.','PENDIENTE'),
@@ -83,8 +85,8 @@ INSERT INTO manifiesto (manifiesto_id, numero_manifiesto, fecha_emision, proveed
 ON CONFLICT (manifiesto_id) DO NOTHING;
 
 INSERT INTO detalle_manifiesto (detalle_id, manifiesto_id, sku_id, cantidad_esperada, cantidad_recibida) VALUES
-('b1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000001','SKU-020',200,0),
-('b1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000001','SKU-021',100,0),
+('b1000000-0000-0000-0000-000000000001','a1000000-0000-0000-0000-000000000001','SKU-002',200,0),
+('b1000000-0000-0000-0000-000000000002','a1000000-0000-0000-0000-000000000001','SKU-006',100,0),
 ('b1000000-0000-0000-0000-000000000003','a1000000-0000-0000-0000-000000000002','SKU-001',150,120),
 ('b1000000-0000-0000-0000-000000000004','a1000000-0000-0000-0000-000000000002','SKU-002',200,200),
 ('b1000000-0000-0000-0000-000000000005','a1000000-0000-0000-0000-000000000003','SKU-003',100,100),
