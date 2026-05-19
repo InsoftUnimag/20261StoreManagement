@@ -18,8 +18,6 @@ import java.util.List;
 @Service
 public class ConsultarExcepcionesUseCase {
 
-    private static final Logger log = LoggerFactory.getLogger(ConsultarExcepcionesUseCase.class);
-
     private final ExcepcionInventarioRepository excepcionRepository;
 
     public ConsultarExcepcionesUseCase(ExcepcionInventarioRepository excepcionRepository) {
