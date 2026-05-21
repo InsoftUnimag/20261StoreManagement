@@ -1,6 +1,6 @@
 # Contratos de Integración — Módulo de Gestion de Personas.
 
-**Fecha**: 08/05/2026  
+**Fecha**: 20/05/2026  
 **Actualizado**: Fusionado con especificación de Gestión de Personas  
 **Elaborado por**: Equipo del modulo de Gestion de Inventario  
 **Para**: Equipo Módulo de Usuarios  
@@ -153,7 +153,8 @@ Como **Módulo de gestion de inventario** necesito que **Módulo Personas**, me 
 
 - ¿Teléfono duplicado? → No permitido.
 - ¿Correo duplicado? → No permitido.
-- ¿Eliminación de persona con tareas activas? → Sistema rechaza si tiene picking o recepcion pendiente.
+- ¿Eliminación de persona? → No es permitido.
+- ¿Desactivación de persona con tareas activas?  → El sistema rechaza si tiene picking o recepcion pendiente.
 - ¿Una persona con múltiples roles? → No permitido, cada persona tiene un único rol.
 
 ---
