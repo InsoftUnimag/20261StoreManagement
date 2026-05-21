@@ -63,7 +63,8 @@ public class ProductoRepositoryAdapter implements ProductoRepository {
     }
 
     @Override
-    public Page<Producto> findByBusquedaWithPagination(String busqueda, org.springframework.data.domain.Pageable pageable) {
+    public Page<Producto> findByBusquedaWithPagination(String busqueda,
+            org.springframework.data.domain.Pageable pageable) {
         return jpaRepository
                 .findByBusquedaAll(busqueda, pageable)
                 .map(this::toDomain);
@@ -83,7 +84,7 @@ public class ProductoRepositoryAdapter implements ProductoRepository {
     public void deleteById(String skuId) {
         jpaRepository.deleteById(Objects.requireNonNull(skuId));
     }
-    
+
     @Override
     public Map<String, Producto> findByIds(List<String> skuIds) {
         // Functional approach: convert list to map
@@ -91,7 +92,7 @@ public class ProductoRepositoryAdapter implements ProductoRepository {
                 .map(this::toDomain)
                 .collect(Collectors.toMap(Producto::getSkuId, p -> p));
     }
-    
+
     @Override
     public Integer countActiveSkus() {
         return Optional.ofNullable(jpaRepository.countActiveSkus()).orElse(0);
@@ -118,7 +119,7 @@ public class ProductoRepositoryAdapter implements ProductoRepository {
 
     private Producto toDomain(ProductoJpaEntity entity) {
         return Producto.builder()
-                .skuId(entity.getSkuId())
+                .skuId(Objects.requireNonNull(entity.getSkuId()))
                 .marca(entity.getMarca())
                 .presentacion(entity.getPresentacion())
                 .contenidoMl(entity.getContenidoMl())

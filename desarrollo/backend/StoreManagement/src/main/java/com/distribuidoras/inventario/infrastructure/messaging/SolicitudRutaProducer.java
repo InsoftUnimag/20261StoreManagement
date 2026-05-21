@@ -114,13 +114,13 @@ public class SolicitudRutaProducer {
         }
 
         // Construir mensaje explícitamente con lo que exige Módulo 2
-        // Spec 13: id_pedido, id_cliente, total_pedido, direccion, peso_total
+        // Spec 13: idPedido, idCliente, totalPedido, direccionEntrega, pesoLogistico
         Map<String, Object> mensaje = new HashMap<>();
-        mensaje.put("id_pedido", pedido.getPedidoId().toString());
-        mensaje.put("id_cliente", pedido.getClienteCc());
-        mensaje.put("total_pedido", precioTotal.doubleValue());
-        mensaje.put("direccion", direccionEntrega);
-        mensaje.put("peso_logistico_kg", pesoTotal.doubleValue());
+        mensaje.put("idPedido", pedido.getPedidoId().toString());
+        mensaje.put("idCliente", pedido.getClienteCc());
+        mensaje.put("totalPedido", precioTotal.doubleValue());
+        mensaje.put("direccionEntrega", direccionEntrega);
+        mensaje.put("pesoLogistico", pesoTotal.doubleValue());
         
         // Enviar a RabbitMQ (fire-and-forget)
         try {

@@ -25,8 +25,8 @@ public class EntregaConfirmadaConsumer {
 
     @RabbitListener(queues = "inventario.entrega-confirmada")
     public void recibirEntregaConfirmada(Map<String, String> mensaje) {
-        String pedidoId = mensaje.get("pedido_id");
-        String fechaEntregaStr = mensaje.get("fecha_entrega");
+        String pedidoId = mensaje.get("idPedido");
+        String fechaEntregaStr = mensaje.get("fechaDespacho");
         String observaciones = mensaje.getOrDefault("observaciones", "");
 
         log.info("Recibida confirmación de entrega: pedido={}, fecha={}", pedidoId, fechaEntregaStr);

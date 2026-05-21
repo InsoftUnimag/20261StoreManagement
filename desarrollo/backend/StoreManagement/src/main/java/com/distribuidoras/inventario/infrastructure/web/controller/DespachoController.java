@@ -4,7 +4,7 @@ import com.distribuidoras.inventario.application.usecase.ConfirmarDespachoUseCas
 import com.distribuidoras.inventario.application.usecase.ConfirmarDespachoUseCase.*;
 import com.distribuidoras.inventario.application.usecase.ListarPedidosDespachoUseCase;
 import com.distribuidoras.inventario.application.usecase.ListarPedidosAsignadosUseCase;
-import com.distribuidoras.inventario.domain.model.Pedido;
+import com.distribuidoras.inventario.infrastructure.web.dto.PedidoAsignadoDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -48,9 +48,9 @@ public class DespachoController {
     }
 
     @GetMapping("/mis-pedidos/{operarioId}")
-    public ResponseEntity<List<Pedido>> listarMisPedidos(@PathVariable UUID operarioId) {
+    public ResponseEntity<List<PedidoAsignadoDTO>> listarMisPedidos(@PathVariable UUID operarioId) {
         log.info("REST: Listando pedidos asignados a operario {}", operarioId);
-        List<Pedido> pedidos = listarPedidosAsignadosUseCase.ejecutar(operarioId, "despacho");
+        List<PedidoAsignadoDTO> pedidos = listarPedidosAsignadosUseCase.ejecutar(operarioId, "despacho");
         return ResponseEntity.ok(pedidos);
     }
 

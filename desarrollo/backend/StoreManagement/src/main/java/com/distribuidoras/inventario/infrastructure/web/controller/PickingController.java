@@ -6,6 +6,7 @@ import com.distribuidoras.inventario.application.usecase.ListarPedidosPickingUse
 import com.distribuidoras.inventario.application.usecase.ListarPedidosAsignadosUseCase;
 import com.distribuidoras.inventario.application.usecase.IniciarPickingUseCase;
 import com.distribuidoras.inventario.domain.model.Pedido;
+import com.distribuidoras.inventario.infrastructure.web.dto.PedidoAsignadoDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -71,9 +72,9 @@ public class PickingController {
     }
 
     @GetMapping("/mis-pedidos/{operarioId}")
-    public ResponseEntity<List<Pedido>> listarMisPedidos(@PathVariable UUID operarioId) {
+    public ResponseEntity<List<PedidoAsignadoDTO>> listarMisPedidos(@PathVariable UUID operarioId) {
         log.info("REST: Listando pedidos asignados a operario {}", operarioId);
-        List<Pedido> pedidos = listarPedidosAsignadosUseCase.ejecutar(operarioId, "picking");
+        List<PedidoAsignadoDTO> pedidos = listarPedidosAsignadosUseCase.ejecutar(operarioId, "picking");
         return ResponseEntity.ok(pedidos);
     }
 

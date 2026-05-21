@@ -15,8 +15,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -89,7 +92,7 @@ public class RealizarPedidoUseCase {
                                 command.clienteCc(), command.asesorId(), command.lineas().size());
 
                 // 1. Validar cliente existe y está activo (FR-052)
-                consultarClienteUseCase.ejecutar(command.clienteCc());
+                var cliente = consultarClienteUseCase.ejecutar(command.clienteCc());
 
                 // 2. Validar SKUs existen (FR-053)
                 Map<String, Producto> productos = validarYObtenerProductos(command.lineas());
@@ -98,13 +101,14 @@ public class RealizarPedidoUseCase {
                 validarStockDisponible(command.lineas(), productos);
 
                 // 4. Generar número único de pedido (FR-056)
-                String numeroPedido = pedidoRepository.generarNumeroPedido(java.time.LocalDate.now());
+                String numeroPedido = pedidoRepository.generarNumeroPedido(LocalDate.now());
 
                 // 5. Crear Pedido en estado ESPERANDO_RUTA (FR-057)
                 Pedido pedido = Pedido.builder()
                                 .pedidoId(UUID.randomUUID())
                                 .numeroPedido(numeroPedido)
                                 .clienteCc(command.clienteCc())
+                                .clienteNombre(cliente.getNombre())
                                 .fechaCreacion(LocalDateTime.now())
                                 .estado(EstadoPedido.ESPERANDO_RUTA)
                                 .asesorId(command.asesorId())
@@ -132,11 +136,27 @@ public class RealizarPedidoUseCase {
                 log.info("Pedido creado exitosamente: {} - {} en estado ESPERANDO_RUTA",
                                 pedidoGuardado.getPedidoId(), numeroPedido);
 
-                // Spec 15: Publicar evento para Módulo 3 Financiero
-                pedidoCreadoProducer.publicarPedidoCreado(pedidoGuardado.getPedidoId(), numeroPedido);
+                // Spec 15 & 13: Publicar eventos SOLO después del commit exitoso para evitar
+                // Race Conditions
+                if (TransactionSynchronizationManager.isActualTransactionActive()) {
+                        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                                @Override
+                                public void afterCommit() {
+                                        // Spec 15: Publicar evento para Módulo 3 Financiero
+                                        pedidoCreadoProducer.publicarPedidoCreado(pedidoGuardado.getPedidoId(),
+                                                        numeroPedido);
 
-                // Spec 13: Solicitar ruta a Módulo 2 Logística
-                solicitudRutaProducer.enviarSolicitudRuta(pedidoGuardado.getPedidoId().toString());
+                                        // Spec 13: Solicitar ruta a Módulo 2 Logística
+                                        solicitudRutaProducer
+                                                        .enviarSolicitudRuta(pedidoGuardado.getPedidoId().toString());
+                                }
+                        });
+                } else {
+                        // Fallback si por alguna razón no hay transacción activa (no debería ocurrir
+                        // aquí)
+                        pedidoCreadoProducer.publicarPedidoCreado(pedidoGuardado.getPedidoId(), numeroPedido);
+                        solicitudRutaProducer.enviarSolicitudRuta(pedidoGuardado.getPedidoId().toString());
+                }
 
                 return pedidoGuardado;
         }
@@ -178,10 +198,14 @@ public class RealizarPedidoUseCase {
 
                 for (LineaCommand linea : lineas) {
                         // Consulta StockGlobalSku para validar disponibilidad
-                        var stockOpt = stockGlobalSkuRepository.findById(java.util.Objects.requireNonNull(linea.skuId()));
+                        var stockOpt = stockGlobalSkuRepository
+                                        .findById(java.util.Objects.requireNonNull(linea.skuId()));
                         int stockDisponible = stockOpt.map(s -> s.getDisponibles()).orElse(0);
 
                         if (stockDisponible < linea.cantidadSolicitada()) {
+                                log.warn("STOCK INSUFICIENTE para SKU {}: Solicitado={}, Disponible en DB={}",
+                                                linea.skuId(), linea.cantidadSolicitada(), stockDisponible);
+
                                 Producto producto = productos.get(linea.skuId());
                                 insuficientes.put(linea.skuId(),
                                                 new StockInsuficienteException.StockDetalle(

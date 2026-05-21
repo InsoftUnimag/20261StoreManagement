@@ -54,7 +54,6 @@ public class ExcepcionController {
         return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
     }
 
-    /** GET /api/v1/excepciones - Consultar excepciones con filtros y paginación */
     @GetMapping
     public ResponseEntity<Page<ExcepcionInventario>> consultarExcepciones(
             @RequestParam(required = false) String tipo,
@@ -63,9 +62,12 @@ public class ExcepcionController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) LocalDateTime desde,
             @RequestParam(required = false) LocalDateTime hasta) {
-        log.info("GET /api/v1/excepciones - tipo={}, sku={}, page={}, desde={}", tipo, skuId, page, desde);
+        log.info("GET /api/v1/excepciones - tipo={}, sku={}, page={}", tipo, skuId, page);
 
-        TipoExcepcion tipoEnum = tipo != null ? TipoExcepcion.valueOf(tipo) : null;
+        TipoExcepcion tipoEnum = (tipo != null && !tipo.isBlank()) 
+                ? TipoExcepcion.valueOf(tipo.toUpperCase()) 
+                : null;
+        
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fechaRegistro"));
 
         Page<ExcepcionInventario> excepciones = consultarExcepcionesUseCase.ejecutarConPaginacion(

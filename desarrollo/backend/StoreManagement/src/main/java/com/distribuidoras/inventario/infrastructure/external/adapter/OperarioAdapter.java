@@ -89,6 +89,40 @@ public class OperarioAdapter implements OperarioServicePort {
     }
     
     @Override
+    @CircuitBreaker(name = "moduloUsuarios", fallbackMethod = "fallbackFindById")
+    public Optional<Operario> findById(UUID id) {
+        log.info("Consultando operario con ID: {}", id);
+        try {
+            String url = baseUrl + "/api/usuarios/operarios/id/" + id;
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                    url, Objects.requireNonNull(HttpMethod.GET), null, new ParameterizedTypeReference<Map<String, Object>>() {});
+            
+            Map<String, Object> body = response.getBody();
+            if (response.getStatusCode().is2xxSuccessful() && body != null) {
+                String rolStr = (String) body.get("rol");
+                RolUsuario rol = rolStr != null ? RolUsuario.valueOf(rolStr.toUpperCase()) : null;
+                
+                return Optional.of(Operario.builder()
+                        .operarioId(UUID.fromString((String) body.get("id")))
+                        .nombre((String) body.get("nombre"))
+                        .cedula((String) body.get("cedula"))
+                        .activo((Boolean) body.getOrDefault("activo", false))
+                        .rol(rol)
+                        .build());
+            }
+            return Optional.empty();
+        } catch (Exception e) {
+            log.warn("Error consultando operario por ID {}: {}", id, e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    public Optional<Operario> fallbackFindById(UUID id, Exception ex) {
+        log.warn("Fallback findById para ID: {}", id);
+        return Optional.empty();
+    }
+
+    @Override
     public List<Operario> findByRol(String rol) {
         log.info("Consultando operarios con rol: {}", rol);
         

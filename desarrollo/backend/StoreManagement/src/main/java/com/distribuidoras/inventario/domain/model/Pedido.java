@@ -53,6 +53,9 @@ public class Pedido {
 
     private LocalDateTime fechaEntrega;
 
+    @Size(max = 255, message = "La dirección de entrega no puede exceder 255 caracteres")
+    private String direccionEntrega;
+
     @Size(max = 500, message = "Las observaciones no pueden exceder 500 caracteres")
     private String observaciones;
 
