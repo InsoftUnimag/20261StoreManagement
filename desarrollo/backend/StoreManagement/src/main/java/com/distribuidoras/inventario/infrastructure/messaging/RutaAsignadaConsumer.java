@@ -32,8 +32,8 @@ public class RutaAsignadaConsumer {
      */
     @RabbitListener(queues = "inventario.ruta-asignada")
     public void recibirRutaAsignada(Map<String, String> mensaje) {
-        String pedidoId = mensaje.get("pedido_id");
-        String rutaId = mensaje.get("ruta_id");
+        String pedidoId = mensaje.get("idPedido");
+        String rutaId = mensaje.get("idRuta");
 
         log.info("Recibida ruta asignada: pedido={}, ruta={}", pedidoId, rutaId);
 
