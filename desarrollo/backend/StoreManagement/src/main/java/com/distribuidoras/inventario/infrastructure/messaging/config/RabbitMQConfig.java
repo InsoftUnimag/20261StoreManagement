@@ -45,6 +45,16 @@ public class RabbitMQConfig {
     }
 
     @Bean
+    public TopicExchange rutaAsignadaResponseExchange() {
+        return new TopicExchange("ruta-asignada.response", true, false);
+    }
+
+    @Bean
+    public TopicExchange rutaDespachadaEventExchange() {
+        return new TopicExchange("ruta-despachada.event", true, false);
+    }
+
+    @Bean
     public TopicExchange inventarioAlertasExchange() {
         return new TopicExchange(INVENTARIO_ALERTAS_EXCHANGE, true, false);
     }
@@ -92,8 +102,8 @@ public class RabbitMQConfig {
     @Bean
     public Binding rutaAsignadaBinding() {
         return BindingBuilder.bind(rutaAsignadaQueue())
-                .to(logisticaEventosExchange())
-                .with(RUTA_ASIGNADA_KEY);
+                .to(rutaAsignadaResponseExchange())
+                .with("#");
     }
 
     @Bean
@@ -113,7 +123,7 @@ public class RabbitMQConfig {
     @Bean
     public Binding entregaConfirmadaBinding() {
         return BindingBuilder.bind(entregaConfirmadaQueue())
-                .to(logisticaEventosExchange())
-                .with(ENTREGA_CONFIRMADA_KEY);
+                .to(rutaDespachadaEventExchange())
+                .with("#");
     }
 }
