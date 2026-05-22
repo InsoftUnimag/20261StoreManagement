@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: store_management
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -20,13 +20,14 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: rabbitmq-store
+    container_name: store_shared_rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_NODENAME: rabbit@localhost
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 5s

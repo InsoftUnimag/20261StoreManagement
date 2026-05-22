@@ -40,7 +40,7 @@ public class RutaAsignadaConsumer {
         try {
             ComprometerCommand command = new ComprometerCommand(
                     UUID.fromString(pedidoId),
-                    UUID.fromString(rutaId)
+                    Long.parseLong(rutaId)
             );
 
             ComprometerResult result = comprometerInventarioUseCase.ejecutar(command);

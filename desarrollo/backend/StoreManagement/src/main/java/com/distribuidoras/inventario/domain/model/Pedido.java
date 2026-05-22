@@ -40,7 +40,7 @@ public class Pedido {
     @NotNull(message = "El estado del pedido no puede ser nulo")
     private EstadoPedido estado;
 
-    private UUID rutaId;
+    private Long rutaId;
 
     private LocalDateTime fechaCompromiso;
 

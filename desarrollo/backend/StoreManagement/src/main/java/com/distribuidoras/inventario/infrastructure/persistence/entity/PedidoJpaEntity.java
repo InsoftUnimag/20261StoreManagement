@@ -44,7 +44,7 @@ public class PedidoJpaEntity {
     private EstadoPedido estado;
     
     @Column(name = "ruta_id")
-    private UUID rutaId;
+    private Long rutaId;
     
     @Column(name = "fecha_compromiso")
     private LocalDateTime fechaCompromiso;

@@ -14,7 +14,6 @@ import com.distribuidoras.inventario.infrastructure.persistence.entity.StockGlob
 import com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -49,9 +48,6 @@ public class PedidoCreadoProducer {
 
         Map<String, Object> mensaje = new HashMap<>();
         mensaje.put("idPedido", pedidoId.toString());
-        mensaje.put("numero_pedido", numeroPedido);
-        mensaje.put("evento", "PEDIDO_CREADO");
-        mensaje.put("timestamp", LocalDateTime.now().toString());
 
         try {
             var pedidoOpt = pedidoRepository.findById(pedidoId);
