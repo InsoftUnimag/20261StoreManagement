@@ -66,7 +66,7 @@ public class ComprometerInventarioUseCase {
      */
     public record ComprometerCommand(
             UUID pedidoId,
-            UUID rutaId
+            Long rutaId
     ) {}
 
     public record ComprometerResult(

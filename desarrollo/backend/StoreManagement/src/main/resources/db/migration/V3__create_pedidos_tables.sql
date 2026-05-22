@@ -8,7 +8,7 @@ CREATE TABLE pedidos (
     cliente_cc VARCHAR(50) NOT NULL,
     fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     estado VARCHAR(30) NOT NULL DEFAULT 'ESPERANDO_RUTA',
-    ruta_id UUID,
+    ruta_id BIGINT,
     fecha_compromiso TIMESTAMP,
     asesor_id UUID,
     operario_picking_id UUID,

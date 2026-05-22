@@ -21,7 +21,7 @@ public class PedidoResponseDTO {
     private String estado;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaCompromiso;
-    private UUID rutaId;
+    private Long rutaId;
     private ClienteInfoDTO cliente;
     private String clienteNombre;
     private AsesorInfoDTO asesor;

@@ -101,7 +101,7 @@ public class PedidoController {
 
                 log.info("REST: Comprometiendo inventario para pedido {}", pedidoId);
 
-                UUID rutaId = UUID.fromString(request.get("ruta_id"));
+                Long rutaId = Long.parseLong(request.get("ruta_id"));
 
                 ComprometerCommand command = new ComprometerCommand(
                                 UUID.fromString(pedidoId),
