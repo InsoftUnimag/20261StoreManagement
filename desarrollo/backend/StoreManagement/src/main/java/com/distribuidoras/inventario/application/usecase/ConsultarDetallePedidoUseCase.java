@@ -26,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.math.BigDecimal;
 
 /**
@@ -76,7 +75,7 @@ public class ConsultarDetallePedidoUseCase {
         public PedidoResponseDTO ejecutar(String identifier) {
                 log.info("Consultando detalle de pedido: {}", identifier);
 
-                // 1. Buscar pedido por UUID o numero_pedido
+                // 1. Buscar pedido por ID o numero_pedido
                 Pedido pedido = buscarPedido(identifier);
 
                 // 2. Obtener líneas del pedido
@@ -112,7 +111,7 @@ public class ConsultarDetallePedidoUseCase {
                                 .rutaId(pedido.getRutaId())
                                 .cliente(clienteInfo)
                                 .clienteNombre(pedido.getClienteNombre())
-                                .asesor(AsesorInfoDTO.builder().asesorId(pedido.getAsesorId()).nombre("Asesor").build())
+                                .asesor(new AsesorInfoDTO(pedido.getAsesorId(), "Asesor"))
                                 .operarioPicking(mapearOperario(pedido.getOperarioPickingId()))
                                 .operarioDespacho(mapearOperario(pedido.getOperarioDespachoId()))
                                 .direccionEntrega(pedido.getDireccionEntrega())
@@ -125,17 +124,17 @@ public class ConsultarDetallePedidoUseCase {
         }
 
         /**
-         * Busca pedido por UUID o número.
+         * Busca pedido por ID o número.
          */
         private Pedido buscarPedido(String identifier) {
                 Optional<Pedido> pedido;
 
                 try {
-                        // Intentar como UUID primero
-                        UUID id = UUID.fromString(identifier);
+                        // Intentar como ID numérico primero
+                        Long id = Long.parseLong(identifier);
                         pedido = pedidoRepository.findById(id);
                 } catch (IllegalArgumentException e) {
-                        // Si no es UUID válido, buscar por numero_pedido
+                        // Si no es ID numérico válido, buscar por numero_pedido
                         pedido = pedidoRepository.findByNumeroPedido(identifier);
                 }
 
@@ -165,7 +164,7 @@ public class ConsultarDetallePedidoUseCase {
         /**
          * Mapea un ID de operario a su DTO de información.
          */
-        private OperarioInfoDTO mapearOperario(UUID operarioId) {
+        private OperarioInfoDTO mapearOperario(Long operarioId) {
                 if (operarioId == null)
                         return null;
                 return operarioServicePort.findById(operarioId)

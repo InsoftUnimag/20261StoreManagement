@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
+
 
 @Service
 public class AsignarPedidoUseCase {
@@ -21,7 +21,7 @@ public class AsignarPedidoUseCase {
         this.pedidoRepository = pedidoRepository;
     }
 
-    public Pedido ejecutar(UUID pedidoId, UUID operarioPickingId, UUID operarioDespachoId) {
+    public Pedido ejecutar(Long pedidoId, Long operarioPickingId, Long operarioDespachoId) {
         log.info("Asignando pedido {} - picking: {}, despacho: {}", pedidoId, operarioPickingId, operarioDespachoId);
 
         Pedido pedido = pedidoRepository.findById(pedidoId)
@@ -30,13 +30,12 @@ public class AsignarPedidoUseCase {
         if (operarioPickingId != null) {
             if (pedido.getEstado() != EstadoPedido.COMPROMETIDO) {
                 throw new IllegalStateException(
-                        "Solo se pueden asignar pedidos a picking en estado COMPROMETIDO. Estado actual: " + pedido.getEstado()
-                );
+                        "Solo se pueden asignar pedidos a picking en estado COMPROMETIDO. Estado actual: "
+                                + pedido.getEstado());
             }
             if (pedido.getOperarioPickingId() != null) {
                 throw new IllegalStateException(
-                        "El pedido ya tiene operario de picking asignado: " + pedido.getOperarioPickingId()
-                );
+                        "El pedido ya tiene operario de picking asignado: " + pedido.getOperarioPickingId());
             }
             pedido.setOperarioPickingId(operarioPickingId);
         }
@@ -44,18 +43,17 @@ public class AsignarPedidoUseCase {
         if (operarioDespachoId != null) {
             if (pedido.getEstado() != EstadoPedido.PICKUP) {
                 throw new IllegalStateException(
-                        "Solo se puede asignar operario de despacho desde estado PICKUP. Estado actual: " + pedido.getEstado()
-                );
+                        "Solo se puede asignar operario de despacho desde estado PICKUP. Estado actual: "
+                                + pedido.getEstado());
             }
             if (pedido.getOperarioDespachoId() != null) {
                 throw new IllegalStateException(
-                        "El pedido ya tiene operario de despacho asignado: " + pedido.getOperarioDespachoId()
-                );
+                        "El pedido ya tiene operario de despacho asignado: " + pedido.getOperarioDespachoId());
             }
             pedido.setOperarioDespachoId(operarioDespachoId);
         }
 
-        log.info("Pedido {} asignado exitosamente (Picking: {}, Despacho: {})", 
+        log.info("Pedido {} asignado exitosamente (Picking: {}, Despacho: {})",
                 pedidoId, pedido.getOperarioPickingId(), pedido.getOperarioDespachoId());
 
         pedidoRepository.update(pedido);

@@ -193,13 +193,13 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 **Purpose**: Consultar stock disponible de un SKU con detalle de lotes
 
 **Path Param**:
-- `sku_id`: UUID del producto
+- `sku_id`: String del producto
 
 **Response 200 OK**:
 ```json
 {
   "sku": {
-    "sku_id": "uuid",
+    "sku_id": "string",
     "marca": "Pilsen",
     "presentacion": "Six-pack",
     "contenido_ml": 1980,
@@ -243,7 +243,7 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 **Purpose**: Consultar stock de múltiples SKUs (batch query)
 
 **Query Params**:
-- `sku_ids`: Comma-separated UUIDs (ej: "uuid1,uuid2,uuid3")
+- `sku_ids`: Comma-separated SKU IDs (ej: "sku001,sku002,sku003")
 - `include_zero_stock`: Boolean (default: false) - incluir SKUs con stock = 0
 
 **Response 200 OK**:
@@ -251,13 +251,13 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 {
   "stocks": [
     {
-      "sku_id": "uuid1",
+      "sku_id": "sku001",
       "marca": "Pilsen",
       "presentacion": "Unidad",
       "fisico_total": 1200
     },
     {
-      "sku_id": "uuid2",
+      "sku_id": "sku002",
       "marca": "Águila",
       "presentacion": "Six-pack",
       "fisico_total": 0
@@ -282,28 +282,28 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
     "creado_el": "2026-03-15T09:30:00Z"
   },
   "producto": {
-    "sku_id": "uuid",
+    "sku_id": "string",
     "marca": "Pilsen",
     "presentacion": "Six-pack"
   },
   "recepcion": {
-    "recepcion_id": "uuid",
+    "recepcion_id": "number",
     "fecha_recepcion": "2026-03-15T09:30:00Z",
     "operario_nombre": "Juan Pérez"
   },
   "movimientos_recientes": [
     {
-      "movimiento_id": "uuid",
+      "movimiento_id": "number",
       "tipo_movimiento": "Entrada",
       "cantidad": 300,
       "fecha": "2026-03-15T09:30:00Z"
     },
     {
-      "movimiento_id": "uuid",
+      "movimiento_id": "number",
       "tipo_movimiento": "Compromiso",
       "cantidad": -60,
       "fecha": "2026-03-20T14:00:00Z",
-      "pedido_id": "uuid"
+      "pedido_id": "number"
     }
   ]
 }
@@ -321,7 +321,7 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 **Purpose**: Consultar kardex (movimientos de inventario) con filtros
 
 **Query Params**:
-- `sku_id` (opcional): UUID del producto
+- `sku_id` (opcional): String del producto
 - `codigo_lote` (opcional): String del lote
 - `tipo_movimiento` (opcional): Enum (Entrada, Compromiso, Picking, Salida, Baja Avería, Baja Vencimiento, Faltante)
 - `fecha_desde` (opcional): ISO Date (ej: "2026-03-01")
@@ -334,7 +334,7 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 {
   "movimientos": [
     {
-      "movimiento_id": "uuid",
+      "movimiento_id": "number",
       "tipo_movimiento": "Entrada",
       "cantidad": 300,
       "fecha_movimiento": "2026-03-15T09:30:00Z",
@@ -343,7 +343,7 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
         "codigo_lote": "LOT-2025-001"
       },
       "producto": {
-        "sku_id": "uuid",
+        "sku_id": "string",
         "marca": "Pilsen",
         "presentacion": "Six-pack"
       },
@@ -351,7 +351,7 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
       "observaciones": "Recepción contra manifiesto MAN-2025-042"
     },
     {
-      "movimiento_id": "uuid",
+      "movimiento_id": "number",
       "tipo_movimiento": "Compromiso",
       "cantidad": -60,
       "fecha_movimiento": "2026-03-20T14:00:00Z",
@@ -360,11 +360,11 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
         "codigo_lote": "LOT-2025-001"
       },
       "producto": {
-        "sku_id": "uuid",
+        "sku_id": "string",
         "marca": "Pilsen",
         "presentacion": "Six-pack"
       },
-      "pedido_id": "uuid",
+      "pedido_id": "number",
       "observaciones": "Compromiso FEFO para pedido PED-001"
     }
   ],
@@ -418,7 +418,7 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 
 **T002: Implementar ConsultarStockMultipleSkusUseCase**
 - Path: `application/usecases/ConsultarStockMultipleSkusUseCase.java`
-- Input: List<UUID> skuIds, boolean includeZeroStock
+- Input: List<String> skuIds, boolean includeZeroStock
 - Output: List<StockResumenDTO> (sku_id, marca, presentacion, fisico_total)
 - Lógica:
   1. Query eficiente con JOIN: Producto + SUM(Lote.cantidad) GROUP BY sku_id
@@ -464,7 +464,7 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
 - Método:
   ```java
   @Query("SELECT l FROM LoteEntity l WHERE l.skuId = :skuId AND l.cantidad > 0 ORDER BY l.fechaVencimiento ASC, l.creadoEl ASC")
-  List<LoteEntity> findAvailableBySkuOrderByFEFO(@Param("skuId") UUID skuId);
+  List<LoteEntity> findAvailableBySkuOrderByFEFO(@Param("skuId") String skuId);
   ```
 - Usar índice existente: `idx_lotes_sku_vencimiento`
 
@@ -474,15 +474,15 @@ Este plan NO crea nuevas entidades, solo consulta las existentes:
   @Query("SELECT l.skuId as skuId, SUM(l.cantidad) as fisicoTotal " +
          "FROM LoteEntity l WHERE l.skuId IN :skuIds AND l.cantidad > 0 " +
          "GROUP BY l.skuId")
-  List<StockProjection> findStockBySkuIds(@Param("skuIds") List<UUID> skuIds);
+  List<StockProjection> findStockBySkuIds(@Param("skuIds") List<String> skuIds);
   ```
 - Interface projection: `StockProjection` (skuId, fisicoTotal)
 
 **T008: Crear Specification para filtros dinámicos de kardex**
 - Path: `infrastructure/persistence/specifications/MovimientoInventarioSpecification.java`
 - Métodos estáticos:
-  - `bySkuId(UUID skuId)`
-  - `bycodigoLote(UUID codigoLote)`
+  - `bySkuId(String skuId)`
+  - `bycodigoLote(String codigoLote)`
   - `byTipoMovimiento(TipoMovimiento tipo)`
   - `byFechaRange(LocalDate desde, LocalDate hasta)`
 - Composición con `Specification.where(spec1).and(spec2)...`

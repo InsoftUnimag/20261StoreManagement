@@ -100,7 +100,7 @@ La estructura específica para este componente implementada es:
 **Propósito**: Documento de fábrica con productos esperados (entidad externa al Módulo 1).
 
 **Atributos**:
-- `manifiesto_id`: UUID (PK)
+- `manifiesto_id`: Long (PK)
 - `numero_manifiesto`: String (número del documento físico)
 - `fecha_emision`: Date
 - `proveedor`: String
@@ -112,9 +112,9 @@ La estructura específica para este componente implementada es:
 
 ### DetalleManifiesto
 **Atributos**:
-- `detalle_id`: UUID (PK)
-- `manifiesto_id`: UUID (FK)
-- `sku_id`: UUID (FK → Producto)
+- `detalle_id`: Long (PK)
+- `manifiesto_id`: Long (FK)
+- `sku_id`: String (FK → Producto)
 - `cantidad_esperada`: Integer
 - `cantidad_recibida`: Integer (acumulado)
 
@@ -122,9 +122,9 @@ La estructura específica para este componente implementada es:
 **Propósito**: Registro de recepción física de mercancía.
 
 **Atributos**:
-- `recepcion_id`: UUID (PK, autogenerado)
-- `manifiesto_id`: UUID (FK, puede ser null si recepción sin manifiesto)
-- `operario_id`: UUID (FK → Usuario)
+- `recepcion_id`: Long (PK, autogenerado)
+- `manifiesto_id`: Long (FK, puede ser null si recepción sin manifiesto)
+- `operario_id`: Long (FK → Usuario)
 - `fecha_recepcion`: DateTime
 - `notas`: Text (opcional)
 
@@ -138,14 +138,14 @@ La estructura específica para este componente implementada es:
 
 **Atributos**:
 - `codigo_lote`: String (PK, Código de fábrica)
-- `sku_id`: UUID (FK → Producto, inmutable)
+- `sku_id`: String (FK → Producto, inmutable)
 - `cantidad`: Integer (Unidades físicas actuales)
 - `fecha_vencimiento`: Date (Mandatorio para control FEFO)
 - `fecha_expedicion`: Date
 - `disponible`: Boolean
 - `flag_urgencia_fefo`: Boolean (Activo si vencimiento cercano)
 - `costo_unitario_producto`: Decimal (Costo en pesos colombianos)
-- `recepcion_id`: UUID (FK → Recepcion)
+- `recepcion_id`: Long (FK → Recepcion)
 
 **Constraints**:
 - UNIQUE(sku_id, codigo_lote, fecha_vencimiento) - evita duplicados
@@ -161,14 +161,14 @@ La estructura específica para este componente implementada es:
 **Propósito**: Registro contable de movimientos de stock para auditoría.
 
 **Atributos**:
-- `movimiento_id`: UUID (PK, autogenerado)
+- `movimiento_id`: Long (PK, autogenerado)
 - `codigo_lote`: String (FK → Lote)
 - `tipo_movimiento`: Enum (Entrada, Compromiso, Picking, Salida, Baja Avería, Baja Vencimiento, Faltante)
 - `cantidad`: Integer (positivo o negativo según tipo)
 - `fecha_movimiento`: DateTime
-- `pedido_id`: UUID (FK → Pedido, nullable, solo para Compromiso/Picking/Salida)
-- `excepcion_id`: UUID (FK → ExcepcionInventario, nullable, solo para Bajas/Faltantes)
-- `operario_id`: UUID (FK → Usuario, nullable)
+- `pedido_id`: Long (FK → Pedido, nullable, solo para Compromiso/Picking/Salida)
+- `excepcion_id`: Long (FK → ExcepcionInventario, nullable, solo para Bajas/Faltantes)
+- `operario_id`: Long (FK → Usuario, nullable)
 - `observaciones`: Text (opcional)
 
 **Business Rules**:
@@ -186,13 +186,13 @@ La estructura específica para este componente implementada es:
 **Propósito**: Registro de anomalías para investigación y trazabilidad.
 
 **Atributos**:
-- `excepcion_id`: UUID (PK, autogenerado)
+- `excepcion_id`: Long (PK, autogenerado)
 - `tipo_excepcion`: Enum (Avería, Vencimiento, Diferencia, Faltante)
 - `codigo_lote`: String (FK → Lote, puede ser null)
-- `sku_id`: UUID (FK → Producto, siempre presente)
+- `sku_id`: String (FK → Producto, siempre presente)
 - `cantidad_afectada`: Integer
 - `fecha_registro`: DateTime
-- `operario_id`: UUID (FK → Usuario)
+- `operario_id`: Long (FK → Usuario)
 - `descripcion`: Text (obligatorio, ej: "Pallet dañado en recepción")
 - `evidencia_url`: String (nullable, foto/documento)
 - `estado`: Enum (Abierta, En Investigación, Cerrada)
@@ -305,11 +305,11 @@ La estructura específica para este componente implementada es:
 **Request Body**:
 ```json
 {
-  "manifiesto_id": "uuid", // opcional (null si recepción sin manifiesto)
-  "operario_id": "uuid",
+  "manifiesto_id": "number", // opcional (null si recepción sin manifiesto)
+  "operario_id": "number",
   "lineas_recepcion": [
     {
-      "sku_id": "uuid",
+      "sku_id": "string",
       "codigo_lote": "LOT-2025-001",
       "fecha_vencimiento": "2026-12-31",
       "fecha_fabricacion": "2025-01-15", // opcional
@@ -323,19 +323,19 @@ La estructura específica para este componente implementada es:
 **Response 201 Created**:
 ```json
 {
-  "recepcion_id": "uuid",
+  "recepcion_id": "number",
   "fecha_recepcion": "2026-04-03T10:30:00Z",
   "lotes_creados": [
     {
       "codigo_lote": "LOT-2026-001",
-      "sku_id": "uuid",
+      "sku_id": "string",
       "codigo_lote": "LOT-2025-001",
       "cantidad": 240
     }
   ],
   "excepciones_generadas": [ // si hubo diferencias
     {
-      "excepcion_id": "uuid",
+      "excepcion_id": "number",
       "tipo": "Diferencia",
       "cantidad_afectada": -10,
       "descripcion": "Diferencia automática: Esperado 250, Recibido 240"
@@ -361,7 +361,7 @@ La estructura específica para este componente implementada es:
 {
   "manifiestos": [
     {
-      "manifiesto_id": "uuid",
+      "manifiesto_id": "number",
       "numero_manifiesto": "MAN-2025-042",
       "proveedor": "Bavaria",
       "fecha_emision": "2025-03-28",
@@ -381,13 +381,13 @@ La estructura específica para este componente implementada es:
 **Response 200 OK**:
 ```json
 {
-  "manifiesto_id": "uuid",
+  "manifiesto_id": "number",
   "numero_manifiesto": "MAN-2025-042",
   "lineas": [
     {
-      "detalle_id": "uuid",
+      "detalle_id": "number",
       "sku": {
-        "sku_id": "uuid",
+        "sku_id": "string",
         "marca": "Pilsen",
         "presentacion": "Six-pack"
       },
@@ -405,24 +405,24 @@ La estructura específica para este componente implementada es:
 ```json
 {
   "tipo_excepcion": "Avería", // Avería | Vencimiento | Diferencia | Faltante
-  "sku_id": "uuid",
+  "sku_id": "string",
   "codigo_lote": "LOT-2026-001", // opcional
   "cantidad_afectada": 12,
   "descripcion": "Cajas dañadas por humedad durante transporte",
   "evidencia_url": "https://storage/foto123.jpg", // opcional
-  "operario_id": "uuid"
+  "operario_id": "number"
 }
 ```
 
 **Response 201 Created**:
 ```json
 {
-  "excepcion_id": "uuid",
+  "excepcion_id": "number",
   "tipo_excepcion": "Avería",
   "estado": "Abierta",
   "fecha_registro": "2026-04-03T11:15:00Z",
   "movimiento_generado": {
-    "movimiento_id": "uuid",
+    "movimiento_id": "number",
     "tipo_movimiento": "Baja Avería",
     "cantidad": -12
   }
@@ -449,10 +449,10 @@ La estructura específica para este componente implementada es:
 {
   "excepciones": [
     {
-      "excepcion_id": "uuid",
+      "excepcion_id": "number",
       "tipo_excepcion": "Avería",
       "sku": {
-        "sku_id": "uuid",
+        "sku_id": "string",
         "marca": "Pilsen",
         "presentacion": "Unidad"
       },
@@ -477,10 +477,10 @@ La estructura específica para este componente implementada es:
 **Response 200 OK**:
 ```json
 {
-  "excepcion_id": "uuid",
+  "excepcion_id": "number",
   "tipo_excepcion": "Avería",
   "sku": {
-    "sku_id": "uuid",
+    "sku_id": "string",
     "marca": "Pilsen",
     "presentacion": "Unidad",
     "contenido_ml": 330
@@ -496,12 +496,12 @@ La estructura específica para este componente implementada es:
   "evidencia_url": "https://storage/foto123.jpg",
   "fecha_registro": "2026-04-03T11:15:00Z",
   "operario": {
-    "operario_id": "uuid",
+    "operario_id": "number",
     "nombre": "Juan Pérez"
   },
   "estado": "Abierta",
   "movimiento_asociado": {
-    "movimiento_id": "uuid",
+    "movimiento_id": "number",
     "tipo_movimiento": "Baja Avería",
     "cantidad": -12,
     "fecha": "2026-04-03T11:15:00Z"
@@ -523,7 +523,7 @@ La estructura específica para este componente implementada es:
 **Response 200 OK**:
 ```json
 {
-  "excepcion_id": "uuid",
+  "excepcion_id": "number",
   "estado": "En Investigación",
   "fecha_actualizacion": "2026-04-03T14:00:00Z"
 }
@@ -578,40 +578,40 @@ La estructura específica para este componente implementada es:
 - Métodos:
   - `List<Manifiesto> findByEstado(EstadoManifiesto estado)`
   - `List<Manifiesto> findPendientes()` (estado IN [PENDIENTE, RECEPCIONADO_PARCIAL])
-  - `Optional<Manifiesto> findById(UUID id)`
+  - `Optional<Manifiesto> findById(Long id)`
   - `void save(Manifiesto manifiesto)` // solo para actualizar estado
 
 **T008: Crear DetalleManifiestoRepository (domain/repositories)**
 - Métodos:
-  - `List<DetalleManifiesto> findByManifiestoId(UUID manifiestoId)`
+  - `List<DetalleManifiesto> findByManifiestoId(Long manifiestoId)`
   - `void save(DetalleManifiesto detalle)` // para actualizar cantidad_recibida
 
 **T009: Crear RecepcionRepository (domain/repositories)**
 - Métodos:
-  - `UUID save(Recepcion recepcion)` retorna ID
-  - `Optional<Recepcion> findById(UUID id)`
+  - `Long save(Recepcion recepcion)` retorna ID
+  - `Optional<Recepcion> findById(Long id)`
   - `List<Recepcion> findByFechaRange(LocalDate desde, LocalDate hasta)`
 
 **T010: Crear LoteRepository (domain/repositories)**
 - Métodos:
-  - `UUID save(Lote lote)` retorna ID
-  - `Optional<Lote> findById(UUID id)`
-  - `Optional<Lote> findBySkuAndCodigoAndVencimiento(UUID skuId, String codigoLote, LocalDate fechaVencimiento)`
-  - `List<Lote> findBySkuIdOrderByFechaVencimientoAsc(UUID skuId)` // FEFO
-  - `List<Lote> findBySkuIdWithStock(UUID skuId)` // cantidad > 0
+  - `Long save(Lote lote)` retorna ID
+  - `Optional<Lote> findById(Long id)`
+  - `Optional<Lote> findBySkuAndCodigoAndVencimiento(String skuId, String codigoLote, LocalDate fechaVencimiento)`
+  - `List<Lote> findBySkuIdOrderByFechaVencimientoAsc(String skuId)` // FEFO
+  - `List<Lote> findBySkuIdWithStock(String skuId)` // cantidad > 0
   - `void update(Lote lote)` // para actualizar cantidad
 
 **T011: Crear MovimientoInventarioRepository (domain/repositories)**
 - Métodos:
-  - `UUID save(MovimientoInventario movimiento)`
-  - `List<MovimientoInventario> findBycodigoLote(UUID codigoLote)` // kardex de un lote
-  - `List<MovimientoInventario> findByPedidoId(UUID pedidoId)` // movimientos de un pedido
+  - `Long save(MovimientoInventario movimiento)`
+  - `List<MovimientoInventario> findBycodigoLote(String codigoLote)` // kardex de un lote
+  - `List<MovimientoInventario> findByPedidoId(Long pedidoId)` // movimientos de un pedido
 
 **T012: Crear ExcepcionInventarioRepository (domain/repositories)**
 - Métodos:
-  - `UUID save(ExcepcionInventario excepcion)`
-  - `Optional<ExcepcionInventario> findById(UUID id)`
-  - `Page<ExcepcionInventario> findByFilters(TipoExcepcion tipo, EstadoExcepcion estado, LocalDate desde, LocalDate hasta, UUID skuId, Pageable pageable)`
+  - `Long save(ExcepcionInventario excepcion)`
+  - `Optional<ExcepcionInventario> findById(Long id)`
+  - `Page<ExcepcionInventario> findByFilters(TipoExcepcion tipo, EstadoExcepcion estado, LocalDate desde, LocalDate hasta, String skuId, Pageable pageable)`
   - `void update(ExcepcionInventario excepcion)` // para cambiar estado
 
 ### Phase 3: Use Cases (Application Layer)
@@ -718,7 +718,7 @@ La estructura específica para este componente implementada es:
 - JpaLoteRepository con query FEFO:
   ```java
   @Query("SELECT l FROM LoteEntity l WHERE l.skuId = :skuId AND l.cantidad > 0 ORDER BY l.fechaVencimiento ASC")
-  List<LoteEntity> findAvailableBySkuOrderByFEFO(@Param("skuId") UUID skuId);
+  List<LoteEntity> findAvailableBySkuOrderByFEFO(@Param("skuId") String skuId);
   ```
 - JpaMovimientoInventarioRepository
 - JpaExcepcionInventarioRepository con Specification para filtros dinámicos

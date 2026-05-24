@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 /**
  * Use Case: Comprometer Inventario cuando Módulo 2 asigna ruta.
@@ -48,11 +47,11 @@ public class ComprometerInventarioUseCase {
     private final com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository stockGlobalSkuRepository;
 
     public ComprometerInventarioUseCase(PedidoRepository pedidoRepository,
-                                         ProductoPedidoRepository productoPedidoRepository,
-                                         LoteRepository loteRepository,
-                                         LoteComprometidoRepository loteComprometidoRepository,
-                                         MovimientoInventarioRepository movimientoRepository,
-                                         com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository stockGlobalSkuRepository) {
+            ProductoPedidoRepository productoPedidoRepository,
+            LoteRepository loteRepository,
+            LoteComprometidoRepository loteComprometidoRepository,
+            MovimientoInventarioRepository movimientoRepository,
+            com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository stockGlobalSkuRepository) {
         this.pedidoRepository = pedidoRepository;
         this.productoPedidoRepository = productoPedidoRepository;
         this.loteRepository = loteRepository;
@@ -65,15 +64,15 @@ public class ComprometerInventarioUseCase {
      * Command para compromiso de inventario.
      */
     public record ComprometerCommand(
-            UUID pedidoId,
-            Long rutaId
-    ) {}
+            Long pedidoId,
+            Long rutaId) {
+    }
 
     public record ComprometerResult(
             boolean exitoso,
             String numeroPedido,
-            List<String> alertas
-    ) {}
+            List<String> alertas) {
+    }
 
     /**
      * Ejecuta el compromiso de inventario con algoritmo FEFO.
@@ -81,7 +80,7 @@ public class ComprometerInventarioUseCase {
      */
     @Transactional
     public ComprometerResult ejecutar(ComprometerCommand command) {
-        log.info("Comprometiendo inventario para pedido: {}, ruta: {}", 
+        log.info("Comprometiendo inventario para pedido: {}, ruta: {}",
                 command.pedidoId(), command.rutaId());
 
         // 1. Buscar pedido
@@ -91,9 +90,9 @@ public class ComprometerInventarioUseCase {
 
         // 2. Idempotencia: Verificar si ya está comprometido
         if (pedido.getEstado() == EstadoPedido.COMPROMETIDO) {
-            log.warn("Pedido {} ya está COMPROMETIDO. Ignorando (idempotencia).", 
+            log.warn("Pedido {} ya está COMPROMETIDO. Ignorando (idempotencia).",
                     pedido.getNumeroPedido());
-            return new ComprometerResult(true, pedido.getNumeroPedido(), 
+            return new ComprometerResult(true, pedido.getNumeroPedido(),
                     List.of("Pedido ya estaba comprometido (mensaje duplicado)"));
         }
 
@@ -120,7 +119,7 @@ public class ComprometerInventarioUseCase {
         pedido.setFechaCompromiso(LocalDateTime.now());
         pedidoRepository.update(pedido);
 
-        log.info("Pedido {} comprometido exitosamente. Alertas: {}", 
+        log.info("Pedido {} comprometido exitosamente. Alertas: {}",
                 pedido.getNumeroPedido(), alertas.size());
 
         return new ComprometerResult(true, pedido.getNumeroPedido(), alertas);
@@ -143,7 +142,8 @@ public class ComprometerInventarioUseCase {
 
         // Aplicar FEFO: seleccionar lotes hasta cubrir cantidad
         for (Lote lote : lotesFEFO) {
-            if (cantidadPendiente <= 0) break;
+            if (cantidadPendiente <= 0)
+                break;
 
             // Verificar cuántas unidades disponibles tiene el lote
             // disponible = lote.cantidad - lo ya comprometido en LoteComprometido
@@ -160,7 +160,6 @@ public class ComprometerInventarioUseCase {
 
             // Crear compromiso
             LoteComprometido compromiso = LoteComprometido.builder()
-                    .compromisoId(UUID.randomUUID())
                     .productoPedidoId(linea.getProductoPedidoId())
                     .codigoLote(lote.getCodigoLote())
                     .cantidadComprometida(cantidadAComprometer)
@@ -208,10 +207,9 @@ public class ComprometerInventarioUseCase {
      */
     private void registrarMovimientoCompromiso(Pedido pedido, Lote lote, int cantidad) {
         MovimientoInventario movimiento = MovimientoInventario.builder()
-                .movimientoId(UUID.randomUUID())
                 .codigoLote(lote.getCodigoLote())
                 .tipoMovimiento(TipoMovimiento.COMPROMISO)
-                .cantidad(-cantidad)  // Negativo porque es salida/reserva
+                .cantidad(-cantidad) // Negativo porque es salida/reserva
                 .fechaMovimiento(LocalDateTime.now())
                 .pedidoId(pedido.getPedidoId())
                 .observaciones("Compromiso FEFO para pedido " + pedido.getNumeroPedido())
@@ -234,13 +232,14 @@ public class ComprometerInventarioUseCase {
 
     /**
      * Verifica si el lote ya está completamente comprometido.
-     * Busca en LoteComprometido la suma total de cantidades comprometidas para ese lote.
+     * Busca en LoteComprometido la suma total de cantidades comprometidas para ese
+     * lote.
      * Si totalComprometido >= lote.cantidad → lote.disponible = false
      * Si no, lote.disponible = true
      */
     private void actualizarDisponibilidadLote(Lote lote) {
         List<LoteComprometido> compromisos = loteComprometidoRepository.findByCodigoLote(lote.getCodigoLote());
-        
+
         int totalComprometido = compromisos.stream()
                 .mapToInt(LoteComprometido::getCantidadComprometida)
                 .sum();
@@ -252,8 +251,8 @@ public class ComprometerInventarioUseCase {
             lote.setDisponible(true);
         }
         loteRepository.save(lote);
-        
-        log.info("Lote {} - Comprometido: {}, Original: {}, Disponible: {}", 
+
+        log.info("Lote {} - Comprometido: {}, Original: {}, Disponible: {}",
                 lote.getCodigoLote(), totalComprometido, lote.getCantidad(), lote.getDisponible());
     }
 }

@@ -4,7 +4,7 @@
 
 -- Manifiesto: documento de fábrica con productos esperados
 CREATE TABLE manifiesto (
-    manifiesto_id       UUID            PRIMARY KEY,
+    manifiesto_id       BIGSERIAL        PRIMARY KEY,
     numero_manifiesto VARCHAR(50)     NOT NULL UNIQUE,
     fecha_emision     DATE            NOT NULL,
     proveedor         VARCHAR(200)    NOT NULL,
@@ -15,8 +15,8 @@ CREATE TABLE manifiesto (
 
 -- Detalle de manifiesto: líneas con cantidades esperadas por SKU
 CREATE TABLE detalle_manifiesto (
-    detalle_id        UUID            PRIMARY KEY,
-    manifiesto_id     UUID            NOT NULL,
+    detalle_id        BIGSERIAL        PRIMARY KEY,
+    manifiesto_id     BIGINT            NOT NULL,
     sku_id           VARCHAR(20)     NOT NULL,
     cantidad_esperada INTEGER       NOT NULL CHECK (cantidad_esperada > 0),
     cantidad_recibida INTEGER       NOT NULL DEFAULT 0,
@@ -29,10 +29,10 @@ CREATE TABLE detalle_manifiesto (
 
 -- Recepción: evento de recepción física de mercancía
 CREATE TABLE recepcion (
-    recepcion_id     UUID            PRIMARY KEY,
+    recepcion_id     BIGSERIAL        PRIMARY KEY,
     numero_recepcion VARCHAR(50)     NOT NULL UNIQUE,
-    manifiesto_id    UUID,
-    operario_id     UUID,
+    manifiesto_id    BIGINT,
+    operario_id     BIGINT,
     fecha_recepcion TIMESTAMP       NOT NULL DEFAULT NOW(),
     notas            TEXT,
 
@@ -50,7 +50,7 @@ CREATE TABLE lote (
     disponible       BOOLEAN          NOT NULL DEFAULT TRUE,
     flag_urgencia_fefo BOOLEAN          NOT NULL DEFAULT FALSE,
     costo_unitario_producto DECIMAL(15,2),
-    recepcion_id     UUID            NOT NULL,
+    recepcion_id     BIGINT            NOT NULL,
     creado_el        TIMESTAMP       NOT NULL DEFAULT NOW(),
 
     CONSTRAINT fk_lote_producto FOREIGN KEY (sku_id)
@@ -77,14 +77,14 @@ CREATE TABLE stock_global_sku (
 
 -- Excepción de inventario: registro de anomalías
 CREATE TABLE excepcion_inventario (
-    excepcion_id    UUID            PRIMARY KEY,
+    excepcion_id    BIGSERIAL        PRIMARY KEY,
     tipo_excepcion  VARCHAR(30)     NOT NULL
         CHECK (tipo_excepcion IN ('AVERIA', 'VENCIMIENTO', 'DIFERENCIA', 'FALTANTE')),
     codigo_lote     VARCHAR(100),
     sku_id          VARCHAR(20)     NOT NULL,
     cantidad_afectada INTEGER       NOT NULL CHECK (cantidad_afectada > 0),
     fecha_registro  TIMESTAMP       NOT NULL DEFAULT NOW(),
-    operario_id    UUID,
+    operario_id    BIGINT,
     descripcion    TEXT            NOT NULL,
     evidencia_url VARCHAR(500),
 
@@ -98,16 +98,16 @@ CREATE INDEX idx_excepcion_tipo ON excepcion_inventario (tipo_excepcion);
 
 -- Movimiento de inventario (Kardex): registro contable de movimientos de stock
 CREATE TABLE movimiento_inventario (
-    movimiento_id    UUID            PRIMARY KEY,
+    movimiento_id    BIGSERIAL        PRIMARY KEY,
     codigo_lote     VARCHAR(100)    NOT NULL,
     tipo_movimiento VARCHAR(30)    NOT NULL
         CHECK (tipo_movimiento IN ('ENTRADA', 'COMPROMISO', 'PICKING', 'SALIDA',
                'BAJA_AVERIA', 'BAJA_VENCIMIENTO', 'FALTANTE')),
     cantidad        INTEGER         NOT NULL,
     fecha_movimiento TIMESTAMP      NOT NULL DEFAULT NOW(),
-    pedido_id       UUID,
-    excepcion_id    UUID,
-    operario_id     UUID,
+    pedido_id       BIGINT,
+    excepcion_id    BIGINT,
+    operario_id     BIGINT,
     observaciones   TEXT,
 
     CONSTRAINT fk_movimiento_lote FOREIGN KEY (codigo_lote)

@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 @Component
 public class RegistroDespachoRepositoryAdapter implements RegistroDespachoRepository {
@@ -26,7 +25,7 @@ public class RegistroDespachoRepositoryAdapter implements RegistroDespachoReposi
     }
 
     @Override
-    public Optional<RegistroDespacho> findByPedidoId(UUID pedidoId) {
+    public Optional<RegistroDespacho> findByPedidoId(Long pedidoId) {
         return jpaRepository.findByPedidoId(pedidoId).map(this::toDomain);
     }
 

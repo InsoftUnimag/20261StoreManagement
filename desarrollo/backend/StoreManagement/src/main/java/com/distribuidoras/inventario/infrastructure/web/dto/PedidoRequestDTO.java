@@ -1,14 +1,13 @@
 package com.distribuidoras.inventario.infrastructure.web.dto;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Request DTO for creating a new order (Pedido).
  */
 public record PedidoRequestDTO(
         String clienteCc,
-        UUID asesorId,
+        Long asesorId,
         List<LineaPedidoRequestDTO> lineas
 ) {
     public static Builder builder() {
@@ -17,7 +16,7 @@ public record PedidoRequestDTO(
 
     public static class Builder {
         private String clienteCc;
-        private UUID asesorId;
+        private Long asesorId;
         private List<LineaPedidoRequestDTO> lineas;
 
         public Builder clienteCc(String clienteCc) {
@@ -25,7 +24,7 @@ public record PedidoRequestDTO(
             return this;
         }
 
-        public Builder asesorId(UUID asesorId) {
+        public Builder asesorId(Long asesorId) {
             this.asesorId = asesorId;
             return this;
         }

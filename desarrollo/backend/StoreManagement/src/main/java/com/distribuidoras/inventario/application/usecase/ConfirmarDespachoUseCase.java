@@ -48,12 +48,12 @@ public class ConfirmarDespachoUseCase {
         }
 
         public record ConfirmarDespachoCommand(
-                        UUID pedidoId,
-                        UUID operarioId,
+                        Long pedidoId,
+                        Long operarioId,
                         String transportista,
                         String placaVehiculo,
                         String observaciones,
-                        Map<UUID, Integer> cantidadesDespachadas) {
+                        Map<Long, Integer> cantidadesDespachadas) {
         }
 
         public record ConfirmarDespachoResult(
@@ -74,7 +74,8 @@ public class ConfirmarDespachoUseCase {
                                 .orElseThrow(() -> new IllegalArgumentException(
                                                 "Pedido no encontrado: " + command.pedidoId()));
 
-                // 2. Validar estado (FR-081): Solo pedidos en estado PICKUP pueden ser despachados
+                // 2. Validar estado (FR-081): Solo pedidos en estado PICKUP pueden ser
+                // despachados
                 if (pedido.getEstado() != EstadoPedido.PICKUP) {
                         throw new PedidoEstadoInvalidoException(
                                         pedido.getNumeroPedido(), pedido.getEstado().name());
@@ -84,7 +85,7 @@ public class ConfirmarDespachoUseCase {
                 List<ProductoPedido> lineasPedido = productoPedidoRepository.findByPedidoId(pedido.getPedidoId());
 
                 // 4. Obtener lotes comprometidos por cada línea del pedido
-                Map<UUID, LoteComprometido> lotesPorProductoPedidoId = new HashMap<>();
+                Map<Long, LoteComprometido> lotesPorProductoPedidoId = new HashMap<>();
                 for (ProductoPedido linea : lineasPedido) {
                         List<LoteComprometido> lotes = loteComprometidoRepository
                                         .findByProductoPedidoId(linea.getProductoPedidoId());
@@ -140,7 +141,6 @@ public class ConfirmarDespachoUseCase {
 
                 // Crear registro de despacho
                 RegistroDespacho registro = RegistroDespacho.builder()
-                                .registroDespachoId(UUID.randomUUID())
                                 .pedidoId(pedido.getPedidoId())
                                 .operarioId(command.operarioId())
                                 .fechaDespacho(LocalDateTime.now())
@@ -163,9 +163,8 @@ public class ConfirmarDespachoUseCase {
         }
 
         private void registrarMovimientoSalida(Pedido pedido, ProductoPedido linea,
-                        int cantidad, UUID operarioId, String codigoLote) {
+                        int cantidad, Long operarioId, String codigoLote) {
                 MovimientoInventario movimiento = MovimientoInventario.builder()
-                                .movimientoId(UUID.randomUUID())
                                 .codigoLote(codigoLote)
                                 .tipoMovimiento(TipoMovimiento.SALIDA)
                                 .cantidad(-cantidad)

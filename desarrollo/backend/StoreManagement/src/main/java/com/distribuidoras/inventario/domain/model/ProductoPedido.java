@@ -3,8 +3,6 @@ package com.distribuidoras.inventario.domain.model;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
-import java.util.UUID;
-
 /**
  * Domain entity: ProductoPedido (Order line item).
  * Represents a product line in an order.
@@ -17,23 +15,23 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ProductoPedido {
 
-    private UUID productoPedidoId;
-    
+    private Long productoPedidoId;
+
     @NotNull(message = "El ID del pedido no puede ser nulo")
-    private UUID pedidoId;
-    
+    private Long pedidoId;
+
     @NotBlank(message = "El SKU no puede estar vacío")
     @Size(max = 20, message = "El SKU no puede exceder 20 caracteres")
     private String skuId;
-    
+
     @NotNull(message = "La cantidad solicitada no puede ser nula")
     @Min(value = 1, message = "La cantidad solicitada debe ser mayor a 0")
     private Integer cantidadSolicitada;
-    
+
     @NotNull(message = "La cantidad confirmada no puede ser nula")
     @Min(value = 0, message = "La cantidad confirmada no puede ser negativa")
     private Integer cantidadConfirmada;
-    
+
     @Min(value = 0, message = "La cantidad despachada no puede ser negativa")
     private Integer cantidadDespachada;
 
@@ -41,7 +39,7 @@ public class ProductoPedido {
      * Validates that confirmed quantity doesn't exceed requested quantity.
      */
     public void validarCantidadConfirmada() {
-        if (this.cantidadConfirmada != null && this.cantidadSolicitada != null 
+        if (this.cantidadConfirmada != null && this.cantidadSolicitada != null
                 && this.cantidadConfirmada > this.cantidadSolicitada) {
             throw new IllegalArgumentException(
                     "Cantidad confirmada (%d) no puede ser mayor a la solicitada (%d)"
@@ -55,7 +53,7 @@ public class ProductoPedido {
             throw new IllegalArgumentException(
                     "Cantidad despachada no puede ser negativa: %d".formatted(this.cantidadDespachada));
         }
-        if (this.cantidadDespachada != null && this.cantidadConfirmada != null 
+        if (this.cantidadDespachada != null && this.cantidadConfirmada != null
                 && this.cantidadDespachada > this.cantidadConfirmada) {
             throw new IllegalArgumentException(
                     "Cantidad despachada (%d) no puede ser mayor a la confirmada (%d)"

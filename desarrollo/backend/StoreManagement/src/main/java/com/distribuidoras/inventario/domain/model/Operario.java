@@ -4,7 +4,6 @@ import com.distribuidoras.inventario.domain.model.enums.RolUsuario;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -13,7 +12,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Operario {
     @NotNull(message = "El ID del operario no puede ser nulo")
-    private UUID operarioId;
+    private Long operarioId;
     
     @NotNull(message = "El nombre del operario no puede ser nulo")
 

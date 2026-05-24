@@ -8,7 +8,6 @@ import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Puerto del dominio para ExcepcionInventario.
@@ -16,7 +15,7 @@ import java.util.UUID;
  */
 public interface ExcepcionInventarioRepository {
     ExcepcionInventario save(ExcepcionInventario excepcion);
-    Optional<ExcepcionInventario> findById(UUID excepcionId);
+    Optional<ExcepcionInventario> findById(Long excepcionId);
     List<ExcepcionInventario> findAll();
     List<ExcepcionInventario> findByFilters(TipoExcepcion tipo, String skuId);
     List<ExcepcionInventario> findByCodigoLote(String codigoLote);

@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * REST Controller for order management.
@@ -104,7 +103,7 @@ public class PedidoController {
                 Long rutaId = Long.parseLong(request.get("ruta_id"));
 
                 ComprometerCommand command = new ComprometerCommand(
-                                UUID.fromString(pedidoId),
+                                Long.parseLong(pedidoId),
                                 rutaId);
 
                 ComprometerResult result = comprometerInventarioUseCase.ejecutar(command);
@@ -181,7 +180,7 @@ public class PedidoController {
          * Spec 13: Solicitar Ruta
          */
         @PostMapping("/{pedidoId}/solicitar-ruta")
-        public ResponseEntity<Map<String, Object>> solicitarRuta(@PathVariable @NotBlank String pedidoId) {
+        public ResponseEntity<Map<String, Object>> solicitarRuta(@PathVariable @NotBlank Long pedidoId) {
                 log.info("REST: Solicitando ruta para pedido {}", pedidoId);
 
                 solicitudRutaProducer.enviarSolicitudRuta(pedidoId);
@@ -195,7 +194,7 @@ public class PedidoController {
 
         @PutMapping("/{pedidoId}/asignar")
         public ResponseEntity<PedidoAsignadoResponse> asignarOperarios(
-                        @PathVariable UUID pedidoId,
+                        @PathVariable Long pedidoId,
                         @Valid @RequestBody AsignarPedidoRequest request) {
                 log.info("REST: Asignando operarios a pedido {}", pedidoId);
 

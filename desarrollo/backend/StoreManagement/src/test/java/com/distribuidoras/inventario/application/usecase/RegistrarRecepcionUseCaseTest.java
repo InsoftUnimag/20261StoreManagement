@@ -19,7 +19,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -50,7 +49,7 @@ class RegistrarRecepcionUseCaseTest {
         private RegistrarRecepcionUseCase useCase;
 
         private final String skuId = "SKU-001";
-        private final UUID operarioId = UUID.randomUUID();
+        private final Long operarioId = 1L;
 
         @BeforeEach
         void setUp() {
@@ -135,7 +134,7 @@ class RegistrarRecepcionUseCaseTest {
         @Test
         @DisplayName("Recepción con manifiesto y discrepancia genera excepción automática")
         void recepcion_conManifiesto_discrepancia() {
-                UUID manifiestoId = UUID.randomUUID();
+                Long manifiestoId = 1L;
                 Producto producto = Producto.builder()
                                 .skuId(skuId)
                                 .marca("Pilsen")
@@ -153,7 +152,7 @@ class RegistrarRecepcionUseCaseTest {
                 when(excepcionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
                 // Manifiesto espera 250, recibimos 240 → diferencia de -10
-                DetalleManifiesto detalle = new DetalleManifiesto(UUID.randomUUID(), manifiestoId, skuId, 250, 0);
+                DetalleManifiesto detalle = new DetalleManifiesto(1L, manifiestoId, skuId, 250, 0);
                 when(detalleManifiestoRepository.findByManifiestoId(manifiestoId))
                                 .thenReturn(Objects.requireNonNull(List.of(detalle)));
                 when(detalleManifiestoRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));

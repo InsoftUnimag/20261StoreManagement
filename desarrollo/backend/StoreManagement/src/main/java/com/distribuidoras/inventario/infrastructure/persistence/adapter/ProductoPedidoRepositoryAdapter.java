@@ -9,42 +9,41 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
 public class ProductoPedidoRepositoryAdapter implements ProductoPedidoRepository {
-    
+
     private final ProductoPedidoJpaRepository jpa;
-    
+
     public ProductoPedidoRepositoryAdapter(ProductoPedidoJpaRepository jpa) {
         this.jpa = jpa;
     }
-    
+
     @Override
     public List<ProductoPedido> saveAll(List<ProductoPedido> lineas) {
         return jpa.saveAll(Objects.requireNonNull(lineas.stream().map(this::toEntity).toList())).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
-    
+
     @Override
-    public Optional<ProductoPedido> findById(UUID productoPedidoId) {
+    public Optional<ProductoPedido> findById(Long productoPedidoId) {
         return jpa.findById(Objects.requireNonNull(productoPedidoId)).map(this::toDomain);
     }
-    
+
     @Override
-    public List<ProductoPedido> findByPedidoId(UUID pedidoId) {
+    public List<ProductoPedido> findByPedidoId(Long pedidoId) {
         return jpa.findByPedidoId(Objects.requireNonNull(pedidoId)).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
-    
+
     @Override
     public void update(ProductoPedido productoPedido) {
         jpa.save(Objects.requireNonNull(toEntity(productoPedido)));
     }
-    
+
     private ProductoPedidoJpaEntity toEntity(ProductoPedido pp) {
         return ProductoPedidoJpaEntity.builder()
                 .productoPedidoId(pp.getProductoPedidoId())
@@ -54,7 +53,7 @@ public class ProductoPedidoRepositoryAdapter implements ProductoPedidoRepository
                 .cantidadConfirmada(pp.getCantidadConfirmada())
                 .build();
     }
-    
+
     private ProductoPedido toDomain(ProductoPedidoJpaEntity e) {
         return ProductoPedido.builder()
                 .productoPedidoId(e.getProductoPedidoId())

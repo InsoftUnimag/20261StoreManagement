@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 @Component
 public class OperarioAdapter implements OperarioServicePort {
@@ -58,7 +57,7 @@ public class OperarioAdapter implements OperarioServicePort {
                 RolUsuario rol = rolStr != null ? RolUsuario.valueOf(rolStr.toUpperCase()) : null;
                 
                 Operario operario = Operario.builder()
-                        .operarioId(UUID.fromString((String) body.get("id")))
+                        .operarioId(((Number) body.get("id")).longValue())
                         .nombre((String) body.get("nombre"))
                         .cedula((String) body.get("cedula"))
                         .activo((Boolean) body.getOrDefault("activo", false))
@@ -90,7 +89,7 @@ public class OperarioAdapter implements OperarioServicePort {
     
     @Override
     @CircuitBreaker(name = "moduloUsuarios", fallbackMethod = "fallbackFindById")
-    public Optional<Operario> findById(UUID id) {
+    public Optional<Operario> findById(Long id) {
         log.info("Consultando operario con ID: {}", id);
         try {
             String url = baseUrl + "/api/usuarios/operarios/id/" + id;
@@ -103,7 +102,7 @@ public class OperarioAdapter implements OperarioServicePort {
                 RolUsuario rol = rolStr != null ? RolUsuario.valueOf(rolStr.toUpperCase()) : null;
                 
                 return Optional.of(Operario.builder()
-                        .operarioId(UUID.fromString((String) body.get("id")))
+                        .operarioId(((Number) body.get("id")).longValue())
                         .nombre((String) body.get("nombre"))
                         .cedula((String) body.get("cedula"))
                         .activo((Boolean) body.getOrDefault("activo", false))
@@ -117,7 +116,7 @@ public class OperarioAdapter implements OperarioServicePort {
         }
     }
 
-    public Optional<Operario> fallbackFindById(UUID id, Exception ex) {
+    public Optional<Operario> fallbackFindById(Long id, Exception ex) {
         log.warn("Fallback findById para ID: {}", id);
         return Optional.empty();
     }
@@ -142,7 +141,7 @@ public class OperarioAdapter implements OperarioServicePort {
                     RolUsuario rolEnum = rolStr != null ? RolUsuario.valueOf(rolStr.toUpperCase()) : null;
                     
                     Operario operario = Operario.builder()
-                            .operarioId(UUID.fromString((String) item.get("id")))
+                            .operarioId(((Number) item.get("id")).longValue())
                             .nombre((String) item.get("nombre"))
                             .cedula((String) item.get("cedula"))
                             .activo((Boolean) item.getOrDefault("activo", false))

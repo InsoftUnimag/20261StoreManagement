@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/excepciones")
@@ -114,7 +113,7 @@ public class ExcepcionController {
 
     /** GET /api/v1/excepciones/{id} - Ver detalle de excepción */
     @GetMapping("/{id}")
-    public ResponseEntity<ExcepcionInventario> consultarDetalle(@PathVariable UUID id) {
+    public ResponseEntity<ExcepcionInventario> consultarDetalle(@PathVariable Long id) {
         log.info("GET /api/v1/excepciones/{}", id);
         return ResponseEntity.ok(consultarDetalleUseCase.ejecutar(id));
     }
@@ -132,6 +131,6 @@ public class ExcepcionController {
         @NotBlank(message = "La descripción es obligatoria")
         public String descripcion;
         public String evidenciaUrl;
-        public UUID operarioId;
+        public Long operarioId;
     }
 }

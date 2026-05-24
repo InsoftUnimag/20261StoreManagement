@@ -2,6 +2,8 @@ package com.distribuidoras.inventario.infrastructure.persistence.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Index;
@@ -12,7 +14,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "registro_despacho", indexes = {
@@ -27,14 +28,15 @@ import java.util.UUID;
 @Builder
 public class RegistroDespachoJpaEntity {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "registro_despacho_id", updatable = false, nullable = false)
-    private UUID registroDespachoId;
+    private Long registroDespachoId;
 
     @Column(name = "pedido_id", nullable = false)
-    private UUID pedidoId;
+    private Long pedidoId;
 
     @Column(name = "operario_id", nullable = false)
-    private UUID operarioId;
+    private Long operarioId;
 
     @Column(name = "fecha_despacho", nullable = false)
     private LocalDateTime fechaDespacho;

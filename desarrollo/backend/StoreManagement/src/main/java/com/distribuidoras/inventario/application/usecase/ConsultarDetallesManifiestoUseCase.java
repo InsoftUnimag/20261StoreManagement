@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
+
 
 @Service
 public class ConsultarDetallesManifiestoUseCase {
@@ -27,7 +27,7 @@ public class ConsultarDetallesManifiestoUseCase {
     }
 
     @Transactional(readOnly = true)
-    public ManifiestoDetalleResult ejecutar(UUID id) {
+    public ManifiestoDetalleResult ejecutar(Long id) {
         Manifiesto m = repoManifiesto.findById(id).orElseThrow(() -> new ManifiestoNotFoundException(id));
         List<DetalleManifiesto> lista = repoDetalle.findByManifiestoId(id);
         List<LineaManifiestoResult> lineas = lista.stream().map(d -> {
@@ -40,6 +40,6 @@ public class ConsultarDetallesManifiestoUseCase {
         return new ManifiestoDetalleResult(m.getManifiestoId(), m.getNumeroManifiesto(), lineas);
     }
 
-    public record ManifiestoDetalleResult(UUID manifiestoId, String numeroManifiesto, List<LineaManifiestoResult> lineas) {}
-    public record LineaManifiestoResult(UUID detalleId, String skuId, String marca, String presentacion, int cantidadEsperada, int cantidadRecibida) {}
+    public record ManifiestoDetalleResult(Long manifiestoId, String numeroManifiesto, List<LineaManifiestoResult> lineas) {}
+    public record LineaManifiestoResult(Long detalleId, String skuId, String marca, String presentacion, int cantidadEsperada, int cantidadRecibida) {}
 }

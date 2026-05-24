@@ -1,15 +1,14 @@
 package com.distribuidoras.inventario.domain.model;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * Domain entity for a Picking Record.
  */
 public class RegistroPicking {
-    private final UUID registroPickingId;
-    private final UUID pedidoId;
-    private final UUID operarioId;
+    private final Long registroPickingId;
+    private final Long pedidoId;
+    private final Long operarioId;
     private final LocalDateTime fechaPicking;
     private final String observaciones;
 
@@ -41,9 +40,9 @@ public class RegistroPicking {
     }
 
     // Getters
-    public UUID getRegistroPickingId() { return registroPickingId; }
-    public UUID getPedidoId() { return pedidoId; }
-    public UUID getOperarioId() { return operarioId; }
+    public Long getRegistroPickingId() { return registroPickingId; }
+    public Long getPedidoId() { return pedidoId; }
+    public Long getOperarioId() { return operarioId; }
     public LocalDateTime getFechaPicking() { return fechaPicking; }
     public String getObservaciones() { return observaciones; }
 
@@ -52,23 +51,23 @@ public class RegistroPicking {
     }
 
     public static class Builder {
-        private UUID registroPickingId;
-        private UUID pedidoId;
-        private UUID operarioId;
+        private Long registroPickingId;
+        private Long pedidoId;
+        private Long operarioId;
         private LocalDateTime fechaPicking;
         private String observaciones;
 
-        public Builder registroPickingId(UUID registroPickingId) {
+        public Builder registroPickingId(Long registroPickingId) {
             this.registroPickingId = registroPickingId;
             return this;
         }
 
-        public Builder pedidoId(UUID pedidoId) {
+        public Builder pedidoId(Long pedidoId) {
             this.pedidoId = pedidoId;
             return this;
         }
 
-        public Builder operarioId(UUID operarioId) {
+        public Builder operarioId(Long operarioId) {
             this.operarioId = operarioId;
             return this;
         }

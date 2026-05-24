@@ -5,17 +5,17 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
+
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class PedidoAsignadoResponse {
-    private UUID pedidoId;
+    private Long pedidoId;
     private String numeroPedido;
     private String clienteCc;
     private String estado;
-    private UUID operarioPickingId;
-    private UUID operarioDespachoId;
+    private Long operarioPickingId;
+    private Long operarioDespachoId;
 }

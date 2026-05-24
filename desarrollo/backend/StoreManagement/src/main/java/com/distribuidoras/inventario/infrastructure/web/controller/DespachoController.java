@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * REST Controller for dispatch confirmation.
@@ -48,7 +47,7 @@ public class DespachoController {
     }
 
     @GetMapping("/mis-pedidos/{operarioId}")
-    public ResponseEntity<List<PedidoAsignadoDTO>> listarMisPedidos(@PathVariable UUID operarioId) {
+    public ResponseEntity<List<PedidoAsignadoDTO>> listarMisPedidos(@PathVariable Long operarioId) {
         log.info("REST: Listando pedidos asignados a operario {}", operarioId);
         List<PedidoAsignadoDTO> pedidos = listarPedidosAsignadosUseCase.ejecutar(operarioId, "despacho");
         return ResponseEntity.ok(pedidos);
@@ -87,11 +86,11 @@ public class DespachoController {
     }
 
     public record ConfirmarDespachoRequestDTO(
-            UUID pedidoId,
-            UUID operarioId,
+            Long pedidoId,
+            Long operarioId,
             String transportista,
             String placaVehiculo,
             String observaciones,
-            Map<UUID, Integer> cantidadesDespachadas
+            Map<Long, Integer> cantidadesDespachadas
     ) {}
 }

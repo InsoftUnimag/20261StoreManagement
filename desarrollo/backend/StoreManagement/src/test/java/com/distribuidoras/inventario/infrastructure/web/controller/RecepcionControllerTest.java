@@ -18,7 +18,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -37,7 +36,7 @@ class RecepcionControllerTest {
     @Test
     @DisplayName("POST /api/v1/recepciones exitoso → 201")
     void registrarRecepcion_exitoso() throws Exception {
-        UUID recId = UUID.randomUUID();
+        Long recId = 1L;
         String skuId = "SKU-001";
 
         when(registrarRecepcionUseCase.ejecutar(any())).thenReturn(
@@ -60,7 +59,7 @@ class RecepcionControllerTest {
                                         }
                                     ]
                                 }
-                                """.formatted(UUID.randomUUID(), skuId,
+                                """.formatted(1L, skuId,
                                 LocalDate.now().plusMonths(6)))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.recepcionId").value(recId.toString()))
@@ -107,7 +106,7 @@ class RecepcionControllerTest {
                                         }
                                     ]
                                 }
-                                """.formatted(UUID.randomUUID(), "SKU-999",
+                                """.formatted(1L, "SKU-999",
                                 LocalDate.now().plusMonths(6)))))
                 .andExpect(status().isNotFound());
     }

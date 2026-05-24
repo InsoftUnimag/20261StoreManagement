@@ -6,8 +6,6 @@ import com.distribuidoras.inventario.domain.repository.ExcepcionInventarioReposi
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
-
 /**
  * Caso de uso: Consultar Detalle de Excepción de Inventario.
  * T018 del Plan de Implementación.
@@ -22,7 +20,7 @@ public class ConsultarDetalleExcepcionUseCase {
     }
 
     @Transactional(readOnly = true)
-    public ExcepcionInventario ejecutar(UUID excepcionId) {
+    public ExcepcionInventario ejecutar(Long excepcionId) {
         return excepcionRepository.findById(excepcionId)
                 .orElseThrow(() -> new ExcepcionNotFoundException(excepcionId));
     }

@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.UUID;
+
 
 @Service
 public class IniciarPickingUseCase {
@@ -23,7 +23,7 @@ public class IniciarPickingUseCase {
     }
 
     @Transactional
-    public Pedido ejecutar(UUID pedidoId, UUID operarioId) {
+    public Pedido ejecutar(Long pedidoId, Long operarioId) {
         log.info("Iniciando picking para pedido {} por operario {}", pedidoId, operarioId);
 
         Pedido pedido = pedidoRepository.findById(pedidoId)

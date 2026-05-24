@@ -3,7 +3,7 @@ package com.distribuidoras.inventario.infrastructure.persistence.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
-import java.util.UUID;
+
 
 @Entity
 @Table(name = "recepcion", indexes = {
@@ -16,9 +16,11 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class RecepcionJpaEntity {
-    @Id @Column(name = "recepcion_id") private UUID recepcionId;
-    @Column(name = "manifiesto_id", nullable = false) private UUID manifiestoId;
-    @Column(name = "operario_id", nullable = false) private UUID operarioId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "recepcion_id") private Long recepcionId;
+    @Column(name = "manifiesto_id", nullable = false) private Long manifiestoId;
+    @Column(name = "operario_id", nullable = false) private Long operarioId;
     @Column(name = "fecha_recepcion", nullable = false) private LocalDateTime fechaRecepcion;
     @Column(name = "notas") private String notas;
     @Column(name = "numero_recepcion", unique = true)

@@ -5,8 +5,6 @@ import lombok.*;
 
 import com.distribuidoras.inventario.domain.model.enums.TipoExcepcion;
 import java.time.LocalDateTime;
-import java.util.UUID;
-
 /**
  * Entidad de dominio: ExcepcionInventario.
  * Registro de anomalías para trazabilidad.
@@ -19,7 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ExcepcionInventario {
 
-    private UUID excepcionId;
+    private Long excepcionId;
 
     @NotNull(message = "El tipo de excepción no puede ser nulo")
     private TipoExcepcion tipoExcepcion;
@@ -37,7 +35,7 @@ public class ExcepcionInventario {
     @NotNull(message = "La fecha de registro no puede ser nula")
     private LocalDateTime fechaRegistro;
 
-    private UUID operarioId;
+    private Long operarioId;
 
     @NotBlank(message = "La descripción no puede estar vacía")
     @Size(max = 500, message = "La descripción no puede exceder 500 caracteres")

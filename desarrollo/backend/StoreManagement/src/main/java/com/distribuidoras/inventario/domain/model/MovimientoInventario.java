@@ -4,8 +4,6 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 import com.distribuidoras.inventario.domain.model.enums.TipoMovimiento;
 import java.time.LocalDateTime;
-import java.util.UUID;
-
 /**
  * Entidad de dominio: MovimientoInventario (Kardex).
  * Registro contable de cada cambio en stock de un lote.
@@ -18,7 +16,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class MovimientoInventario {
 
-    private UUID movimientoId;
+    private Long movimientoId;
 
     @NotBlank(message = "El código de lote no puede estar vacío")
     @Size(max = 100, message = "El código de lote no puede exceder 100 caracteres")
@@ -33,13 +31,12 @@ public class MovimientoInventario {
     @NotNull(message = "La fecha de movimiento no puede ser nula")
     private LocalDateTime fechaMovimiento;
 
-    private UUID pedidoId;
+    private Long pedidoId;
 
-    private UUID excepcionId;
+    private Long excepcionId;
 
-    private UUID operarioId;
+    private Long operarioId;
 
     @Size(max = 500, message = "Las observaciones no pueden exceder 500 caracteres")
     private String observaciones;
 }
-

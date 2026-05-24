@@ -4,7 +4,6 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * Domain entity: LoteComprometido (Committed Lot).
@@ -17,11 +16,10 @@ import java.util.UUID;
 @AllArgsConstructor
 public class LoteComprometido {
 
-    @NotNull(message = "El ID del compromiso no puede ser nulo")
-    private UUID compromisoId;
+    private Long compromisoId;
     
     @NotNull(message = "El ID del producto pedido no puede ser nulo")
-    private UUID productoPedidoId;
+    private Long productoPedidoId;
     
     @NotBlank(message = "El código de lote no puede estar vacío")
     @Size(max = 100, message = "El código de lote no puede exceder 100 caracteres")
