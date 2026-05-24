@@ -15,7 +15,7 @@ public class ManifiestoRepositoryAdapter implements ManifiestoRepository {
     private final ManifiestoJpaRepository jpa;
     public ManifiestoRepositoryAdapter(ManifiestoJpaRepository jpa) { this.jpa = jpa; }
 
-    @Override public Optional<Manifiesto> findById(UUID id) { return jpa.findById(Objects.requireNonNull(id)).map(this::toDomain); }
+    @Override public Optional<Manifiesto> findById(Long id) { return jpa.findById(Objects.requireNonNull(id)).map(this::toDomain); }
     @Override public List<Manifiesto> findPendientes() {
         return jpa.findByEstadoInOrderByFechaEmisionAsc(List.of("PENDIENTE", "RECEPCIONADO_PARCIAL"))
                 .stream().map(this::toDomain).toList();

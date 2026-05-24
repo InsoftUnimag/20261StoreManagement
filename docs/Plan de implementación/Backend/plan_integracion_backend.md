@@ -137,7 +137,7 @@ Headers:
 **Message Schema** (Payload ultra-ligero):
 ```json
 {
-  "pedido_id": "uuid",
+  "pedido_id": "number",
   "numero_pedido": "PED-20260403-001",
   "estado": "ESPERANDO_RUTA"
 }
@@ -167,8 +167,8 @@ Headers:
 **Message Schema**:
 ```json
 {
-  "pedido_id": "uuid",
-  "ruta_id": "uuid",
+  "pedido_id": "number",
+  "ruta_id": "number",
   "fecha_asignacion": "2026-04-03T11:00:00Z"
 }
 ```
@@ -199,7 +199,7 @@ Headers:
 **Message Schema** (Payload ultra-ligero para API call posterior):
 ```json
 {
-  "pedido_id": "uuid",
+  "pedido_id": "number",
   "numero_pedido": "PED-20260403-001",
   "evento": "PEDIDO_CREADO"
 }

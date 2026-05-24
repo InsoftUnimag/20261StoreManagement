@@ -10,10 +10,9 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Repository
-public interface ExcepcionInventarioJpaRepository extends JpaRepository<ExcepcionInventarioJpaEntity, UUID> {
+public interface ExcepcionInventarioJpaRepository extends JpaRepository<ExcepcionInventarioJpaEntity, Long> {
     List<ExcepcionInventarioJpaEntity> findByTipoExcepcion(String tipoExcepcion);
     List<ExcepcionInventarioJpaEntity> findBySkuId(String skuId);
     List<ExcepcionInventarioJpaEntity> findByCodigoLote(String codigoLote);

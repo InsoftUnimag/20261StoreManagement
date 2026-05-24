@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
+
 
 @Entity
 @Table(name = "lote", indexes = {
@@ -26,6 +26,6 @@ public class LoteJpaEntity {
     @Column(name = "disponible", nullable = false) private Boolean disponible;
     @Column(name = "flag_urgencia_fefo", nullable = false) private Boolean flagUrgenciaFefo;
     @Column(name = "costo_unitario_producto") private java.math.BigDecimal costoUnitarioProducto;
-    @Column(name = "recepcion_id", nullable = false) private UUID recepcionId;
+    @Column(name = "recepcion_id", nullable = false) private Long recepcionId;
     @Column(name = "creado_el", nullable = false) private LocalDateTime creadoEl;
 }

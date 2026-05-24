@@ -8,18 +8,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 
     private static final Map<String, MockUser> MOCK_USERS = Map.of(
-            "11111111", new MockUser(UUID.fromString("81000000-0000-0000-0000-000000000001"), "Carlos Perez", "OPERARIO_PICKING"),
-            "22222222", new MockUser(UUID.fromString("81000000-0000-0000-0000-000000000002"), "Maria Lopez", "OPERARIO_DESPACHO"),
-            "33333333", new MockUser(UUID.fromString("81000000-0000-0000-0000-000000000003"), "Pedro Gomez", "SUPERVISOR_INVENTARIO"),
-            "44444444", new MockUser(UUID.fromString("81000000-0000-0000-0000-000000000004"), "Roberto Sanchez", "ASESOR_COMERCIAL"),
-            "55555555", new MockUser(UUID.fromString("81000000-0000-0000-0000-000000000005"), "Ana Reception", "OPERARIO_RECEPCION")
+            "11111111", new MockUser(1L, "Carlos Perez", "OPERARIO_PICKING"),
+            "22222222", new MockUser(2L, "Maria Lopez", "OPERARIO_DESPACHO"),
+            "33333333", new MockUser(3L, "Pedro Gomez", "SUPERVISOR_INVENTARIO"),
+            "44444444", new MockUser(4L, "Roberto Sanchez", "ASESOR_COMERCIAL"),
+            "55555555", new MockUser(5L, "Ana Reception", "OPERARIO_RECEPCION")
     );
 
     private final OperarioServicePort operarioService;
@@ -78,5 +77,5 @@ public class AuthController {
                 .build());
     }
 
-    private record MockUser(UUID operarioId, String nombre, String rol) {}
+    private record MockUser(Long operarioId, String nombre, String rol) {}
 }

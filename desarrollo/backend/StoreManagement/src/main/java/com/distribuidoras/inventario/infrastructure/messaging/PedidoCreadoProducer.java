@@ -17,7 +17,6 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 
 @Component
 public class PedidoCreadoProducer {
@@ -43,7 +42,7 @@ public class PedidoCreadoProducer {
     }
 
     @Async
-    public void publicarPedidoCreado(UUID pedidoId, String numeroPedido) {
+    public void publicarPedidoCreado(Long pedidoId, String numeroPedido) {
         log.info("Publicando evento pedido.creado: {}", numeroPedido);
 
         Map<String, Object> mensaje = new HashMap<>();
@@ -59,7 +58,8 @@ public class PedidoCreadoProducer {
                 BigDecimal precioTotal = lineas.stream()
                         .map(linea -> {
                             // Obtener costo directamente del stock global
-                            BigDecimal costoUnitario = stockGlobalSkuRepository.findById(Objects.requireNonNull(linea.getSkuId()))
+                            BigDecimal costoUnitario = stockGlobalSkuRepository
+                                    .findById(Objects.requireNonNull(linea.getSkuId()))
                                     .map(StockGlobalSkuJpaEntity::getPrecio)
                                     .orElse(BigDecimal.ZERO);
                             if (costoUnitario == null)

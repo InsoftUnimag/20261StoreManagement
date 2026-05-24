@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
+
 
 /**
  * REST Controller for manifest listing.
@@ -78,7 +78,7 @@ public class ManifiestoController {
     public ResponseEntity<ManifiestoDetalleDTO> obtenerDetalleManifiesto(@PathVariable String id) {
         log.info("REST: Obteniendo detalle del manifiesto {}", id);
         
-        ManifiestoDetalleDTO detalle = listarManifiestosUseCase.obtenerDetalle(UUID.fromString(id));
+        ManifiestoDetalleDTO detalle = listarManifiestosUseCase.obtenerDetalle(Long.parseLong(id));
         
         return ResponseEntity.ok(detalle);
     }
@@ -108,7 +108,7 @@ public class ManifiestoController {
     public ResponseEntity<Object> consultarDetallesManifiesto(@PathVariable String id) {
         log.info("REST: Consultando detalles completos del manifiesto {}", id);
         
-        var detalles = consultarDetallesManifiestoUseCase.ejecutar(UUID.fromString(id));
+        var detalles = consultarDetallesManifiestoUseCase.ejecutar(Long.parseLong(id));
         
         return ResponseEntity.ok(detalles);
     }

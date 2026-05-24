@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "lotes_comprometidos", indexes = {
@@ -19,11 +18,12 @@ import java.util.UUID;
 public class LoteComprometidoJpaEntity {
     
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "compromiso_id")
-    private UUID compromisoId;
+    private Long compromisoId;
     
     @Column(name = "producto_pedido_id", nullable = false)
-    private UUID productoPedidoId;
+    private Long productoPedidoId;
     
     @Column(name = "codigo_lote", nullable = false, length = 100)
     private String codigoLote;

@@ -3,16 +3,16 @@
 
 -- Pedidos table
 CREATE TABLE pedidos (
-    pedido_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    pedido_id BIGSERIAL PRIMARY KEY,
     numero_pedido VARCHAR(50) NOT NULL UNIQUE,
     cliente_cc VARCHAR(50) NOT NULL,
     fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     estado VARCHAR(30) NOT NULL DEFAULT 'ESPERANDO_RUTA',
     ruta_id BIGINT,
     fecha_compromiso TIMESTAMP,
-    asesor_id UUID,
-    operario_picking_id UUID,
-    operario_despacho_id UUID,
+    asesor_id BIGINT,
+    operario_picking_id BIGINT,
+    operario_despacho_id BIGINT,
     fecha_entrega TIMESTAMP,
     observaciones VARCHAR(500),
     direccion_entrega VARCHAR(255),
@@ -29,8 +29,8 @@ CREATE INDEX idx_pedidos_fecha_entrega ON pedidos(fecha_entrega);
 
 -- Order lines table
 CREATE TABLE productos_pedido (
-    producto_pedido_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    pedido_id UUID NOT NULL REFERENCES pedidos(pedido_id) ON DELETE CASCADE,
+    producto_pedido_id BIGSERIAL PRIMARY KEY,
+    pedido_id BIGINT NOT NULL REFERENCES pedidos(pedido_id) ON DELETE CASCADE,
     sku_id VARCHAR(20) NOT NULL,
     cantidad_solicitada INTEGER NOT NULL CHECK (cantidad_solicitada > 0),
     cantidad_confirmada INTEGER NOT NULL CHECK (cantidad_confirmada >= 0)
@@ -41,8 +41,8 @@ CREATE INDEX idx_productos_pedido_sku ON productos_pedido(sku_id);
 
 -- Committed lots table
 CREATE TABLE lotes_comprometidos (
-    compromiso_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    producto_pedido_id UUID NOT NULL REFERENCES productos_pedido(producto_pedido_id) ON DELETE CASCADE,
+    compromiso_id BIGSERIAL PRIMARY KEY,
+    producto_pedido_id BIGINT NOT NULL REFERENCES productos_pedido(producto_pedido_id) ON DELETE CASCADE,
     codigo_lote VARCHAR(100) NOT NULL,
     cantidad_comprometida INTEGER NOT NULL CHECK (cantidad_comprometida > 0),
     fecha_compromiso TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP

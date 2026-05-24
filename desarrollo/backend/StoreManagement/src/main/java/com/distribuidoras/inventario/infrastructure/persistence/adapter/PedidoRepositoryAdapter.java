@@ -19,66 +19,71 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
 public class PedidoRepositoryAdapter implements PedidoRepository {
-    
+
     private final PedidoJpaRepository jpa;
-    
+
     public PedidoRepositoryAdapter(PedidoJpaRepository jpa) {
         this.jpa = jpa;
     }
-    
+
     @Override
     public Pedido save(Pedido pedido) {
         return toDomain(jpa.save(Objects.requireNonNull(toEntity(pedido))));
     }
-    
+
     @Override
-    public Optional<Pedido> findById(UUID pedidoId) {
+    public Optional<Pedido> findById(Long pedidoId) {
         return jpa.findById(Objects.requireNonNull(pedidoId)).map(this::toDomain);
     }
-    
+
     @Override
     public Optional<Pedido> findByNumeroPedido(String numeroPedido) {
         return jpa.findByNumeroPedido(numeroPedido).map(this::toDomain);
     }
-    
+
     @Override
     public String generarNumeroPedido(LocalDate fecha) {
         String prefix = "PED-" + fecha.toString().replace("-", "");
         Integer maxSeq = Optional.ofNullable(jpa.findMaxNumeroPedidoByPrefix(prefix)).orElse(0);
         return prefix + "-%03d".formatted(maxSeq + 1);
     }
-    
-@Override
+
+    @Override
     public Page<Pedido> findByFilters(EstadoPedido estado, String clienteCc, String numeroPedido,
-                                       LocalDate fechaDesde, LocalDate fechaHasta, @NonNull Pageable pageable) {
-        
-        Specification<PedidoJpaEntity> spec = (Root<PedidoJpaEntity> root, jakarta.persistence.criteria.CriteriaQuery<?> query, CriteriaBuilder cb) -> {
+            LocalDate fechaDesde, LocalDate fechaHasta, @NonNull Pageable pageable) {
+
+        Specification<PedidoJpaEntity> spec = (Root<PedidoJpaEntity> root,
+                jakarta.persistence.criteria.CriteriaQuery<?> query, CriteriaBuilder cb) -> {
             List<Predicate> predicates = new ArrayList<>();
-            if (estado != null) predicates.add(cb.equal(root.get("estado"), estado));
-            if (clienteCc != null) predicates.add(cb.like(root.get("clienteCc"), "%" + clienteCc + "%"));
-            if (numeroPedido != null) predicates.add(cb.like(root.get("numeroPedido"), "%" + numeroPedido + "%"));
-            if (fechaDesde != null) predicates.add(cb.greaterThanOrEqualTo(root.get("fechaCreacion"), fechaDesde.atStartOfDay()));
-            if (fechaHasta != null) predicates.add(cb.lessThanOrEqualTo(root.get("fechaCreacion"), fechaHasta.atTime(23, 59, 59)));
-            
+            if (estado != null)
+                predicates.add(cb.equal(root.get("estado"), estado));
+            if (clienteCc != null)
+                predicates.add(cb.like(root.get("clienteCc"), "%" + clienteCc + "%"));
+            if (numeroPedido != null)
+                predicates.add(cb.like(root.get("numeroPedido"), "%" + numeroPedido + "%"));
+            if (fechaDesde != null)
+                predicates.add(cb.greaterThanOrEqualTo(root.get("fechaCreacion"), fechaDesde.atStartOfDay()));
+            if (fechaHasta != null)
+                predicates.add(cb.lessThanOrEqualTo(root.get("fechaCreacion"), fechaHasta.atTime(23, 59, 59)));
+
             // Forzamos el ordenamiento por fecha de creación descendente
             query.orderBy(cb.desc(root.get("fechaCreacion")));
-            
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-        
+
         return jpa.findAll(spec, pageable).map(this::toDomain);
     }
-    
+
     @Override
     public void update(Pedido pedido) {
         jpa.save(Objects.requireNonNull(toEntity(pedido)));
     }
-    
+
     @Override
     public List<Pedido> findByEstadoOrderByFechaCreacionAsc(EstadoPedido estado) {
         return jpa.findByEstadoOrderByFechaCreacionAsc(estado).stream()
@@ -95,26 +100,27 @@ public class PedidoRepositoryAdapter implements PedidoRepository {
 
     @Override
     public List<Pedido> findByEstadoWithPickingOrderByFechaPickingAsc(EstadoPedido estado) {
-        // En esta fase 1 se omitirá el join con picking y ordenará temporalmente por creación o compromiso
+        // En esta fase 1 se omitirá el join con picking y ordenará temporalmente por
+        // creación o compromiso
         return jpa.findByEstadoOrderByFechaCreacionAsc(estado).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<Pedido> findByOperarioPickingId(UUID operarioPickingId) {
+    public List<Pedido> findByOperarioPickingId(Long operarioPickingId) {
         return jpa.findByOperarioPickingId(operarioPickingId).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<Pedido> findByOperarioDespachoId(UUID operarioDespachoId) {
+    public List<Pedido> findByOperarioDespachoId(Long operarioDespachoId) {
         return jpa.findByOperarioDespachoId(operarioDespachoId).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
-    
+
     // Functional mapper to Entity
     private PedidoJpaEntity toEntity(Pedido p) {
         return PedidoJpaEntity.builder()
@@ -132,7 +138,7 @@ public class PedidoRepositoryAdapter implements PedidoRepository {
                 .direccionEntrega(p.getDireccionEntrega())
                 .build();
     }
-    
+
     // Functional mapper to Domain
     private Pedido toDomain(PedidoJpaEntity e) {
         return Pedido.builder()

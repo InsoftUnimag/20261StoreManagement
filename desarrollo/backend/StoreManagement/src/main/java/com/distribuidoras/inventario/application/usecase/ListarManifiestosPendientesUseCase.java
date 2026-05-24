@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
+
 
 /**
  * Caso de uso: Listar Manifiestos Pendientes.
@@ -48,7 +48,7 @@ public class ListarManifiestosPendientesUseCase {
         }).toList();
     }
 
-    public record ManifiestoResumen(UUID manifiestoId, String numeroManifiesto, String proveedor,
+    public record ManifiestoResumen(Long manifiestoId, String numeroManifiesto, String proveedor,
                                      java.time.LocalDate fechaEmision, String estado,
                                      int lineasCompletadas, int lineasTotales) {}
 }

@@ -38,7 +38,7 @@ El módulo de Gestion de Inventario está basado en arquitectura hexagonal y có
 
 | Campo | Tipo | Requerido | Descripción |
 |-------|------|----------|-------------|
-| `id` | UUID | Sí | Identificador único interno |
+| `id` | Long | Sí | Identificador único interno |
 | `identificador` | String | Sí | ID único de la persona (cedula) |
 | `nombre_completo` | String | Sí | Nombre completo de la persona |
 | `telefono` | String | Sí | Teléfono de contacto (10 dígitos) |
@@ -255,7 +255,7 @@ Content-Type: application/json
 **Response 201**:
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440001",
+  "id": 1,
   "identificador": "80123456",
   "nombre_completo": "Carlos Mendoza",
   "telefono": "3001234567",
@@ -290,7 +290,7 @@ Content-Type: application/json
 ```json
 [
   {
-    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "id": 1,
     "identificador": "80123456",
     "nombre_completo": "Carlos Mendoza",
     "telefono": "3001234567",
@@ -321,7 +321,7 @@ Content-Type: application/json
 ```json
 [
   {
-    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "id": 1,
     "identificador": "80123456",
     "nombre_completo": "Carlos Mendoza",
     "telefono": "3001234567",
@@ -352,7 +352,7 @@ Content-Type: application/json
 ```json
 [
   {
-    "id": "550e8400-e29b-41d4-a716-446655440003",
+    "id": 3,
     "identificador": "80123458",
     "nombre_completo": "Ana Martínez",
     "telefono": "3008765432",
@@ -383,7 +383,7 @@ Content-Type: application/json
 ```json
 [
   {
-    "id": "550e8400-e29b-41d4-a716-446655440010",
+    "id": 10,
     "identificador": "80123460",
     "nombre_completo": "Pedro Ramírez",
     "telefono": "3001112233",
@@ -410,7 +410,7 @@ Content-Type: application/json
 ```json
 [
   {
-    "id": "550e8400-e29b-41d4-a716-446655440020",
+    "id": 20,
     "identificador": "80123470",
     "nombre_completo": "Laura Fernández",
     "telefono": "3002223344",
@@ -436,7 +436,7 @@ Content-Type: application/json
 **Response 200**:
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440001",
+  "id": 1,
   "identificador": "80123456",
   "nombre_completo": "Carlos Mendoza",
   "telefono": "3001234567",
@@ -470,7 +470,7 @@ Content-Type: application/json
 **Response 200**:
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440001",
+  "id": 1,
   "estado": "INACTIVO"
 }
 ```
@@ -586,7 +586,7 @@ Los siguientes endpoints son ejecutados por los trabajadores registrados en Log�
   "descripcion": "Producto recibido en mal estado",
   "productoSku": "SKU-12345",
   "clienteCedula": "1088245693",
-  "operarioId": "550e8400-e29b-41d4-a716-446655440001",
+  "operarioId": 1,
   "fecha": "2026-05-08T10:30:00Z"
 }
 ```
@@ -599,9 +599,9 @@ Los siguientes endpoints son ejecutados por los trabajadores registrados en Log�
 
 ```json
 {
-  "pedidoId": "uuid-pedido",
+  "pedidoId": 1,
   "clienteCedula": "1088245693",
-  "asesorId": "550e8400-e29b-41d4-a716-446655440020",
+  "asesorId": 20,
   "fechaCreacion": "2026-05-08T10:30:00Z"
 }
 ```

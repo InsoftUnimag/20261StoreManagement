@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "manifiesto", indexes = {
@@ -20,7 +19,9 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 public class ManifiestoJpaEntity {
-    @Id @Column(name = "manifiesto_id") private UUID manifiestoId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "manifiesto_id") private Long manifiestoId;
     @Column(name = "numero_manifiesto", unique = true, nullable = false) private String numeroManifiesto;
     @Column(name = "fecha_emision", nullable = false) private LocalDate fechaEmision;
     @Column(nullable = false) private String proveedor;

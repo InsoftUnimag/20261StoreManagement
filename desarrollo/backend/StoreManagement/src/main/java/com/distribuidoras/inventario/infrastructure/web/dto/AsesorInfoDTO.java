@@ -1,12 +1,10 @@
 package com.distribuidoras.inventario.infrastructure.web.dto;
 
-import java.util.UUID;
-
 /**
  * Advisor info DTO for order responses.
  */
 public record AsesorInfoDTO(
-        UUID asesorId,
+        Long asesorId,
         String nombre
 ) {
     public static Builder builder() {
@@ -14,10 +12,10 @@ public record AsesorInfoDTO(
     }
 
     public static class Builder {
-        private UUID asesorId;
+        private Long asesorId;
         private String nombre;
 
-        public Builder asesorId(UUID asesorId) {
+        public Builder asesorId(Long asesorId) {
             this.asesorId = asesorId;
             return this;
         }

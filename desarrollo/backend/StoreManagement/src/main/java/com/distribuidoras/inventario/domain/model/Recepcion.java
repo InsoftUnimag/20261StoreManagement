@@ -3,7 +3,6 @@ package com.distribuidoras.inventario.domain.model;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * Entidad de dominio: Recepcion.
@@ -17,11 +16,11 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Recepcion {
 
-    private UUID recepcionId;
+    private Long recepcionId;
 
-    private UUID manifiestoId;
+    private Long manifiestoId;
 
-    private UUID operarioId;
+    private Long operarioId;
 
     @NotNull(message = "La fecha de recepción no puede ser nula")
     private LocalDateTime fechaRecepcion;
@@ -29,7 +28,7 @@ public class Recepcion {
     @Size(max = 1000, message = "Las notas no pueden exceder 1000 caracteres")
     private String notas;
 
-    // Número de recepción generado (secuencial, no UUID)
+    // Número de recepción generado (secuencial)
     private String numeroRecepcion;
 }
 

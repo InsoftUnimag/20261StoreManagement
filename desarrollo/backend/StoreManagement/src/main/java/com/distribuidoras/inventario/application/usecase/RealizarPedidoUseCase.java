@@ -23,7 +23,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -71,7 +70,7 @@ public class RealizarPedidoUseCase {
          */
         public record PedidoCommand(
                         String clienteCc,
-                        UUID asesorId,
+                        Long asesorId,
                         List<LineaCommand> lineas) {
         }
 
@@ -105,7 +104,6 @@ public class RealizarPedidoUseCase {
 
                 // 5. Crear Pedido en estado ESPERANDO_RUTA (FR-057)
                 Pedido pedido = Pedido.builder()
-                                .pedidoId(UUID.randomUUID())
                                 .numeroPedido(numeroPedido)
                                 .clienteCc(command.clienteCc())
                                 .clienteNombre(cliente.getNombre())
@@ -119,8 +117,7 @@ public class RealizarPedidoUseCase {
                 // 6. Crear líneas de pedido
                 List<ProductoPedido> lineas = command.lineas().stream()
                                 .map(linea -> ProductoPedido.builder()
-                                                .productoPedidoId(UUID.randomUUID())
-                                                .pedidoId(pedidoGuardado.getPedidoId())
+                .pedidoId(pedidoGuardado.getPedidoId())
                                                 .skuId(linea.skuId())
                                                 .cantidadSolicitada(linea.cantidadSolicitada())
                                                 .cantidadConfirmada(linea.cantidadSolicitada()) // Inicialmente igual a
@@ -148,14 +145,14 @@ public class RealizarPedidoUseCase {
 
                                         // Spec 13: Solicitar ruta a Módulo 2 Logística
                                         solicitudRutaProducer
-                                                        .enviarSolicitudRuta(pedidoGuardado.getPedidoId().toString());
+                                                        .enviarSolicitudRuta(pedidoGuardado.getPedidoId());
                                 }
                         });
                 } else {
                         // Fallback si por alguna razón no hay transacción activa (no debería ocurrir
                         // aquí)
                         pedidoCreadoProducer.publicarPedidoCreado(pedidoGuardado.getPedidoId(), numeroPedido);
-                        solicitudRutaProducer.enviarSolicitudRuta(pedidoGuardado.getPedidoId().toString());
+                        solicitudRutaProducer.enviarSolicitudRuta(pedidoGuardado.getPedidoId());
                 }
 
                 return pedidoGuardado;

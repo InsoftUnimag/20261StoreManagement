@@ -88,7 +88,6 @@ public class RegistrarRecepcionUseCase {
         // 2. Crear Recepción (FR-024) con número de recepción secuencial
         String numeroRecepcion = generarNumeroRecepcion();
         Recepcion recepcion = Recepcion.builder()
-                .recepcionId(UUID.randomUUID())
                 .manifiestoId(command.manifiestoId())
                 .operarioId(command.operarioId())
                 .fechaRecepcion(LocalDateTime.now())
@@ -144,7 +143,6 @@ public class RegistrarRecepcionUseCase {
 
             // FR-017: Registrar MovimientoInventario tipo "Entrada"
             MovimientoInventario movimiento = MovimientoInventario.builder()
-                    .movimientoId(UUID.randomUUID())
                     .codigoLote(lote.getCodigoLote())
                     .tipoMovimiento(TipoMovimiento.ENTRADA)
                     .cantidad(linea.cantidadRecibida())
@@ -166,7 +164,6 @@ public class RegistrarRecepcionUseCase {
                 int diferencia = detalle.getCantidadRecibida() - detalle.getCantidadEsperada();
                 if (diferencia != 0) {
                     ExcepcionInventario excepcion = ExcepcionInventario.builder()
-                            .excepcionId(UUID.randomUUID())
                             .tipoExcepcion(TipoExcepcion.DIFERENCIA)
                             .codigoLote(lote.getCodigoLote())
                             .skuId(linea.skuId().toString())
@@ -203,7 +200,7 @@ public class RegistrarRecepcionUseCase {
                 recepcion.getFechaRecepcion(), lotesCreados, excepcionesGeneradas);
     }
 
-    private void actualizarEstadoManifiesto(UUID manifiestoId) {
+    private void actualizarEstadoManifiesto(Long manifiestoId) {
         List<DetalleManifiesto> detalles = detalleManifiestoRepository.findByManifiestoId(manifiestoId);
         boolean todosCompletos = detalles.stream()
                 .allMatch(d -> d.getCantidadRecibida() >= d.getCantidadEsperada());
@@ -222,20 +219,20 @@ public class RegistrarRecepcionUseCase {
 
     // --- Command & Result Records ---
 
-    public record RecepcionCommand(UUID manifiestoId, UUID operarioId,
+    public record RecepcionCommand(Long manifiestoId, Long operarioId,
                                     List<LineaRecepcionCommand> lineas, String notas) {}
 
     public record LineaRecepcionCommand(String skuId, String codigoLote,
                                          LocalDate fechaVencimiento, LocalDate fechaFabricacion,
                                          int cantidadRecibida, BigDecimal costoUnitarioProducto) {}
 
-    public record RecepcionResult(UUID recepcionId, String numeroRecepcion, LocalDateTime fechaRecepcion,
+    public record RecepcionResult(Long recepcionId, String numeroRecepcion, LocalDateTime fechaRecepcion,
                                    List<LoteResult> lotesCreados,
                                    List<ExcepcionResult> excepcionesGeneradas) {}
 
     public record LoteResult(String codigoLoteResult, String skuId, String codigoLote, int cantidad) {}
 
-    public record ExcepcionResult(UUID excepcionId, String tipo,
+    public record ExcepcionResult(Long excepcionId, String tipo,
                                    int cantidadAfectada, String descripcion) {}
 
     private void actualizarStockGlobal(String skuId, int cantidadEntrante, BigDecimal precioUnitario) {

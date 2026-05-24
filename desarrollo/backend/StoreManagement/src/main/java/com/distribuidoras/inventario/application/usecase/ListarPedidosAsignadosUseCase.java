@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class ListarPedidosAsignadosUseCase {
@@ -30,7 +29,7 @@ public class ListarPedidosAsignadosUseCase {
         this.registroDespachoRepository = registroDespachoRepository;
     }
 
-    public List<PedidoAsignadoDTO> ejecutar(UUID operarioId, String tipo) {
+    public List<PedidoAsignadoDTO> ejecutar(Long operarioId, String tipo) {
         log.info("Listando pedidos asignados a operario {} para tipo {}", operarioId, tipo);
 
         List<Pedido> pedidos;

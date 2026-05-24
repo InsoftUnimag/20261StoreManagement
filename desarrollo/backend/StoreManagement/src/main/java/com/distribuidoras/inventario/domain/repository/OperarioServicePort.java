@@ -3,7 +3,6 @@ package com.distribuidoras.inventario.domain.repository;
 import com.distribuidoras.inventario.domain.model.Operario;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Port for Operario consultation from external user module.
@@ -22,7 +21,7 @@ public interface OperarioServicePort {
      * @param id ID del operario
      * @return Optional con datos del operario
      */
-    Optional<Operario> findById(UUID id);
+    Optional<Operario> findById(Long id);
 
     /**
      * Find all operarios by rol.

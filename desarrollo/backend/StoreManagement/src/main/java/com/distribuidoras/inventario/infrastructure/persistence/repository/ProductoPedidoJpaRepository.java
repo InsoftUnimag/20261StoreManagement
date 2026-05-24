@@ -5,10 +5,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.UUID;
 
 @Repository
-public interface ProductoPedidoJpaRepository extends JpaRepository<ProductoPedidoJpaEntity, UUID> {
-    
-    List<ProductoPedidoJpaEntity> findByPedidoId(UUID pedidoId);
+public interface ProductoPedidoJpaRepository extends JpaRepository<ProductoPedidoJpaEntity, Long> {
+
+    List<ProductoPedidoJpaEntity> findByPedidoId(Long pedidoId);
 }

@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * RabbitMQ Producer for sending route requests to Logistics Module.
@@ -68,10 +67,10 @@ public class SolicitudRutaProducer {
      * Envía datos clave: pedido_id, cliente_cc, peso_logistico, direccion_entrega
      */
     @Async
-    public void enviarSolicitudRuta(String pedidoId) {
+    public void enviarSolicitudRuta(Long pedidoId) {
         log.info("Enviando solicitud de ruta para pedido: {}", pedidoId);
 
-        Pedido pedido = pedidoRepository.findById(UUID.fromString(pedidoId))
+        Pedido pedido = pedidoRepository.findById(pedidoId)
                 .orElseThrow(() -> new IllegalArgumentException("Pedido no encontrado: " + pedidoId));
 
         // Obtener líneas del pedido
@@ -92,7 +91,8 @@ public class SolicitudRutaProducer {
         // StockGlobalSku
         BigDecimal precioTotal = lineas.stream()
                 .map(linea -> {
-                    BigDecimal costoUnitario = stockGlobalSkuRepository.findById(Objects.requireNonNull(linea.getSkuId()))
+                    BigDecimal costoUnitario = stockGlobalSkuRepository
+                            .findById(Objects.requireNonNull(linea.getSkuId()))
                             .map(com.distribuidoras.inventario.infrastructure.persistence.entity.StockGlobalSkuJpaEntity::getPrecio)
                             .orElse(BigDecimal.ZERO);
                     if (costoUnitario == null)
@@ -121,7 +121,7 @@ public class SolicitudRutaProducer {
         mensaje.put("totalPedido", precioTotal.doubleValue());
         mensaje.put("direccionEntrega", direccionEntrega);
         mensaje.put("pesoLogistico", pesoTotal.doubleValue());
-        
+
         // Enviar a RabbitMQ (fire-and-forget)
         try {
             rabbitTemplate.convertAndSend(RabbitMQConfig.INVENTARIO_PEDIDOS_EXCHANGE,

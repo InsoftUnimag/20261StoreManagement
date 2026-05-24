@@ -5,7 +5,6 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * Domain entity: Pedido (Order).
@@ -21,7 +20,7 @@ import java.util.UUID;
 public class Pedido {
 
     @EqualsAndHashCode.Include
-    private UUID pedidoId;
+    private Long pedidoId;
 
     @NotBlank(message = "El número de pedido no puede estar vacío")
     @Size(max = 50, message = "El número de pedido no puede exceder 50 caracteres")
@@ -45,11 +44,11 @@ public class Pedido {
     private LocalDateTime fechaCompromiso;
 
     @NotNull(message = "El asesorId no puede ser nulo")
-    private UUID asesorId;
+    private Long asesorId;
 
-    private UUID operarioPickingId;
+    private Long operarioPickingId;
 
-    private UUID operarioDespachoId;
+    private Long operarioDespachoId;
 
     private LocalDateTime fechaEntrega;
 

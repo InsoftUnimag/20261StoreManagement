@@ -9,7 +9,6 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * RabbitMQ Consumer for receiving route assignment from Logistics Module.
@@ -39,9 +38,8 @@ public class RutaAsignadaConsumer {
 
         try {
             ComprometerCommand command = new ComprometerCommand(
-                    UUID.fromString(pedidoId),
-                    Long.parseLong(rutaId)
-            );
+                    Long.parseLong(pedidoId),
+                    Long.parseLong(rutaId));
 
             ComprometerResult result = comprometerInventarioUseCase.ejecutar(command);
 
