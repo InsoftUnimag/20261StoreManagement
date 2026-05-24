@@ -1,13 +1,12 @@
 package com.distribuidoras.inventario.infrastructure.web.dto;
 
 import java.util.List;
-import java.util.UUID;
 
 /**
  * Order line response DTO.
  */
 public record LineaPedidoResponseDTO(
-        UUID productoPedidoId,
+        Long productoPedidoId,
         ProductoInfoDTO producto,
         Integer cantidadSolicitada,
         Integer cantidadConfirmada,
@@ -19,14 +18,14 @@ public record LineaPedidoResponseDTO(
     }
 
     public static class Builder {
-        private UUID productoPedidoId;
+        private Long productoPedidoId;
         private ProductoInfoDTO producto;
         private Integer cantidadSolicitada;
         private Integer cantidadConfirmada;
         private String skuId;
         private List<LoteComprometidoDTO> lotesComprometidos;
 
-        public Builder productoPedidoId(UUID productoPedidoId) {
+        public Builder productoPedidoId(Long productoPedidoId) {
             this.productoPedidoId = productoPedidoId;
             return this;
         }

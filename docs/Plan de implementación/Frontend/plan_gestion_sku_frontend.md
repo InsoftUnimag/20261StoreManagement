@@ -98,7 +98,7 @@ Interfaces de usuario para CRUD de productos (SKU). Incluye formularios para cre
 
 **Sections**:
 - **Información del Producto**:
-  - SKU ID (UUID, con botón copiar)
+  - SKU ID (String, con botón copiar)
   - Marca, Presentación, Contenido ML, Peso Logístico
   - Fecha de creación
   - Botones: Editar, Eliminar, Volver
@@ -413,7 +413,7 @@ function useProductos() {
 
 **FR-001**: Formulario de creación permite ingresar marca, presentación, contenido_ml, peso_logistico_kg.
 
-**FR-003**: SKU ID (UUID) es generado automáticamente y es inmutable (no editable).
+**FR-003**: SKU ID es generado automáticamente y es inmutable (no editable).
 
 **FR-005**: Sistema valida UNIQUE(marca, presentacion) y muestra error si duplicado.
 
@@ -445,7 +445,7 @@ function useProductos() {
 
 6. **Error 409 (duplicado)**: Mensaje específico: "Ya existe un producto con la marca '{marca}' y presentación '{presentacion}'. Por favor, verifique los datos."
 
-7. **Copiar SKU ID**: En DetalleProductoPage, botón para copiar UUID al clipboard (útil para debugging).
+7. **Copiar SKU ID**: En DetalleProductoPage, botón para copiar ID al clipboard (útil para debugging).
 
 8. **Responsive design**: Tabla debe hacer scroll horizontal en mobile. Considerar vista de cards en mobile en lugar de tabla.
 

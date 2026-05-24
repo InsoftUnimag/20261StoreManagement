@@ -16,7 +16,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -35,11 +34,11 @@ class ExcepcionControllerTest {
     @Test
     @DisplayName("POST /api/v1/excepciones exitoso → 201")
     void registrarExcepcion_exitoso() throws Exception {
-        UUID excId = UUID.randomUUID();
+        Long excId = 1L;
         when(registrarExcepcionUseCase.ejecutar(any())).thenReturn(
                 new RegistrarExcepcionUseCase.ExcepcionResultado(
                         excId, "AVERIA", LocalDateTime.now(),
-                        new RegistrarExcepcionUseCase.MovimientoInfo(UUID.randomUUID(), "BAJA_AVERIA", -12)));
+                        new RegistrarExcepcionUseCase.MovimientoInfo(1L, "BAJA_AVERIA", -12)));
 
         mockMvc.perform(post("/api/v1/excepciones")
                         .contentType(Objects.requireNonNull(MediaType.APPLICATION_JSON))
@@ -52,7 +51,7 @@ class ExcepcionControllerTest {
                                     "descripcion": "Cajas daÃ±adas",
                                     "operarioId": "%s"
                                 }
-                                """.formatted(UUID.randomUUID(), "LOTE-001", UUID.randomUUID()))))
+                                """.formatted("SKU-001", "LOTE-001", 1L))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.excepcionId").value(excId.toString()))
                 .andExpect(jsonPath("$.movimientoGenerado.cantidad").value(-12));
@@ -70,7 +69,7 @@ class ExcepcionControllerTest {
                                     "cantidadAfectada": 12,
                                     "descripcion": ""
                                 }
-                                """.formatted(UUID.randomUUID()))))
+                                """.formatted("SKU-001"))))
                 .andExpect(status().isBadRequest());
     }
 
@@ -92,22 +91,22 @@ class ExcepcionControllerTest {
                                     "descripcion": "Mucho daño",
                                     "operarioId": "%s"
                                 }
-                                """.formatted(UUID.randomUUID(), "LOTE-001", UUID.randomUUID()))))
+                                """.formatted("SKU-001", "LOTE-001", 1L))))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("GET /api/v1/excepciones → 200")
     void consultarExcepciones_exitoso() throws Exception {
-        UUID excId = UUID.randomUUID();
+        Long excId = 2L;
         ExcepcionInventario exc = ExcepcionInventario.builder()
                 .excepcionId(excId)
                 .tipoExcepcion(TipoExcepcion.AVERIA)
                 .codigoLote(null)
-                .skuId(UUID.randomUUID().toString())
+                .skuId("SKU-001")
                 .cantidadAfectada(10)
                 .fechaRegistro(LocalDateTime.now())
-                .operarioId(UUID.randomUUID())
+                .operarioId(1L)
                 .descripcion("Daño")
                 .evidenciaUrl(null)
                 .build();
@@ -121,15 +120,15 @@ class ExcepcionControllerTest {
     @Test
     @DisplayName("GET /api/v1/excepciones/{id} → 200")
     void consultarDetalle_exitoso() throws Exception {
-        UUID excId = UUID.randomUUID();
+        Long excId = 3L;
         ExcepcionInventario exc = ExcepcionInventario.builder()
                 .excepcionId(excId)
                 .tipoExcepcion(TipoExcepcion.AVERIA)
                 .codigoLote(null)
-                .skuId(UUID.randomUUID().toString())
+                .skuId("SKU-001")
                 .cantidadAfectada(10)
                 .fechaRegistro(LocalDateTime.now())
-                .operarioId(UUID.randomUUID())
+                .operarioId(1L)
                 .descripcion("Daño")
                 .evidenciaUrl(null)
                 .build();

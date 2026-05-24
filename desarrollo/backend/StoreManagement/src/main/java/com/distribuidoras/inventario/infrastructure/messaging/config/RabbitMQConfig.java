@@ -21,7 +21,6 @@ public class RabbitMQConfig {
     public static final String RUTA_ASIGNADA_QUEUE = "inventario.ruta-asignada";
     public static final String RUTA_ASIGNADA_DLQ_QUEUE = "inventario.ruta-asignada.dlq";
     public static final String RUTA_SOLICITAR_QUEUE = "inventario.ruta-solicitar";
-    public static final String ALERTA_INVENTARIO_QUEUE = "inventario.alertas-supervisor";
     public static final String ENTREGA_CONFIRMADA_QUEUE = "inventario.entrega-confirmada";
     public static final String ENTREGA_CONFIRMADA_DLQ_QUEUE = "inventario.entrega-confirmada.dlq";
 
@@ -29,7 +28,6 @@ public class RabbitMQConfig {
     public static final String RUTA_SOLICITAR_KEY = "ruta.solicitar";
     public static final String RUTA_ASIGNADA_KEY = "ruta.asignada";
     public static final String PEDIDO_CREADO_KEY = "pedido.creado";
-    public static final String ALERTA_INVENTARIO_KEY = "alerta.inventario";
     public static final String ENTREGA_CONFIRMADA_KEY = "entrega.confirmada";
 
     // ===== Exchanges =====
@@ -42,6 +40,16 @@ public class RabbitMQConfig {
     @Bean
     public TopicExchange logisticaEventosExchange() {
         return new TopicExchange(LOGISTICA_EVENTOS_EXCHANGE, true, false);
+    }
+
+    @Bean
+    public TopicExchange rutaAsignadaResponseExchange() {
+        return new TopicExchange("ruta-asignada.response", true, false);
+    }
+
+    @Bean
+    public TopicExchange rutaDespachadaEventExchange() {
+        return new TopicExchange("ruta-despachada.event", true, false);
     }
 
     @Bean
@@ -69,10 +77,6 @@ public class RabbitMQConfig {
         return QueueBuilder.durable(RUTA_SOLICITAR_QUEUE).build();
     }
 
-    @Bean
-    public Queue alertaInventarioQueue() {
-        return QueueBuilder.durable(ALERTA_INVENTARIO_QUEUE).build();
-    }
 
     @Bean
     public Queue entregaConfirmadaQueue() {
@@ -92,8 +96,8 @@ public class RabbitMQConfig {
     @Bean
     public Binding rutaAsignadaBinding() {
         return BindingBuilder.bind(rutaAsignadaQueue())
-                .to(logisticaEventosExchange())
-                .with(RUTA_ASIGNADA_KEY);
+                .to(rutaAsignadaResponseExchange())
+                .with("#");
     }
 
     @Bean
@@ -104,16 +108,9 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Binding alertaInventarioBinding() {
-        return BindingBuilder.bind(alertaInventarioQueue())
-                .to(inventarioAlertasExchange())
-                .with(ALERTA_INVENTARIO_KEY);
-    }
-
-    @Bean
     public Binding entregaConfirmadaBinding() {
         return BindingBuilder.bind(entregaConfirmadaQueue())
-                .to(logisticaEventosExchange())
-                .with(ENTREGA_CONFIRMADA_KEY);
+                .to(rutaDespachadaEventExchange())
+                .with("#");
     }
 }

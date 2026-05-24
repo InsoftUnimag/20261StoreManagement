@@ -17,7 +17,7 @@ import org.springframework.http.MediaType;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
-import java.util.UUID;
+
 
 /**
  * Caso de uso: Registrar Excepción de Inventario.
@@ -85,13 +85,12 @@ public class RegistrarExcepcionUseCase {
 
         // Crear excepción (FR-025)
         ExcepcionInventario excepcion = ExcepcionInventario.builder()
-                .excepcionId(UUID.randomUUID())
                 .tipoExcepcion(command.tipoExcepcion())
                 .codigoLote(command.codigoLote())
                 .skuId(command.skuId())
                 .cantidadAfectada(command.cantidadAfectada())
                 .fechaRegistro(LocalDateTime.now())
-                .operarioId(UUID.fromString(command.operarioId()))
+                .operarioId(Long.valueOf(command.operarioId()))
                 .descripcion(command.descripcion())
                 .evidenciaUrl(command.evidenciaUrl())
                 .build();
@@ -130,13 +129,12 @@ public class RegistrarExcepcionUseCase {
             }
 
             movimiento = MovimientoInventario.builder()
-                    .movimientoId(UUID.randomUUID())
                     .codigoLote(lote.getCodigoLote())
                     .tipoMovimiento(tipoMov)
                     .cantidad(-cantidadBaja)
                     .fechaMovimiento(LocalDateTime.now())
                     .excepcionId(excepcion.getExcepcionId())
-                    .operarioId(UUID.fromString(command.operarioId()))
+                    .operarioId(Long.valueOf(command.operarioId()))
                     .observaciones(command.descripcion())
                     .build();
             movimientoRepository.save(movimiento);
@@ -208,10 +206,10 @@ public class RegistrarExcepcionUseCase {
                                     int cantidadAfectada, String descripcion,
                                     String evidenciaUrl, String operarioId) {}
 
-    public record ExcepcionResultado(UUID excepcionId, String tipoExcepcion,
+    public record ExcepcionResultado(Long excepcionId, String tipoExcepcion,
                                       LocalDateTime fechaRegistro, MovimientoInfo movimientoGenerado) {}
 
-    public record MovimientoInfo(UUID movimientoId, String tipoMovimiento, int cantidad) {}
+    public record MovimientoInfo(Long movimientoId, String tipoMovimiento, int cantidad) {}
 
     private void notificarSupervisorExcepcion(ExcepcionInventario excepcion) {
         if (supervisorExcepcionesUrl == null || supervisorExcepcionesUrl.isBlank()) {

@@ -13,11 +13,11 @@ public class DetalleManifiestoRepositoryAdapter implements DetalleManifiestoRepo
     private final DetalleManifiestoJpaRepository jpa;
     public DetalleManifiestoRepositoryAdapter(DetalleManifiestoJpaRepository jpa) { this.jpa = jpa; }
 
-    @Override public List<DetalleManifiesto> findByManifiestoId(UUID id) {
+    @Override public List<DetalleManifiesto> findByManifiestoId(Long id) {
         return jpa.findByManifiestoId(id).stream().map(this::toDomain).toList();
     }
     @Override public DetalleManifiesto save(DetalleManifiesto d) { return toDomain(jpa.save(Objects.requireNonNull(toEntity(d)))); }
-    @Override public java.util.Map<UUID, List<DetalleManifiesto>> findByManifiestoIds(List<UUID> ids) {
+    @Override public java.util.Map<Long, List<DetalleManifiesto>> findByManifiestoIds(List<Long> ids) {
         return jpa.findByManifiestoIdIn(ids).stream()
                 .map(this::toDomain)
                 .collect(java.util.stream.Collectors.groupingBy(DetalleManifiesto::getManifiestoId));

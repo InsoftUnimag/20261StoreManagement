@@ -133,14 +133,14 @@ La estructura específica para este componente implementada es:
 **Propósito**: Solicitud de productos de un cliente.
 
 **Atributos**:
-- `pedido_id`: UUID (PK, autogenerado)
+- `pedido_id`: Long (PK, autogenerado)
 - `numero_pedido`: String (único, formato: "PED-YYYYMMDD-NNN", ej: "PED-20260403-001")
 - `cliente_cc`: String (FK lógica → Módulo Usuarios, inmutable)
 - `fecha_creacion`: DateTime
 - `estado`: Enum (Esperando Ruta, Comprometido, En Picking, Despachado)
-- `ruta_id`: UUID (nullable, asignado por Módulo 2)
+- `ruta_id`: Long (nullable, asignado por Módulo 2)
 - `fecha_compromiso`: DateTime (nullable, cuando estado → Comprometido)
-- `asesor_id`: UUID (FK → Usuario, quien creó el pedido)
+- `asesor_id`: Long (FK → Usuario, quien creó el pedido)
 
 **Constraints**:
 - UNIQUE(numero_pedido)
@@ -163,9 +163,9 @@ Esperando Ruta → Comprometido → En Picking → Despachado
 **Propósito**: Línea de pedido (producto + cantidad).
 
 **Atributos**:
-- `producto_pedido_id`: UUID (PK, autogenerado)
-- `pedido_id`: UUID (FK → Pedido)
-- `sku_id`: UUID (FK → Producto)
+- `producto_pedido_id`: Long (PK, autogenerado)
+- `pedido_id`: Long (FK → Pedido)
+- `sku_id`: String (FK → Producto)
 - `cantidad_solicitada`: Integer (inmutable, lo que pidió el cliente)
 - `cantidad_confirmada`: Integer (mutable, lo que se pudo comprometer, inicialmente = cantidad_solicitada)
 
@@ -182,8 +182,8 @@ Esperando Ruta → Comprometido → En Picking → Despachado
 **Propósito**: Registro de lotes reservados para un pedido (FEFO).
 
 **Atributos**:
-- `compromiso_id`: UUID (PK, autogenerado)
-- `producto_pedido_id`: UUID (FK → ProductoPedido)
+- `compromiso_id`: Long (PK, autogenerado)
+- `producto_pedido_id`: Long (FK → ProductoPedido)
 - `codigo_lote`: String (FK → Lote)
 - `cantidad_comprometida`: Integer
 - `fecha_compromiso`: DateTime
@@ -448,14 +448,14 @@ Para cada ProductoPedido:
 ```json
 {
   "cliente_cc": "1234567890",
-  "asesor_id": "uuid",
+  "asesor_id": 1,
   "lineas": [
     {
-      "sku_id": "uuid",
+      "sku_id": "SKU-001",
       "cantidad_solicitada": 120
     },
     {
-      "sku_id": "uuid",
+      "sku_id": "SKU-002",
       "cantidad_solicitada": 240
     }
   ]
@@ -465,7 +465,7 @@ Para cada ProductoPedido:
 **Response 201 Created**:
 ```json
 {
-  "pedido_id": "uuid",
+  "pedido_id": 1,
   "numero_pedido": "PED-20260403-001",
   "estado": "Esperando Ruta",
   "fecha_creacion": "2026-04-03T10:30:00Z",
@@ -475,9 +475,9 @@ Para cada ProductoPedido:
   },
   "lineas": [
     {
-      "producto_pedido_id": "uuid",
+      "producto_pedido_id": 1,
       "sku": {
-        "sku_id": "uuid",
+        "sku_id": "SKU-001",
         "marca": "Pilsen",
         "presentacion": "Six-pack"
       },
@@ -496,7 +496,7 @@ Para cada ProductoPedido:
   "message": "Stock insuficiente para completar el pedido",
   "detalles": [
     {
-      "sku_id": "uuid",
+      "sku_id": "SKU-001",
       "marca": "Pilsen",
       "presentacion": "Six-pack",
       "cantidad_solicitada": 500,
@@ -513,17 +513,17 @@ Para cada ProductoPedido:
 ### GET /api/v1/pedidos/{id}
 **Purpose**: Consultar detalle completo de pedido
 
-**Path Param**: `id` puede ser UUID (pedido_id) o String (numero_pedido)
+**Path Param**: `id` puede ser Long (pedido_id) o String (numero_pedido)
 
 **Response 200 OK**:
 ```json
 {
-  "pedido_id": "uuid",
+  "pedido_id": 1,
   "numero_pedido": "PED-20260403-001",
   "estado": "Comprometido",
   "fecha_creacion": "2026-04-03T10:30:00Z",
   "fecha_compromiso": "2026-04-03T11:00:00Z",
-  "ruta_id": "uuid",
+  "ruta_id": 1,
   "cliente": {
     "cedula": "1234567890",
     "nombre": "Juan Pérez",
@@ -531,14 +531,14 @@ Para cada ProductoPedido:
     "direccion": "Calle 123 #45-67, Bogotá"
   },
   "asesor": {
-    "asesor_id": "uuid",
+    "asesor_id": 1,
     "nombre": "María López"
   },
   "lineas": [
     {
-      "producto_pedido_id": "uuid",
+      "producto_pedido_id": 1,
       "sku": {
-        "sku_id": "uuid",
+        "sku_id": "SKU-001",
         "marca": "Pilsen",
         "presentacion": "Six-pack",
         "contenido_ml": 1980
@@ -589,7 +589,7 @@ Para cada ProductoPedido:
 {
   "pedidos": [
     {
-      "pedido_id": "uuid",
+      "pedido_id": 1,
       "numero_pedido": "PED-20260403-001",
       "cliente_cc": "1234567890",
       "cliente_nombre": "Juan Pérez",
@@ -639,8 +639,8 @@ Para cada ProductoPedido:
 
 **T005: Crear PedidoRepository (domain/repositories)**
 - Métodos:
-  - `UUID save(Pedido pedido)`
-  - `Optional<Pedido> findById(UUID id)`
+  - `Long save(Pedido pedido)`
+  - `Optional<Pedido> findById(Long id)`
   - `Optional<Pedido> findByNumeroPedido(String numeroPedido)`
   - `String generarNumeroPedido(LocalDate fecha)` // PED-YYYYMMDD-NNN
   - `Page<Pedido> findByFilters(EstadoPedido estado, String clienteCc, String numeroPedido, LocalDate desde, LocalDate hasta, Pageable pageable)`
@@ -648,15 +648,15 @@ Para cada ProductoPedido:
 
 **T006: Crear ProductoPedidoRepository (domain/repositories)**
 - Métodos:
-  - `List<UUID> saveAll(List<ProductoPedido> lineas)`
-  - `List<ProductoPedido> findByPedidoId(UUID pedidoId)`
+  - `List<Long> saveAll(List<ProductoPedido> lineas)`
+  - `List<ProductoPedido> findByPedidoId(Long pedidoId)`
   - `void update(ProductoPedido productoPedido)`
 
 **T007: Crear LoteComprometidoRepository (domain/repositories)**
 - Métodos:
-  - `List<UUID> saveAll(List<LoteComprometido> compromisos)`
-  - `List<LoteComprometido> findByProductoPedidoId(UUID productoPedidoId)`
-  - `List<LoteComprometido> findByPedidoId(UUID pedidoId)`
+  - `List<Long> saveAll(List<LoteComprometido> compromisos)`
+  - `List<LoteComprometido> findByProductoPedidoId(Long productoPedidoId)`
+  - `List<LoteComprometido> findByPedidoId(Long pedidoId)`
 
 **T008: Crear ClienteServicePort (domain/ports)**
 - Interface para integración con Módulo Usuarios
@@ -760,8 +760,8 @@ Para cada ProductoPedido:
 - Message Schema:
   ```json
   {
-    "pedido_id": "uuid",
-    "ruta_id": "uuid",
+    "pedido_id": 1,
+    "ruta_id": 1,
     "fecha_asignacion": "2026-04-03T11:00:00Z"
   }
   ```
@@ -779,13 +779,13 @@ Para cada ProductoPedido:
 - Message Schema:
   ```json
   {
-    "pedido_id": "uuid",
+    "pedido_id": 1,
     "numero_pedido": "PED-20260403-001",
     "cliente_cc": "1234567890",
     "fecha_creacion": "2026-04-03T10:30:00Z",
     "lineas": [
       {
-        "sku_id": "uuid",
+        "sku_id": "SKU-001",
         "cantidad": 120
       }
     ],

@@ -10,13 +10,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import com.distribuidoras.inventario.infrastructure.persistence.entity.StockGlobalSkuJpaEntity;
+import com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.UUID;
 
 @Component
 public class PedidoCreadoProducer {
@@ -27,7 +27,7 @@ public class PedidoCreadoProducer {
     private final PedidoRepository pedidoRepository;
     private final ProductoPedidoRepository productoPedidoRepository;
     private final ClienteServicePort clienteServicePort;
-    private final com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository stockGlobalSkuRepository;
+    private final StockGlobalSkuJpaRepository stockGlobalSkuRepository;
 
     public PedidoCreadoProducer(RabbitTemplate rabbitTemplate,
             PedidoRepository pedidoRepository,
@@ -42,14 +42,11 @@ public class PedidoCreadoProducer {
     }
 
     @Async
-    public void publicarPedidoCreado(UUID pedidoId, String numeroPedido) {
+    public void publicarPedidoCreado(Long pedidoId, String numeroPedido) {
         log.info("Publicando evento pedido.creado: {}", numeroPedido);
 
         Map<String, Object> mensaje = new HashMap<>();
-        mensaje.put("pedido_id", pedidoId.toString());
-        mensaje.put("numero_pedido", numeroPedido);
-        mensaje.put("evento", "PEDIDO_CREADO");
-        mensaje.put("timestamp", LocalDateTime.now().toString());
+        mensaje.put("idPedido", pedidoId.toString());
 
         try {
             var pedidoOpt = pedidoRepository.findById(pedidoId);
@@ -61,8 +58,9 @@ public class PedidoCreadoProducer {
                 BigDecimal precioTotal = lineas.stream()
                         .map(linea -> {
                             // Obtener costo directamente del stock global
-                            BigDecimal costoUnitario = stockGlobalSkuRepository.findById(Objects.requireNonNull(linea.getSkuId()))
-                                    .map(com.distribuidoras.inventario.infrastructure.persistence.entity.StockGlobalSkuJpaEntity::getPrecio)
+                            BigDecimal costoUnitario = stockGlobalSkuRepository
+                                    .findById(Objects.requireNonNull(linea.getSkuId()))
+                                    .map(StockGlobalSkuJpaEntity::getPrecio)
                                     .orElse(BigDecimal.ZERO);
                             if (costoUnitario == null)
                                 costoUnitario = BigDecimal.ZERO;
@@ -71,7 +69,8 @@ public class PedidoCreadoProducer {
                         })
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                mensaje.put("precio_total", precioTotal.doubleValue());
+                mensaje.put("totalPedido", precioTotal.doubleValue());
+                mensaje.put("idCliente", pedido.getClienteCc());
 
                 String direccionEntrega = "No especificada";
                 try {
@@ -82,7 +81,7 @@ public class PedidoCreadoProducer {
                 } catch (Exception e) {
                     log.warn("No se pudo obtener dirección del cliente {}: {}", pedido.getClienteCc(), e.getMessage());
                 }
-                mensaje.put("direccion_entrega", direccionEntrega);
+                mensaje.put("direccion", direccionEntrega);
             }
 
             rabbitTemplate.convertAndSend(

@@ -1,13 +1,12 @@
 package com.distribuidoras.inventario.infrastructure.web.dto;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 /**
  * Committed lot info DTO.
  */
 public record LoteComprometidoDTO(
-        UUID compromisoId,
+        Long compromisoId,
         String codigoLote,
         LocalDate fechaVencimiento,
         Integer cantidadComprometida
@@ -17,12 +16,12 @@ public record LoteComprometidoDTO(
     }
 
     public static class Builder {
-        private UUID compromisoId;
+        private Long compromisoId;
         private String codigoLote;
         private LocalDate fechaVencimiento;
         private Integer cantidadComprometida;
 
-        public Builder compromisoId(UUID compromisoId) {
+        public Builder compromisoId(Long compromisoId) {
             this.compromisoId = compromisoId;
             return this;
         }

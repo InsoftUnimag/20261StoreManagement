@@ -7,11 +7,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+
 import java.time.LocalDate;
 
 @Repository
-public interface ManifiestoJpaRepository extends JpaRepository<ManifiestoJpaEntity, UUID> {
+public interface ManifiestoJpaRepository extends JpaRepository<ManifiestoJpaEntity, Long> {
     List<ManifiestoJpaEntity> findByEstadoInOrderByFechaEmisionAsc(List<String> estados);
     List<ManifiestoJpaEntity> findByFechaEmisionBetweenOrderByFechaEmisionDesc(LocalDate desde, LocalDate hasta);
     List<ManifiestoJpaEntity> findTop100ByFechaEmisionBetweenOrderByFechaEmisionDesc(LocalDate desde, LocalDate hasta);

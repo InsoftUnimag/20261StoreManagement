@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.UUID;
+
 
 @RestController
 @RequestMapping("/api/v1/recepciones")
@@ -57,9 +57,9 @@ public class RecepcionController {
 
     // --- Request DTO ---
     public static class RecepcionRequestDto {
-        public UUID manifiestoId;
+        public Long manifiestoId;
         @NotNull(message = "El operario es obligatorio")
-        public UUID operarioId;
+        public Long operarioId;
         @NotNull @Size(min = 1, message = "Debe incluir al menos una línea de recepción")
         public List<LineaRecepcionDto> lineasRecepcion;
         public String notas;

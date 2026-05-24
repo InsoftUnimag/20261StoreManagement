@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 @Component
 public class ExcepcionInventarioRepositoryAdapter implements ExcepcionInventarioRepository {
@@ -28,7 +27,7 @@ public class ExcepcionInventarioRepositoryAdapter implements ExcepcionInventario
     }
 
     @Override
-    public Optional<ExcepcionInventario> findById(UUID id) {
+    public Optional<ExcepcionInventario> findById(Long id) {
         return jpa.findById(Objects.requireNonNull(id)).map(this::toDomain);
     }
 

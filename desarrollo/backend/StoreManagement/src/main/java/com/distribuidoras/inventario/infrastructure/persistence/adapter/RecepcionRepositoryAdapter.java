@@ -24,7 +24,7 @@ public class RecepcionRepositoryAdapter implements RecepcionRepository {
     }
 
     @Override
-    public Optional<Recepcion> findById(UUID id) {
+    public Optional<Recepcion> findById(Long id) {
         return jpa.findById(Objects.requireNonNull(id)).map(this::toDomain);
     }
 

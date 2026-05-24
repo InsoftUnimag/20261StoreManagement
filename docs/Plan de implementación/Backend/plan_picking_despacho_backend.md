@@ -104,9 +104,9 @@ La estructura específica para este componente implementada es:
 **Propósito**: Registro de confirmación de recolección de productos.
 
 **Atributos**:
-- `registro_picking_id`: UUID (PK, autogenerado)
-- `pedido_id`: UUID (FK → Pedido)
-- `operario_id`: UUID (FK → Usuario)
+- `registro_picking_id`: Long (PK, autogenerado)
+- `pedido_id`: Long (FK → Pedido)
+- `operario_id`: Long (FK → Usuario)
 - `fecha_picking`: DateTime
 - `observaciones`: Text (opcional)
 
@@ -119,9 +119,9 @@ La estructura específica para este componente implementada es:
 **Propósito**: Registro de confirmación de salida de mercancía.
 
 **Atributos**:
-- `registro_despacho_id`: UUID (PK, autogenerado)
-- `pedido_id`: UUID (FK → Pedido)
-- `operario_id`: UUID (FK → Usuario)
+- `registro_despacho_id`: Long (PK, autogenerado)
+- `pedido_id`: Long (FK → Pedido)
+- `operario_id`: Long (FK → Usuario)
 - `fecha_despacho`: DateTime
 - `transportista`: String (nombre del transportista)
 - `placa_vehiculo`: String (opcional)
@@ -303,20 +303,20 @@ Nuevo tipo de movimiento:
 {
   "pedidos": [
     {
-      "pedido_id": "uuid",
+      "pedido_id": "number",
       "numero_pedido": "PED-20260403-001",
       "cliente": {
         "cedula": "1234567890",
         "nombre": "Juan Pérez",
         "direccion": "Calle 123 #45-67, Bogotá"
       },
-      "ruta_id": "uuid",
+      "ruta_id": "number",
       "fecha_compromiso": "2026-04-03T11:00:00Z",
       "total_unidades": 360,
       "lineas": [
         {
           "sku": {
-            "sku_id": "uuid",
+            "sku_id": "string",
             "marca": "Pilsen",
             "presentacion": "Six-pack"
           },
@@ -356,8 +356,8 @@ Nuevo tipo de movimiento:
 **Request Body**:
 ```json
 {
-  "pedido_id": "uuid",
-  "operario_id": "uuid",
+  "pedido_id": "number",
+  "operario_id": "number",
   "observaciones": "Picking completo sin novedades" // opcional
 }
 ```
@@ -365,14 +365,14 @@ Nuevo tipo de movimiento:
 **Response 200 OK**:
 ```json
 {
-  "registro_picking_id": "uuid",
-  "pedido_id": "uuid",
+  "registro_picking_id": "number",
+  "pedido_id": "number",
   "numero_pedido": "PED-20260403-001",
   "estado_anterior": "Comprometido",
   "estado_actual": "En Picking",
   "fecha_picking": "2026-04-03T11:15:00Z",
   "operario": {
-    "operario_id": "uuid",
+    "operario_id": "number",
     "nombre": "Carlos Ramírez"
   }
 }
@@ -402,14 +402,14 @@ Nuevo tipo de movimiento:
 {
   "pedidos": [
     {
-      "pedido_id": "uuid",
+      "pedido_id": "number",
       "numero_pedido": "PED-20260403-001",
       "cliente": {
         "cedula": "1234567890",
         "nombre": "Juan Pérez",
         "direccion": "Calle 123 #45-67, Bogotá"
       },
-      "ruta_id": "uuid",
+      "ruta_id": "number",
       "fecha_picking": "2026-04-03T11:15:00Z",
       "tiempo_desde_picking_minutos": 3,
       "alerta_tiempo": false, // true si > 5 min
@@ -434,8 +434,8 @@ Nuevo tipo de movimiento:
 **Request Body**:
 ```json
 {
-  "pedido_id": "uuid",
-  "operario_id": "uuid",
+  "pedido_id": "number",
+  "operario_id": "number",
   "transportista": "Transportes ABC S.A.S.",
   "placa_vehiculo": "ABC-123", // opcional
   "observaciones": "Despacho completo" // opcional
@@ -445,26 +445,26 @@ Nuevo tipo de movimiento:
 **Response 200 OK**:
 ```json
 {
-  "registro_despacho_id": "uuid",
-  "pedido_id": "uuid",
+  "registro_despacho_id": "number",
+  "pedido_id": "number",
   "numero_pedido": "PED-20260403-001",
   "estado_anterior": "En Picking",
   "estado_actual": "Despachado",
   "fecha_despacho": "2026-04-03T11:20:00Z",
   "operario": {
-    "operario_id": "uuid",
+    "operario_id": "number",
     "nombre": "María González"
   },
   "transportista": "Transportes ABC S.A.S.",
   "movimientos_generados": [
     {
-      "movimiento_id": "uuid",
+      "movimiento_id": "number",
       "codigo_lote": "LOT-2026-001",
       "tipo": "Salida",
       "cantidad": -80
     },
     {
-      "movimiento_id": "uuid",
+      "movimiento_id": "number",
       "codigo_lote": "LOT-2026-001",
       "tipo": "Salida",
       "cantidad": -40
@@ -493,14 +493,14 @@ Nuevo tipo de movimiento:
 **Response 200 OK**:
 ```json
 {
-  "registro_picking_id": "uuid",
+  "registro_picking_id": "number",
   "pedido": {
-    "pedido_id": "uuid",
+    "pedido_id": "number",
     "numero_pedido": "PED-20260403-001"
   },
   "fecha_picking": "2026-04-03T11:15:00Z",
   "operario": {
-    "operario_id": "uuid",
+    "operario_id": "number",
     "nombre": "Carlos Ramírez"
   },
   "observaciones": "Picking completo sin novedades",
@@ -514,14 +514,14 @@ Nuevo tipo de movimiento:
 **Response 200 OK**:
 ```json
 {
-  "registro_despacho_id": "uuid",
+  "registro_despacho_id": "number",
   "pedido": {
-    "pedido_id": "uuid",
+    "pedido_id": "number",
     "numero_pedido": "PED-20260403-001"
   },
   "fecha_despacho": "2026-04-03T11:20:00Z",
   "operario": {
-    "operario_id": "uuid",
+    "operario_id": "number",
     "nombre": "María González"
   },
   "transportista": "Transportes ABC S.A.S.",
@@ -529,7 +529,7 @@ Nuevo tipo de movimiento:
   "observaciones": "Despacho completo",
   "movimientos_generados": [
     {
-      "movimiento_id": "uuid",
+      "movimiento_id": "number",
       "lote": {
         "codigo_lote": "LOT-2026-001",
         "codigo_lote": "LOT-2025-001"
@@ -569,13 +569,13 @@ Nuevo tipo de movimiento:
 
 **T005: Crear RegistroPickingRepository (domain/repositories)**
 - Métodos:
-  - `UUID save(RegistroPicking registro)`
-  - `Optional<RegistroPicking> findByPedidoId(UUID pedidoId)`
+  - `Long save(RegistroPicking registro)`
+  - `Optional<RegistroPicking> findByPedidoId(Long pedidoId)`
 
 **T006: Crear RegistroDespachoRepository (domain/repositories)**
 - Métodos:
-  - `UUID save(RegistroDespacho registro)`
-  - `Optional<RegistroDespacho> findByPedidoId(UUID pedidoId)`
+  - `Long save(RegistroDespacho registro)`
+  - `Optional<RegistroDespacho> findByPedidoId(Long pedidoId)`
 
 **T007: Extender PedidoRepository**
 - Agregar métodos:

@@ -96,7 +96,7 @@ La estructura específica para este componente implementada es:
 **Propósito**: Entidad fundamental que define una referencia comercial.
 
 **Atributos**:
-- `sku_id`: UUID (PK, autogenerado, inmutable)
+- `sku_id`: String (PK, autogenerado, inmutable)
 - `marca`: String (ej: "Pilsen", "Postobón")
 - `presentacion`: String (ej: "Unidad", "Six-pack", "Caja")
 - `contenido_ml`: Integer (contenido líquido en mililitros)
@@ -117,7 +117,7 @@ La estructura específica para este componente implementada es:
 
 **Atributos**:
 - `id`: Long (PK, autogenerado)
-- `sku_id_ref`: UUID (FK -> Producto)
+- `sku_id_ref`: String (FK -> Producto)
 - `campo`: String (nombre del atributo modificado)
 - `valor_anterior`: String
 - `valor_nuevo`: String
@@ -138,7 +138,7 @@ La estructura específica para este componente implementada es:
 **Output**: ProductoResponse (incluye sku_id autogenerado)  
 **Business Logic**:
 1. Validar que no exista combinación marca + presentacion
-2. Generar sku_id = UUID.randomUUID()
+2. Generar sku_id (autogenerado por sistema)
 3. Guardar producto con stock inicial = 0
 4. Retornar producto creado
 
@@ -146,7 +146,7 @@ La estructura específica para este componente implementada es:
 - `ProductoDuplicadoException` si ya existe marca + presentacion
 
 ### ModificarProductoUseCase
-**Input**: UUID skuId, ProductoUpdateRequest  
+**Input**: String skuId, ProductoUpdateRequest  
 **Output**: ProductoResponse (con campo alerta si aplica)  
 **Business Logic**:
 1. Cargar producto por skuId
@@ -301,7 +301,7 @@ La estructura específica para este componente implementada es:
 ### Phase 1: Database Schema
 
 **T001** - Crear migración `V2__create_producto_tables.sql`
-- Tabla `producto`: sku_id (UUID PK), marca, presentacion, contenido_ml, peso_logistico_kg, creado_el
+- Tabla `producto`: sku_id (VARCHAR PK), marca, presentacion, contenido_ml, peso_logistico_kg, creado_el
 - Constraint: UNIQUE(marca, presentacion)
 - Tabla `bitacora_producto`: id, sku_id_ref (FK), campo, valor_anterior, valor_nuevo, descripcion, fecha, usuario
 - Índices: producto.marca, producto.presentacion
@@ -323,10 +323,10 @@ La estructura específica para este componente implementada es:
 ```java
 public interface ProductoRepository {
     Producto save(Producto producto);
-    Optional<Producto> findById(UUID skuId);
+    Optional<Producto> findById(String skuId);
     List<Producto> findAll(Pageable pageable);
     boolean existsByMarcaAndPresentacion(String marca, String presentacion);
-    void deleteById(UUID skuId);
+    void deleteById(String skuId);
 }
 ```
 
@@ -345,7 +345,7 @@ public interface ProductoRepository {
 
 **T007** - Implementar `CrearProductoUseCase`
 - Validar duplicado (delegar a repository)
-- Generar UUID para sku_id
+- Generar sku_id (String autogenerado)
 - Guardar producto
 - Spec: 01_crear_plantilla_producto.md
 
@@ -386,7 +386,7 @@ public interface ProductoRepository {
 
 **T014** - Crear `ProductoJpaRepository` (Spring Data)
 ```java
-public interface ProductoJpaRepository extends JpaRepository<ProductoJpaEntity, UUID> {
+public interface ProductoJpaRepository extends JpaRepository<ProductoJpaEntity, String> {
     boolean existsByMarcaAndPresentacion(String marca, String presentacion);
     List<ProductoJpaEntity> findByMarcaContainingIgnoreCaseOrPresentacionContainingIgnoreCase(
         String marca, String presentacion
@@ -449,7 +449,7 @@ public interface ProductoJpaRepository extends JpaRepository<ProductoJpaEntity, 
 ### Unit Tests (sin Spring)
 
 **CrearProductoUseCaseTest.java**:
-- `crearProducto_exitoso()`: Verifica generación de UUID y guardado
+- `crearProducto_exitoso()`: Verifica generación de SKU ID y guardado
 - `crearProducto_duplicado_lanzaExcepcion()`: Verifica ProductoDuplicadoException
 
 **ModificarProductoUseCaseTest.java**:

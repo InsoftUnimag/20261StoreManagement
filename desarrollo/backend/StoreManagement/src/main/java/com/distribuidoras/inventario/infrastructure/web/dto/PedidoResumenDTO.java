@@ -1,14 +1,13 @@
 package com.distribuidoras.inventario.infrastructure.web.dto;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 import java.util.List;
 
 /**
  * Order summary DTO for list view.
  */
 public record PedidoResumenDTO(
-        UUID pedidoId,
+        Long pedidoId,
         String numeroPedido,
         String clienteCc,
         String clienteNombre,
@@ -17,14 +16,13 @@ public record PedidoResumenDTO(
         String estado,
         Integer totalLineas,
         Integer totalUnidades,
-        List<LineaResumenDTO> lineas
-) {
+        List<LineaResumenDTO> lineas) {
     public static Builder builder() {
         return new Builder();
     }
 
     public static class Builder {
-        private UUID pedidoId;
+        private Long pedidoId;
         private String numeroPedido;
         private String clienteCc;
         private String clienteNombre;
@@ -35,7 +33,7 @@ public record PedidoResumenDTO(
         private Integer totalUnidades;
         private List<LineaResumenDTO> lineas;
 
-        public Builder pedidoId(UUID pedidoId) {
+        public Builder pedidoId(Long pedidoId) {
             this.pedidoId = pedidoId;
             return this;
         }
@@ -96,8 +94,7 @@ public record PedidoResumenDTO(
                     estado,
                     totalLineas,
                     totalUnidades,
-                    lineas
-            );
+                    lineas);
         }
     }
 }

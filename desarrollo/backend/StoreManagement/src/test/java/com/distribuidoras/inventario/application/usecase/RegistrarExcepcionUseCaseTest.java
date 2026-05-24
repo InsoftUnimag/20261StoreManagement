@@ -18,7 +18,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,7 +38,7 @@ class RegistrarExcepcionUseCaseTest {
 
     private final String skuId = "SKU-001";
     private final String codigoLote = "LOT-001";
-    private final UUID operarioId = UUID.randomUUID();
+    private final Long operarioId = 1L;
 
     @BeforeEach
     void setUp() {

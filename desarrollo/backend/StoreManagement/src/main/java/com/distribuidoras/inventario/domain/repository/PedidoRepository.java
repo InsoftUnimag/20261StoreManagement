@@ -9,25 +9,24 @@ import org.springframework.lang.NonNull;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * Domain port for Pedido persistence.
  */
 public interface PedidoRepository {
-    
+
     Pedido save(Pedido pedido);
-    
-    Optional<Pedido> findById(UUID pedidoId);
-    
+
+    Optional<Pedido> findById(Long pedidoId);
+
     Optional<Pedido> findByNumeroPedido(String numeroPedido);
-    
+
     /**
      * Generate sequential order number for a given date.
      * Format: PED-YYYYMMDD-NNN
      */
     String generarNumeroPedido(LocalDate fecha);
-    
+
     /**
      * Find orders with dynamic filters.
      */
@@ -37,11 +36,10 @@ public interface PedidoRepository {
             String numeroPedido,
             LocalDate fechaDesde,
             LocalDate fechaHasta,
-            @NonNull Pageable pageable
-    );
-    
+            @NonNull Pageable pageable);
+
     void update(Pedido pedido);
-    
+
     /**
      * Find orders by status ordered by creation date ASC (FIFO).
      */
@@ -60,10 +58,10 @@ public interface PedidoRepository {
     /**
      * Find orders assigned to picking operario.
      */
-    List<Pedido> findByOperarioPickingId(java.util.UUID operarioPickingId);
+    List<Pedido> findByOperarioPickingId(Long operarioPickingId);
 
     /**
      * Find orders assigned to despacho operario.
      */
-    List<Pedido> findByOperarioDespachoId(java.util.UUID operarioDespachoId);
+    List<Pedido> findByOperarioDespachoId(Long operarioDespachoId);
 }

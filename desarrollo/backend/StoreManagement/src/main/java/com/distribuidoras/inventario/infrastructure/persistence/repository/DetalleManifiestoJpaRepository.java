@@ -4,10 +4,10 @@ import com.distribuidoras.inventario.infrastructure.persistence.entity.DetalleMa
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
-import java.util.UUID;
+
 
 @Repository
-public interface DetalleManifiestoJpaRepository extends JpaRepository<DetalleManifiestoJpaEntity, UUID> {
-    List<DetalleManifiestoJpaEntity> findByManifiestoId(UUID manifiestoId);
-    List<DetalleManifiestoJpaEntity> findByManifiestoIdIn(List<UUID> manifiestoIds);
+public interface DetalleManifiestoJpaRepository extends JpaRepository<DetalleManifiestoJpaEntity, Long> {
+    List<DetalleManifiestoJpaEntity> findByManifiestoId(Long manifiestoId);
+    List<DetalleManifiestoJpaEntity> findByManifiestoIdIn(List<Long> manifiestoIds);
 }

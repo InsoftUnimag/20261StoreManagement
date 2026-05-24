@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * REST Controller for picking confirmation.
@@ -58,7 +57,7 @@ public class PickingController {
         ));
     }
 
-    public record IniciarPickingRequestDTO(UUID pedidoId, UUID operarioId) {}
+    public record IniciarPickingRequestDTO(Long pedidoId, Long operarioId) {}
 
     /**
      * GET /api/v1/picking/pedidos
@@ -72,7 +71,7 @@ public class PickingController {
     }
 
     @GetMapping("/mis-pedidos/{operarioId}")
-    public ResponseEntity<List<PedidoAsignadoDTO>> listarMisPedidos(@PathVariable UUID operarioId) {
+    public ResponseEntity<List<PedidoAsignadoDTO>> listarMisPedidos(@PathVariable Long operarioId) {
         log.info("REST: Listando pedidos asignados a operario {}", operarioId);
         List<PedidoAsignadoDTO> pedidos = listarPedidosAsignadosUseCase.ejecutar(operarioId, "picking");
         return ResponseEntity.ok(pedidos);
@@ -111,13 +110,13 @@ public class PickingController {
     }
 
     public record ConfirmarPickingRequestDTO(
-            UUID pedidoId,
-            UUID operarioId,
+            Long pedidoId,
+            Long operarioId,
             List<LineaPickingRequestDTO> lineasRecolectadas
     ) {}
 
     public record LineaPickingRequestDTO(
-            UUID productoPedidoId,
+            Long productoPedidoId,
             Integer cantidadRecolectada
     ) {}
 }

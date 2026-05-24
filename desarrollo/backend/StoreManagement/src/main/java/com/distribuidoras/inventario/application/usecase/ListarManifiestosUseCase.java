@@ -15,7 +15,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+
 import java.util.stream.Collectors;
 
 /**
@@ -66,8 +66,8 @@ public class ListarManifiestosUseCase {
             manifiestos = manifiestoRepository.findPendientes();
         }
 
-        List<UUID> ids = manifiestos.stream().map(Manifiesto::getManifiestoId).toList();
-        Map<UUID, List<DetalleManifiesto>> detallesMap = detalleManifiestoRepository.findByManifiestoIds(ids);
+        List<Long> ids = manifiestos.stream().map(Manifiesto::getManifiestoId).toList();
+        Map<Long, List<DetalleManifiesto>> detallesMap = detalleManifiestoRepository.findByManifiestoIds(ids);
 
         return manifiestos.stream()
                 .filter(m -> filtros.estado() == null || m.getEstado().name().equals(filtros.estado()))
@@ -77,7 +77,7 @@ public class ListarManifiestosUseCase {
     }
 
     @Transactional(readOnly = true)
-    public ManifiestoDetalleDTO obtenerDetalle(UUID manifiestoId) {
+    public ManifiestoDetalleDTO obtenerDetalle(Long manifiestoId) {
         log.info("Obteniendo detalle del manifiesto: {}", manifiestoId);
 
         Manifiesto manifiesto = manifiestoRepository.findById(manifiestoId)

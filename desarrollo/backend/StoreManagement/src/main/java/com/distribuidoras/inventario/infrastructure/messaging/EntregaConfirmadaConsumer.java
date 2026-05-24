@@ -10,7 +10,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.UUID;
 
 @Component
 public class EntregaConfirmadaConsumer {
@@ -25,19 +24,20 @@ public class EntregaConfirmadaConsumer {
 
     @RabbitListener(queues = "inventario.entrega-confirmada")
     public void recibirEntregaConfirmada(Map<String, String> mensaje) {
-        String pedidoId = mensaje.get("pedido_id");
-        String fechaEntregaStr = mensaje.get("fecha_entrega");
+        String pedidoId = mensaje.get("idPedido");
+        String fechaEntregaStr = mensaje.get("fechaDespacho");
         String observaciones = mensaje.getOrDefault("observaciones", "");
 
         log.info("Recibida confirmación de entrega: pedido={}, fecha={}", pedidoId, fechaEntregaStr);
 
         try {
-            UUID pedidoUuid = UUID.fromString(pedidoId);
-            Pedido pedido = pedidoRepository.findById(pedidoUuid)
+            Long pedidoIdLong = Long.parseLong(pedidoId);
+            Pedido pedido = pedidoRepository.findById(pedidoIdLong)
                     .orElseThrow(() -> new IllegalArgumentException("Pedido no encontrado: " + pedidoId));
 
             if (pedido.getEstado() != EstadoPedido.DESPACHADO) {
-                log.warn("Pedido {} no está en estado DESPACHADO, estado actual: {}. Ignorando confirmación de entrega.",
+                log.warn(
+                        "Pedido {} no está en estado DESPACHADO, estado actual: {}. Ignorando confirmación de entrega.",
                         pedido.getNumeroPedido(), pedido.getEstado());
                 return;
             }

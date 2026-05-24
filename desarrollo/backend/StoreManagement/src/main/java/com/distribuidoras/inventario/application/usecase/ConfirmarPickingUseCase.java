@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -43,302 +42,309 @@ import java.util.stream.Collectors;
 @Service
 public class ConfirmarPickingUseCase {
 
-    private static final Logger log = LoggerFactory.getLogger(ConfirmarPickingUseCase.class);
+        private static final Logger log = LoggerFactory.getLogger(ConfirmarPickingUseCase.class);
 
-    private final PedidoRepository pedidoRepository;
-    private final ProductoPedidoRepository productoPedidoRepository;
-    private final LoteComprometidoRepository loteComprometidoRepository;
-    private final LoteRepository loteRepository;
-    private final MovimientoInventarioRepository movimientoRepository;
-    private final ExcepcionInventarioRepository excepcionRepository;
+        private final PedidoRepository pedidoRepository;
+        private final ProductoPedidoRepository productoPedidoRepository;
+        private final LoteComprometidoRepository loteComprometidoRepository;
+        private final LoteRepository loteRepository;
+        private final MovimientoInventarioRepository movimientoRepository;
+        private final ExcepcionInventarioRepository excepcionRepository;
 
-    public ConfirmarPickingUseCase(PedidoRepository pedidoRepository,
-                                    ProductoPedidoRepository productoPedidoRepository,
-                                    LoteComprometidoRepository loteComprometidoRepository,
-                                    LoteRepository loteRepository,
-                                    MovimientoInventarioRepository movimientoRepository,
-                                    ExcepcionInventarioRepository excepcionRepository) {
-        this.pedidoRepository = pedidoRepository;
-        this.productoPedidoRepository = productoPedidoRepository;
-        this.loteComprometidoRepository = loteComprometidoRepository;
-        this.loteRepository = loteRepository;
-        this.movimientoRepository = movimientoRepository;
-        this.excepcionRepository = excepcionRepository;
-    }
-
-    public record ConfirmarPickingCommand(
-            UUID pedidoId,
-            UUID operarioId,
-            List<LineaPickingCommand> lineasRecolectadas
-    ) {}
-
-    public record LineaPickingCommand(
-            UUID productoPedidoId,
-            Integer cantidadRecolectada
-    ) {}
-
-    public record ConfirmarPickingResult(
-            boolean exitoso,
-            String numeroPedido,
-            EstadoPedido nuevoEstado,
-            List<String> alertas
-    ) {}
-
-    @Transactional
-    public ConfirmarPickingResult ejecutar(ConfirmarPickingCommand command) {
-        log.info("Confirmando picking para pedido: {}, operario: {}", 
-                command.pedidoId(), command.operarioId());
-
-        // 1. Buscar pedido
-        Pedido pedido = pedidoRepository.findById(command.pedidoId())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Pedido no encontrado: " + command.pedidoId()));
-
-        // 2. Control de concurrencia: verificar que el estado siga siendo EN_PICKING
-        // Esto previene que se confirme picking si el pedido no ha sido iniciado
-        if (pedido.getEstado() != EstadoPedido.EN_PICKING) {
-            throw new IllegalStateException(
-                    "Pedido %s no está en estado EN_PICKING. Estado actual: %s".formatted(
-                    pedido.getNumeroPedido(), pedido.getEstado()));
+        public ConfirmarPickingUseCase(PedidoRepository pedidoRepository,
+                        ProductoPedidoRepository productoPedidoRepository,
+                        LoteComprometidoRepository loteComprometidoRepository,
+                        LoteRepository loteRepository,
+                        MovimientoInventarioRepository movimientoRepository,
+                        ExcepcionInventarioRepository excepcionRepository) {
+                this.pedidoRepository = pedidoRepository;
+                this.productoPedidoRepository = productoPedidoRepository;
+                this.loteComprometidoRepository = loteComprometidoRepository;
+                this.loteRepository = loteRepository;
+                this.movimientoRepository = movimientoRepository;
+                this.excepcionRepository = excepcionRepository;
         }
 
-        // 3. Obtener líneas del pedido
-        List<ProductoPedido> lineasPedido = productoPedidoRepository.findByPedidoId(pedido.getPedidoId());
-
-        // 4. Obtener lotes comprometidos por cada línea
-        Map<UUID, LoteComprometido> lotesPorProductoPedidoId = new java.util.HashMap<>();
-        for (ProductoPedido linea : lineasPedido) {
-            List<LoteComprometido> lotes = loteComprometidoRepository.findByProductoPedidoId(linea.getProductoPedidoId());
-            if (!lotes.isEmpty()) {
-                lotesPorProductoPedidoId.put(linea.getProductoPedidoId(), lotes.get(0));
-            }
+        public record ConfirmarPickingCommand(
+                        Long pedidoId,
+                        Long operarioId,
+                        List<LineaPickingCommand> lineasRecolectadas) {
         }
 
-        // 5. Procesar cada línea con cantidades recolectadas
-        List<String> alertas = new ArrayList<>();
-        Map<UUID, Integer> cantidadesRecolectadas = command.lineasRecolectadas().stream()
-                .collect(Collectors.toMap(
-                        LineaPickingCommand::productoPedidoId,
-                        LineaPickingCommand::cantidadRecolectada
-                ));
-
-        for (ProductoPedido linea : lineasPedido) {
-            Integer cantidadRecolectada = cantidadesRecolectadas.getOrDefault(
-                    linea.getProductoPedidoId(), 0);
-
-            // Obtener lote comprometido para esta línea
-            LoteComprometido loteComprometido = lotesPorProductoPedidoId.get(linea.getProductoPedidoId());
-            String codigoLote = loteComprometido != null ? loteComprometido.getCodigoLote() : null;
-
-            List<String> alertasLinea = procesarLineaPicking(
-                    pedido, linea, cantidadRecolectada, command.operarioId(), codigoLote);
-            alertas.addAll(alertasLinea);
+        public record LineaPickingCommand(
+                        Long productoPedidoId,
+                        Integer cantidadRecolectada) {
         }
 
-        // 6. Actualizar pedido a "Pickup"
-        pedido.setEstado(EstadoPedido.PICKUP);
-        pedidoRepository.update(pedido);
-
-        log.info("Picking confirmado para pedido {}. Estado: PICKUP. Alertas: {}", 
-                pedido.getNumeroPedido(), alertas.size());
-
-        return new ConfirmarPickingResult(
-                true, pedido.getNumeroPedido(), EstadoPedido.PICKUP, alertas);
-    }
-
-    /**
-     * Procesa una línea de picking con control de concurrencia y reasignación efectiva de lotes.
-     * Si cantidadRecolectada < cantidadConfirmada, busca y reasigna lotes alternativos con FEFO.
-     * Si no hay más stock, registra excepción por faltante.
-     */
-    private List<String> procesarLineaPicking(Pedido pedido, ProductoPedido linea,
-                                               Integer cantidadRecolectada, UUID operarioId, String codigoLoteOriginal) {
-        List<String> alertas = new ArrayList<>();
-        int cantidadConfirmada = linea.getCantidadConfirmada();
-
-        // Si no se recolectó nada, registrar excepción y continuar
-        if (cantidadRecolectada == null || cantidadRecolectada == 0) {
-            registrarExcepcionFaltante(pedido, linea, cantidadConfirmada, operarioId, codigoLoteOriginal);
-            alertas.add("Línea %s: 0 unidades recolectadas de %d confirmadas"
-                    .formatted(linea.getProductoPedidoId(), cantidadConfirmada));
-            return alertas;
+        public record ConfirmarPickingResult(
+                        boolean exitoso,
+                        String numeroPedido,
+                        EstadoPedido nuevoEstado,
+                        List<String> alertas) {
         }
 
-        // Guardar lote original si existe
-        String codigoLoteUsado = codigoLoteOriginal;
-        int faltante = 0;
+        @Transactional
+        public ConfirmarPickingResult ejecutar(ConfirmarPickingCommand command) {
+                log.info("Confirmando picking para pedido: {}, operario: {}",
+                                command.pedidoId(), command.operarioId());
 
-        // Si recolectó menos de lo confirmado, buscar lotes alternativos con FEFO y reasignar
-        if (cantidadRecolectada < cantidadConfirmada) {
-            faltante = cantidadConfirmada - cantidadRecolectada;
-            
-            // Buscar lotes alternativos con FEFO
-            List<Lote> lotesAlternativos = loteRepository.findBySkuIdWithStock(linea.getSkuId()).stream()
-                    .sorted(Comparator.comparing(Lote::getFechaVencimiento))
-                    .toList();
+                // 1. Buscar pedido
+                Pedido pedido = pedidoRepository.findById(command.pedidoId())
+                                .orElseThrow(() -> new IllegalArgumentException(
+                                                "Pedido no encontrado: " + command.pedidoId()));
 
-            List<String> lotesReasignados = new ArrayList<>();
-            List<String> lotesSugeridos = new ArrayList<>();
-
-            for (Lote lote : lotesAlternativos) {
-                if (faltante <= 0) break;
-                
-                // Solo usar lotes que no están ya comprometidos para este pedido
-                List<LoteComprometido> compromisosExistentes = 
-                        loteComprometidoRepository.findByProductoPedidoId(linea.getProductoPedidoId());
-                boolean yaComprometido = compromisosExistentes.stream()
-                        .anyMatch(c -> c.getCodigoLote().equals(lote.getCodigoLote()));
-                
-                if (!yaComprometido && lote.getCantidad() > 0) {
-                    int aTomar = Math.min(faltante, lote.getCantidad());
-                    
-                    // Control de concurrencia: verificar stock disponible actual
-                    Lote loteActual = loteRepository.findById(lote.getCodigoLote())
-                            .orElseThrow(() -> new IllegalArgumentException("Lote no encontrado: " + lote.getCodigoLote()));
-                    
-                    if (loteActual.getCantidad() < aTomar) {
-                        alertas.add("Lote %s: Stock insuficiente (disponible: %d, requerido: %d)"
-                                .formatted(lote.getCodigoLote(), loteActual.getCantidad(), aTomar));
-                        continue;
-                    }
-                    
-                    // Reasignar lote
-                    reasignarLoteParaLinea(pedido, linea, loteActual, aTomar, operarioId);
-                    faltante -= aTomar;
-                    lotesReasignados.add("Lote %s: %d unidades reasignadas (venc: %s)"
-                            .formatted(loteActual.getCodigoLote(), aTomar, loteActual.getFechaVencimiento()));
-                    
-                    // Actualizar codigoLoteUsado si es la primera reasignación
-                    if (codigoLoteUsado == null || (codigoLoteOriginal != null && codigoLoteUsado.equals(codigoLoteOriginal))) {
-                        codigoLoteUsado = loteActual.getCodigoLote();
-                    }
-                } else if (lote.getCantidad() > 0) {
-                    // Lote disponible para sugerencia
-                    lotesSugeridos.add("Lote %s: %d unidades disponibles (venc: %s)"
-                            .formatted(lote.getCodigoLote(), lote.getCantidad(), lote.getFechaVencimiento()));
+                // 2. Control de concurrencia: verificar que el estado siga siendo EN_PICKING
+                // Esto previene que se confirme picking si el pedido no ha sido iniciado
+                if (pedido.getEstado() != EstadoPedido.EN_PICKING) {
+                        throw new IllegalStateException(
+                                        "Pedido %s no está en estado EN_PICKING. Estado actual: %s".formatted(
+                                                        pedido.getNumeroPedido(), pedido.getEstado()));
                 }
-            }
 
-            // Si se reasignaron lotes, informar
-            if (!lotesReasignados.isEmpty()) {
-                alertas.add("Línea %s: %d unidades faltantes. Lotes reasignados: %s"
-                        .formatted(linea.getProductoPedidoId(), 
-                                cantidadConfirmada - cantidadRecolectada,
-                                String.join(", ", lotesReasignados)));
-            }
+                // 3. Obtener líneas del pedido
+                List<ProductoPedido> lineasPedido = productoPedidoRepository.findByPedidoId(pedido.getPedidoId());
 
-            // Si aún falta stock después de reasignar, registrar excepción
-            if (faltante > 0) {
-                registrarExcepcionFaltante(pedido, linea, faltante, operarioId, codigoLoteUsado);
-                alertas.add("Línea %s: Faltante de %d unidades - Excepción registrada"
-                        .formatted(linea.getProductoPedidoId(), faltante));
-                
-                // Si hay lotes sugeridos pero no pudieron ser usados
-                if (!lotesSugeridos.isEmpty()) {
-                    alertas.add("Lotes sugeridos pero no disponibles: %s"
-                            .formatted(String.join(", ", lotesSugeridos)));
+                // 4. Obtener lotes comprometidos por cada línea
+                Map<Long, LoteComprometido> lotesPorProductoPedidoId = new java.util.HashMap<>();
+                for (ProductoPedido linea : lineasPedido) {
+                        List<LoteComprometido> lotes = loteComprometidoRepository
+                                        .findByProductoPedidoId(linea.getProductoPedidoId());
+                        if (!lotes.isEmpty()) {
+                                lotesPorProductoPedidoId.put(linea.getProductoPedidoId(), lotes.get(0));
+                        }
                 }
-            }
+
+                // 5. Procesar cada línea con cantidades recolectadas
+                List<String> alertas = new ArrayList<>();
+                Map<Long, Integer> cantidadesRecolectadas = command.lineasRecolectadas().stream()
+                                .collect(Collectors.toMap(
+                                                LineaPickingCommand::productoPedidoId,
+                                                LineaPickingCommand::cantidadRecolectada));
+
+                for (ProductoPedido linea : lineasPedido) {
+                        Integer cantidadRecolectada = cantidadesRecolectadas.getOrDefault(
+                                        linea.getProductoPedidoId(), 0);
+
+                        // Obtener lote comprometido para esta línea
+                        LoteComprometido loteComprometido = lotesPorProductoPedidoId.get(linea.getProductoPedidoId());
+                        String codigoLote = loteComprometido != null ? loteComprometido.getCodigoLote() : null;
+
+                        List<String> alertasLinea = procesarLineaPicking(
+                                        pedido, linea, cantidadRecolectada, command.operarioId(), codigoLote);
+                        alertas.addAll(alertasLinea);
+                }
+
+                // 6. Actualizar pedido a "Pickup"
+                pedido.setEstado(EstadoPedido.PICKUP);
+                pedidoRepository.update(pedido);
+
+                log.info("Picking confirmado para pedido {}. Estado: PICKUP. Alertas: {}",
+                                pedido.getNumeroPedido(), alertas.size());
+
+                return new ConfirmarPickingResult(
+                                true, pedido.getNumeroPedido(), EstadoPedido.PICKUP, alertas);
         }
 
-        // Registrar movimiento de inventario tipo PICKING
-        registrarMovimientoPicking(pedido, linea, cantidadRecolectada, operarioId, codigoLoteUsado);
+        /**
+         * Procesa una línea de picking con control de concurrencia y reasignación
+         * efectiva de lotes.
+         * Si cantidadRecolectada < cantidadConfirmada, busca y reasigna lotes
+         * alternativos con FEFO.
+         * Si no hay más stock, registra excepción por faltante.
+         */
+        private List<String> procesarLineaPicking(Pedido pedido, ProductoPedido linea,
+                        Integer cantidadRecolectada, Long operarioId, String codigoLoteOriginal) {
+                List<String> alertas = new ArrayList<>();
+                int cantidadConfirmada = linea.getCantidadConfirmada();
 
-        return alertas;
-    }
+                // Si no se recolectó nada, registrar excepción y continuar
+                if (cantidadRecolectada == null || cantidadRecolectada == 0) {
+                        registrarExcepcionFaltante(pedido, linea, cantidadConfirmada, operarioId, codigoLoteOriginal);
+                        alertas.add("Línea %s: 0 unidades recolectadas de %d confirmadas"
+                                        .formatted(linea.getProductoPedidoId(), cantidadConfirmada));
+                        return alertas;
+                }
 
-    /**
-     * Registra excepción por faltante en picking.
-     */
-    private void registrarExcepcionFaltante(Pedido pedido, ProductoPedido linea, 
-                                             int cantidadFaltante, UUID operarioId, String codigoLote) {
-        ExcepcionInventario excepcion = ExcepcionInventario.builder()
-                .excepcionId(UUID.randomUUID())
-                .tipoExcepcion(TipoExcepcion.FALTANTE)
-                .codigoLote(codigoLote)
-                .skuId(linea.getSkuId())
-                .cantidadAfectada(cantidadFaltante)
-                .fechaRegistro(LocalDateTime.now())
-                .operarioId(operarioId)
-                .descripcion("Faltante en picking para pedido %s, SKU %s, Lote %s: %d unidades no recolectadas"
-                        .formatted(pedido.getNumeroPedido(), linea.getSkuId(), codigoLote, cantidadFaltante))
-                .evidenciaUrl(null)
-                .build();
+                // Guardar lote original si existe
+                String codigoLoteUsado = codigoLoteOriginal;
+                int faltante = 0;
 
-        excepcionRepository.save(excepcion);
-    }
+                // Si recolectó menos de lo confirmado, buscar lotes alternativos con FEFO y
+                // reasignar
+                if (cantidadRecolectada < cantidadConfirmada) {
+                        faltante = cantidadConfirmada - cantidadRecolectada;
 
-    /**
-     * Reasigna un lote para una línea de pedido durante el picking.
-     * Actualiza el stock del lote y crea un nuevo registro de lote comprometido.
-     */
-    private void reasignarLoteParaLinea(Pedido pedido, ProductoPedido linea, 
-                                         Lote lote, int cantidad, UUID operarioId) {
-        // Actualizar cantidad disponible en el lote
-        int nuevaCantidad = lote.getCantidad() - cantidad;
-        lote.setCantidad(nuevaCantidad);
-        loteRepository.save(lote);
+                        // Buscar lotes alternativos con FEFO
+                        List<Lote> lotesAlternativos = loteRepository.findBySkuIdWithStock(linea.getSkuId()).stream()
+                                        .sorted(Comparator.comparing(Lote::getFechaVencimiento))
+                                        .toList();
 
-        // Crear nuevo compromiso de lote
-        LoteComprometido.builder()
-                .compromisoId(UUID.randomUUID())
-                .productoPedidoId(linea.getProductoPedidoId())
-                .codigoLote(lote.getCodigoLote())
-                .cantidadComprometida(cantidad)
-                .fechaCompromiso(LocalDateTime.now())
-                .build();
-        // Pendiente: agregar método save al repositorio si no existe
-        // loteComprometidoRepository.save(nuevoCompromiso);
+                        List<String> lotesReasignados = new ArrayList<>();
+                        List<String> lotesSugeridos = new ArrayList<>();
 
-        // Registrar movimiento de reasignación
-        registroMovimientoReasignacion(pedido, linea, lote, cantidad, operarioId);
+                        for (Lote lote : lotesAlternativos) {
+                                if (faltante <= 0)
+                                        break;
 
-        log.info("Lote reasignado: pedido={}, sku={}, lote={}, cantidad={}, stock_restante={}",
-                pedido.getNumeroPedido(), linea.getSkuId(), lote.getCodigoLote(), 
-                cantidad, nuevaCantidad);
-    }
+                                // Solo usar lotes que no están ya comprometidos para este pedido
+                                List<LoteComprometido> compromisosExistentes = loteComprometidoRepository
+                                                .findByProductoPedidoId(linea.getProductoPedidoId());
+                                boolean yaComprometido = compromisosExistentes.stream()
+                                                .anyMatch(c -> c.getCodigoLote().equals(lote.getCodigoLote()));
 
-    /**
-     * Registra movimiento de reasignación de lote.
-     */
-    private void registroMovimientoReasignacion(Pedido pedido, ProductoPedido linea,
-                                                 Lote lote, int cantidad, UUID operarioId) {
-        MovimientoInventario movimiento = MovimientoInventario.builder()
-                .movimientoId(UUID.randomUUID())
-                .codigoLote(lote.getCodigoLote())
-                .tipoMovimiento(TipoMovimiento.REASIGNACION)
-                .cantidad(-cantidad)
-                .fechaMovimiento(LocalDateTime.now())
-                .pedidoId(pedido.getPedidoId())
-                .operarioId(operarioId)
-                .observaciones("Reasignación de lote durante picking para pedido %s, SKU %s: %d unidades"
-                        .formatted(pedido.getNumeroPedido(), linea.getSkuId(), cantidad))
-                .build();
+                                if (!yaComprometido && lote.getCantidad() > 0) {
+                                        int aTomar = Math.min(faltante, lote.getCantidad());
 
-        movimientoRepository.save(movimiento);
-        log.info("Movimiento REASIGNACION registrado: pedido={}, sku={}, lote={}, cantidad={}",
-                pedido.getNumeroPedido(), linea.getSkuId(), lote.getCodigoLote(), -cantidad);
-    }
+                                        // Control de concurrencia: verificar stock disponible actual
+                                        Lote loteActual = loteRepository.findById(lote.getCodigoLote())
+                                                        .orElseThrow(() -> new IllegalArgumentException(
+                                                                        "Lote no encontrado: " + lote.getCodigoLote()));
 
-    /**
-     * Registra movimiento de inventario tipo PICKING.
-     */
-    private void registrarMovimientoPicking(Pedido pedido, ProductoPedido linea, 
-                                             int cantidad, UUID operarioId, String codigoLote) {
-        MovimientoInventario movimiento = MovimientoInventario.builder()
-                .movimientoId(UUID.randomUUID())
-                .codigoLote(codigoLote)
-                .tipoMovimiento(TipoMovimiento.PICKING)
-                .cantidad(-cantidad)
-                .fechaMovimiento(LocalDateTime.now())
-                .pedidoId(pedido.getPedidoId())
-                .operarioId(operarioId)
-                .observaciones("Picking confirmado para pedido %s, SKU %s, Lote %s: %d unidades"
-                        .formatted(pedido.getNumeroPedido(), linea.getSkuId(), codigoLote, cantidad))
-                .build();
+                                        if (loteActual.getCantidad() < aTomar) {
+                                                alertas.add("Lote %s: Stock insuficiente (disponible: %d, requerido: %d)"
+                                                                .formatted(lote.getCodigoLote(),
+                                                                                loteActual.getCantidad(), aTomar));
+                                                continue;
+                                        }
 
-        movimientoRepository.save(movimiento);
-        log.info("Movimiento PICKING registrado: pedido={}, sku={}, lote={}, cantidad={}",
-                pedido.getNumeroPedido(), linea.getSkuId(), codigoLote, -cantidad);
-    }
+                                        // Reasignar lote
+                                        reasignarLoteParaLinea(pedido, linea, loteActual, aTomar, operarioId);
+                                        faltante -= aTomar;
+                                        lotesReasignados.add("Lote %s: %d unidades reasignadas (venc: %s)"
+                                                        .formatted(loteActual.getCodigoLote(), aTomar,
+                                                                        loteActual.getFechaVencimiento()));
+
+                                        // Actualizar codigoLoteUsado si es la primera reasignación
+                                        if (codigoLoteUsado == null || (codigoLoteOriginal != null
+                                                        && codigoLoteUsado.equals(codigoLoteOriginal))) {
+                                                codigoLoteUsado = loteActual.getCodigoLote();
+                                        }
+                                } else if (lote.getCantidad() > 0) {
+                                        // Lote disponible para sugerencia
+                                        lotesSugeridos.add("Lote %s: %d unidades disponibles (venc: %s)"
+                                                        .formatted(lote.getCodigoLote(), lote.getCantidad(),
+                                                                        lote.getFechaVencimiento()));
+                                }
+                        }
+
+                        // Si se reasignaron lotes, informar
+                        if (!lotesReasignados.isEmpty()) {
+                                alertas.add("Línea %s: %d unidades faltantes. Lotes reasignados: %s"
+                                                .formatted(linea.getProductoPedidoId(),
+                                                                cantidadConfirmada - cantidadRecolectada,
+                                                                String.join(", ", lotesReasignados)));
+                        }
+
+                        // Si aún falta stock después de reasignar, registrar excepción
+                        if (faltante > 0) {
+                                registrarExcepcionFaltante(pedido, linea, faltante, operarioId, codigoLoteUsado);
+                                alertas.add("Línea %s: Faltante de %d unidades - Excepción registrada"
+                                                .formatted(linea.getProductoPedidoId(), faltante));
+
+                                // Si hay lotes sugeridos pero no pudieron ser usados
+                                if (!lotesSugeridos.isEmpty()) {
+                                        alertas.add("Lotes sugeridos pero no disponibles: %s"
+                                                        .formatted(String.join(", ", lotesSugeridos)));
+                                }
+                        }
+                }
+
+                // Registrar movimiento de inventario tipo PICKING
+                registrarMovimientoPicking(pedido, linea, cantidadRecolectada, operarioId, codigoLoteUsado);
+
+                return alertas;
+        }
+
+        /**
+         * Registra excepción por faltante en picking.
+         */
+        private void registrarExcepcionFaltante(Pedido pedido, ProductoPedido linea,
+                        int cantidadFaltante, Long operarioId, String codigoLote) {
+                ExcepcionInventario excepcion = ExcepcionInventario.builder()
+                                .tipoExcepcion(TipoExcepcion.FALTANTE)
+                                .codigoLote(codigoLote)
+                                .skuId(linea.getSkuId())
+                                .cantidadAfectada(cantidadFaltante)
+                                .fechaRegistro(LocalDateTime.now())
+                                .operarioId(operarioId)
+                                .descripcion("Faltante en picking para pedido %s, SKU %s, Lote %s: %d unidades no recolectadas"
+                                                .formatted(pedido.getNumeroPedido(), linea.getSkuId(), codigoLote,
+                                                                cantidadFaltante))
+                                .evidenciaUrl(null)
+                                .build();
+
+                excepcionRepository.save(excepcion);
+        }
+
+        /**
+         * Reasigna un lote para una línea de pedido durante el picking.
+         * Actualiza el stock del lote y crea un nuevo registro de lote comprometido.
+         */
+        private void reasignarLoteParaLinea(Pedido pedido, ProductoPedido linea,
+                        Lote lote, int cantidad, Long operarioId) {
+                // Actualizar cantidad disponible en el lote
+                int nuevaCantidad = lote.getCantidad() - cantidad;
+                lote.setCantidad(nuevaCantidad);
+                loteRepository.save(lote);
+
+                // Crear nuevo compromiso de lote
+                LoteComprometido.builder()
+                        .productoPedidoId(linea.getProductoPedidoId())
+                                .codigoLote(lote.getCodigoLote())
+                                .cantidadComprometida(cantidad)
+                                .fechaCompromiso(LocalDateTime.now())
+                                .build();
+                // Pendiente: agregar método save al repositorio si no existe
+                // loteComprometidoRepository.save(nuevoCompromiso);
+
+                // Registrar movimiento de reasignación
+                registroMovimientoReasignacion(pedido, linea, lote, cantidad, operarioId);
+
+                log.info("Lote reasignado: pedido={}, sku={}, lote={}, cantidad={}, stock_restante={}",
+                                pedido.getNumeroPedido(), linea.getSkuId(), lote.getCodigoLote(),
+                                cantidad, nuevaCantidad);
+        }
+
+        /**
+         * Registra movimiento de reasignación de lote.
+         */
+        private void registroMovimientoReasignacion(Pedido pedido, ProductoPedido linea,
+                        Lote lote, int cantidad, Long operarioId) {
+                MovimientoInventario movimiento = MovimientoInventario.builder()
+                                .codigoLote(lote.getCodigoLote())
+                                .tipoMovimiento(TipoMovimiento.REASIGNACION)
+                                .cantidad(-cantidad)
+                                .fechaMovimiento(LocalDateTime.now())
+                                .pedidoId(pedido.getPedidoId())
+                                .operarioId(operarioId)
+                                .observaciones("Reasignación de lote durante picking para pedido %s, SKU %s: %d unidades"
+                                                .formatted(pedido.getNumeroPedido(), linea.getSkuId(), cantidad))
+                                .build();
+
+                movimientoRepository.save(movimiento);
+                log.info("Movimiento REASIGNACION registrado: pedido={}, sku={}, lote={}, cantidad={}",
+                                pedido.getNumeroPedido(), linea.getSkuId(), lote.getCodigoLote(), -cantidad);
+        }
+
+        /**
+         * Registra movimiento de inventario tipo PICKING.
+         */
+        private void registrarMovimientoPicking(Pedido pedido, ProductoPedido linea,
+                        int cantidad, Long operarioId, String codigoLote) {
+                MovimientoInventario movimiento = MovimientoInventario.builder()
+                                .codigoLote(codigoLote)
+                                .tipoMovimiento(TipoMovimiento.PICKING)
+                                .cantidad(-cantidad)
+                                .fechaMovimiento(LocalDateTime.now())
+                                .pedidoId(pedido.getPedidoId())
+                                .operarioId(operarioId)
+                                .observaciones("Picking confirmado para pedido %s, SKU %s, Lote %s: %d unidades"
+                                                .formatted(pedido.getNumeroPedido(), linea.getSkuId(), codigoLote,
+                                                                cantidad))
+                                .build();
+
+                movimientoRepository.save(movimiento);
+                log.info("Movimiento PICKING registrado: pedido={}, sku={}, lote={}, cantidad={}",
+                                pedido.getNumeroPedido(), linea.getSkuId(), codigoLote, -cantidad);
+        }
 }

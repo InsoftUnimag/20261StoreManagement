@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 
-import java.util.UUID;
 
 @Service
 public class CrearManifiestoUseCase {
@@ -42,7 +41,6 @@ public class CrearManifiestoUseCase {
         }
 
         Manifiesto manifiesto = Manifiesto.builder()
-                .manifiestoId(UUID.randomUUID())
                 .numeroManifiesto(numero)
                 .fechaEmision(LocalDate.now())
                 .proveedor(request.getProveedor())
@@ -57,7 +55,6 @@ public class CrearManifiestoUseCase {
                 Producto producto = productoRepository.findById(linea.getSkuId()).orElse(null);
                 if (producto != null) {
                     DetalleManifiesto detalle = DetalleManifiesto.builder()
-                            .detalleId(UUID.randomUUID())
                             .manifiestoId(manifiesto.getManifiestoId())
                             .skuId(linea.getSkuId())
                             .cantidadEsperada(linea.getCantidadEsperada())

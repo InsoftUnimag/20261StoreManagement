@@ -1,18 +1,18 @@
-# Contratos de Integración — Módulo de Personas / Usuarios
+# Contratos de Integración — Módulo de Gestion de Personas.
 
-**Fecha**: 08/05/2026  
+**Fecha**: 20/05/2026  
 **Actualizado**: Fusionado con especificación de Gestión de Personas  
-**Elaborado por**: Equipo Inventario  
+**Elaborado por**: Equipo del modulo de Gestion de Inventario  
 **Para**: Equipo Módulo de Usuarios  
-**Versión**: 3.0
+**Versión**: 4.0
 
 ---
 
 ## 1. Propósito
 
-Este documento establece los contratos que el **módulo de Inventario** necesita del **módulo de Usuarios/Personas** para funcionar correctamente. 
+Este documento establece los contratos que el **módulo de Gestion de Inventario** necesita del **módulo de Gestion de Personas** para funcionar correctamente. 
 
-El módulo de Inventario está basado en arquitectura hexagonal y código limpio, y necesita consumir datos de usuarios y clientes para validar operaciones como crear pedidos, asignar picking, recepcionar productos y confirmar despachos.
+El módulo de Gestion de Inventario está basado en arquitectura hexagonal y código limpio, y necesita consumir datos de trabajadores y clientes para validar operaciones como crear pedidos, asignar picking, recepcionar productos y confirmar despachos.
 
 ---
 
@@ -25,7 +25,7 @@ El módulo de Inventario está basado en arquitectura hexagonal y código limpio
 | `cedula` | String | Sí | Número de documento CC/NIT del cliente |
 | `nombre` | String | Sí | Nombre completo del cliente |
 | `telefono` | String | Sí | Número de teléfono de contacto |
-| `email` | String | No | Correo electrónico (opcional) |
+| `email` | String | Sí | Correo electrónico |
 | `direccion` | String | Sí | Dirección de entrega del cliente |
 | `activo` | Boolean | Sí | Indica si el cliente está activo en el sistema |
 
@@ -51,8 +51,9 @@ El módulo de Inventario está basado en arquitectura hexagonal y código limpio
 
 | Rol | Enum | Funcionalidad en Inventario |
 |-----|------|----------------------------|
-| Supervisor de Inventario | `SUPERVISOR_INVENTARIO` | Supervisa operaciones, asigna tareas |
-| Operario de Picking y Despacho | `OPERARIO_PICKING_DESPACHO` | Prepara y confirma pedidos |
+| Supervisor de Inventario | `SUPERVISOR_INVENTARIO` | Supervisa operaciones, asigna tareas, gestiona inventario |
+| Operario de Picking | `OPERARIO_PICKING` | Prepara pedidos y confirma picking |
+| Operario de Despacho | `OPERARIO_DESPACHO` | Confirma despacho de pedidos |
 | Operario de Recepción | `OPERARIO_RECEPCION` | Registra ingresos de productos |
 | Asesor Comercial | `ASESOR_COMERCIAL` | Crea y consulta pedidos |
 
@@ -60,20 +61,20 @@ El módulo de Inventario está basado en arquitectura hexagonal y código limpio
 
 ## 3. User Stories — Gestión de Personas (Requeridas por Inventario)
 
-### User Story 1 — Registrar Operario de Picking y Despacho (Priority: P1)
+### User Story 1 — Registrar Operario de Picking (Priority: P1)
 
-Como **Docente/Módulo Usuarios**, necesito registrar operarios de picking y despacho para que el sistema identifique al responsable de preparar y confirmar pedidos.
+Como **Modulo de gestion de inventario** necesito que **Módulo personas**, me permita registrar operarios de picking para que el sistema identifique al responsable de preparar y confirmar pedidos.
 
-**Why this priority**: Sin operarios registrados, el módulo de picking y despacho no puede asignar responsables a las tareas.
+**Why this priority**: Sin operarios registrados, el módulo de gestion de inventario no puede asignar responsables a las tareas.
 
 **Acceptance Scenarios**:
 
 1. **Scenario**: Registro exitoso
    - **Given** el identificador no existe en el sistema
    - **When** se ingresa: identificador, nombre_completo, teléfono, correo
-   - **And** se selecciona rol "Operario Picking y Despacho"
+   - **And** se selecciona rol "Operario Picking"
    - **Then** el sistema crea el registro con estado "Activo"
-   - **And** el operario aparece disponible para asignar a picking o despacho
+   - **And** el operario aparece disponible para asignar a picking
 
 2. **Scenario**: Identificador duplicado
    - **Given** ya existe persona con ese identificador
@@ -82,9 +83,31 @@ Como **Docente/Módulo Usuarios**, necesito registrar operarios de picking y des
 
 ---
 
-### User Story 2 — Registrar Operario de Recepción (Priority: P1)
+### User Story 2 — Registrar Operario de Despacho (Priority: P1)
 
-Como **Docente/Módulo Usuarios**, necesito registrar operarios de recepción para que el sistema identifique al responsable de registrar ingresos de productos.
+Como **Modulo de gestion de inventario** necesito que **Módulo personas**, me permita registrar operarios de despacho para que el sistema identifique al responsable de confirmar pedidos.
+
+**Why this priority**: Sin operarios registrados, el módulo de gestion de inventario no puede asignar responsables a las tareas.
+
+**Acceptance Scenarios**:
+
+1. **Scenario**: Registro exitoso
+   - **Given** el identificador no existe en el sistema
+   - **When** se ingresa: identificador, nombre_completo, teléfono, correo
+   - **And** se selecciona rol "Operario despacho"
+   - **Then** el sistema crea el registro con estado "Activo"
+   - **And** el operario aparece disponible para asignar a despacho
+
+2. **Scenario**: Identificador duplicado
+   - **Given** ya existe persona con ese identificador
+   - **When** se intenta registrar otra con mismo identificador
+   - **Then** el sistema rechaza: "El identificador {id} ya existe"
+
+---
+
+### User Story 3 — Registrar Operario de Recepción (Priority: P1)
+
+Como **Módulo de gestion de inventario** necesito que **Módulo Personas**, me permita registrar operarios de recepción para que el sistema identifique al responsable de registrar ingresos de productos.
 
 **Acceptance Scenarios**:
 
@@ -96,9 +119,9 @@ Como **Docente/Módulo Usuarios**, necesito registrar operarios de recepción pa
 
 ---
 
-### User Story 3 — Registrar Supervisor de Inventario (Priority: P1)
+### User Story 4 — Registrar Supervisor de Inventario (Priority: P1)
 
-Como **Docente/Módulo Usuarios**, necesito registrar supervisores de inventario para habilitar la gestión del inventario.
+ Como **Módulo de gestion de inventario** necesito que **Módulo Personas**, me permita registar supervisores de inventario para habilitar la gestión del inventario.
 
 **Why this priority**: Solo los supervisores de inventario pueden acceder a gestión de inventario.
 
@@ -112,9 +135,9 @@ Como **Docente/Módulo Usuarios**, necesito registrar supervisores de inventario
 
 ---
 
-### User Story 4 — Registrar Asesor Comercial (Priority: P1)
+### User Story 5 — Registrar Asesor Comercial (Priority: P1)
 
-Como **Docente/Módulo Usuarios**, necesito registrar asesores comerciales para que puedan realizar pedidos y consultas.
+Como **Módulo de gestion de inventario** necesito que **Módulo Personas**, me permita registrar asesores comerciales para que puedan realizar pedidos y consultas.
 
 **Acceptance Scenarios**:
 
@@ -128,10 +151,11 @@ Como **Docente/Módulo Usuarios**, necesito registrar asesores comerciales para 
 
 ### Edge Cases
 
-- ¿Teléfono duplicado? → Permitido. Un mismo teléfono puede tener múltiples personas.
-- ¿Correo duplicado? → Permitido.
-- ¿Eliminación de persona con tareas activas? → Sistema rechaza si tiene picking o despacho pendiente.
-- ¿Una persona con múltiples roles? → No permitido. Un identificador = un rol.
+- ¿Teléfono duplicado? → No permitido.
+- ¿Correo duplicado? → No permitido.
+- ¿Eliminación de persona? → No es permitido.
+- ¿Desactivación de persona con tareas activas?  → El sistema rechaza si tiene picking o recepcion pendiente.
+- ¿Una persona con múltiples roles? → No permitido, cada persona tiene un único rol.
 
 ---
 
@@ -142,10 +166,10 @@ Como **Docente/Módulo Usuarios**, necesito registrar asesores comerciales para 
 | Código | Requisito |
 |--------|-----------|
 | FR-060 | El sistema DEBE permitir registrar personas con: identificador, nombre_completo, teléfono, correo, rol |
-| FR-061 | El sistema DEBE requerir como obligatorios: identificador, nombre_completo, rol |
+| FR-061 | El sistema DEBE requerir como obligatorios: identificador, nombre_completo, rol, correo_electronico |
 | FR-062 | El sistema DEBE generar identificador único automáticamente si no se proporciona |
 | FR-063 | El sistema DEBE validar que el identificador sea único en todo el sistema |
-| FR-064 | El sistema DEBE permitir los roles: Operario Picking y Despacho, Operario Recepción, Supervisor Inventario, Asesor Comercial |
+| FR-064 | El sistema DEBE permitir los roles: OPERARIO_PICKING, OPERARIO_DESPACHO, OPERARIO_RECEPCION, SUPERVISOR_INVENTARIO, ASESOR_COMERCIAL |
 | FR-065 | El sistema DEBE inicializar el estado como "Activo" al crear |
 | FR-066 | El sistema DEBE impedir eliminación de persona con tareas activas |
 | FR-067 | El sistema DEBE permitir inactivar persona (cambio de estado a "Inactivo") |
@@ -224,7 +248,7 @@ Content-Type: application/json
   "nombre_completo": "Carlos Mendoza",
   "telefono": "3001234567",
   "correo": "carlos.mendoza@email.com",
-  "rol": "OPERARIO_PICKING_DESPACHO"
+  "rol": "OPERARIO_PICKING"
 }
 ```
 
@@ -236,7 +260,7 @@ Content-Type: application/json
   "nombre_completo": "Carlos Mendoza",
   "telefono": "3001234567",
   "correo": "carlos.mendoza@email.com",
-  "rol": "OPERARIO_PICKING_DESPACHO",
+  "rol": "OPERARIO_PICKING",
   "estado": "ACTIVO",
   "fecha_creacion": "2026-05-08T10:30:00Z"
 }
@@ -252,9 +276,9 @@ Content-Type: application/json
 
 ---
 
-### 5.3 Listar Operarios de Picking y Despacho
+### 5.3 Listar Operarios de Picking
 
-**Endpoint**: `GET /api/v1/operarios/picking-despacho`
+**Endpoint**: `GET /api/v1/operarios/picking`
 
 **Headers requeridos**:
 ```
@@ -271,19 +295,50 @@ Content-Type: application/json
     "nombre_completo": "Carlos Mendoza",
     "telefono": "3001234567",
     "correo": "carlos.mendoza@email.com",
-    "rol": "OPERARIO_PICKING_DESPACHO",
+    "rol": "OPERARIO_PICKING",
     "estado": "ACTIVO"
   }
 ]
 ```
 
 **Importante**: 
-- Retornar solo personas con rol `OPERARIO_PICKING_DESPACHO`
+- Retornar solo personas con rol `OPERARIO_PICKING`
 - Filtrar solo personas con `estado = ACTIVO`
 
 ---
 
-### 5.4 Listar Operarios de Recepción
+### 5.4 Listar Operarios de Despacho
+
+**Endpoint**: `GET /api/v1/operarios/despacho`
+
+**Headers requeridos**:
+```
+Authorization: Bearer <token_jwt>
+Content-Type: application/json
+```
+
+**Response 200**:
+```json
+[
+  {
+    "id": 1,
+    "identificador": "80123456",
+    "nombre_completo": "Carlos Mendoza",
+    "telefono": "3001234567",
+    "correo": "carlos.mendoza@email.com",
+    "rol": "OPERARIO_DESPACHO",
+    "estado": "ACTIVO"
+  }
+]
+```
+
+**Importante**: 
+- Retornar solo personas con rol `OPERARIO_DESPACHO`
+- Filtrar solo personas con `estado = ACTIVO`
+
+---
+
+### 5.5 Listar Operarios de Recepción
 
 **Endpoint**: `GET /api/v1/operarios/recepcion`
 
@@ -314,7 +369,7 @@ Content-Type: application/json
 
 ---
 
-### 5.5 Listar Supervisores de Inventario
+### 5.6 Listar Supervisores de Inventario
 
 **Endpoint**: `GET /api/v1/operarios/supervisores`
 
@@ -341,7 +396,7 @@ Content-Type: application/json
 
 ---
 
-### 5.6 Listar Asesores Comerciales
+### 5.7 Listar Asesores Comerciales
 
 **Endpoint**: `GET /api/v1/operarios/asesores`
 
@@ -368,7 +423,7 @@ Content-Type: application/json
 
 ---
 
-### 5.7 Consultar Persona por ID
+### 5.8 Consultar Persona por ID
 
 **Endpoint**: `GET /api/v1/personas/{id}`
 
@@ -402,7 +457,7 @@ Content-Type: application/json
 
 ---
 
-### 5.8 Inactivar Persona
+### 5.9 Inactivar Persona
 
 **Endpoint**: `PATCH /api/v1/personas/{id}/inactivar`
 
@@ -429,16 +484,65 @@ Content-Type: application/json
 ```
 
 ---
+## 6. Endpoints Internos del Módulo de Gestión de Inventario
+Los siguientes endpoints son ejecutados por los trabajadores registrados en Logística de Personas dentro del módulo de Inventario. No son contratos hacia afuera; se documentan aquí para trazabilidad de roles.
 
-## 6. Autenticación
+### 6.1 Supervisor de Inventario
+
+| Endpoint | Metodo | Descripcion |
+|-----|------|----------------------------|
+| /api/v1/inventario/plantillas | `POST` | Crear plantilla del producto|
+| /api/v1/inventario/plantillas/{id} | `PUT` | Modificar plantilla del producto |
+| /api/v1/inventario | `GET` | Consultar inventario |
+| /api/v1/manifiestos | `POST` | Crear manifiesto |
+| /api/v1/manifiestos| `GET` | Listar manifiestos |
+| /api/v1/picking/{id}/asignar| `PATCH` |Asignar picking a operario |
+| /api/v1/despachos/{id}/asignar | `PATCH` |Asignar despacho a operario |
+| /api/v1/inventario/excepciones| `POST` | Reportar excepción de inventario |
+
+### 6.2 Asesor Comercial
+
+| Endpoint | Metodo | Descripcion |
+|-----|------|----------------------------|
+| /api/v1/productos | `GET` | Consultar productos disponibles|
+| /api/v1/productos/{id}/disponibilidad | `GET` | Consultar disponibilidad de producto |
+| /api/v1/pedidos | `POST` | Realizar pedido |
+| /api/v1/pedidos/{id} | `GET` | Ofrecer detalles del pedido|
+| /api/v1/rutas/solicitar| `POST` | Solicitar ruta (integración Logística de Rutas) |
+
+### 6.3 Operario de Recepción
+
+| Endpoint | Metodo | Descripcion |
+|-----|------|----------------------------|
+| /api/v1/recepciones | `POST` | Registrar ingreso de productos|
+| /api/v1/manifiestos | `GET` | Listar manifiestos |
+
+### 6.4 Operario de Picking
+
+| Endpoint | Metodo | Descripcion |
+|-----|------|----------------------------|
+| /api/v1/picking/asignados| `GET` | Listar pedidos asignados a picking|
+| /api/v1/picking/{id}/confirmar| `PATCH` | Confirmar picking de pedido|
+
+### 6.5 Operario de Despacho
+
+| Endpoint | Metodo | Descripcion |
+|-----|------|----------------------------|
+| /api/v1/despachos/asignados| `GET` | Listar pedidos asignados a despacho|
+| /api/v1/despachos/{id}/confirmar| `PATCH` |Confirmar despacho de pedido|
+
+
+---
+## 7. Autenticación
 
 - Todos los endpoints requieren **JWT Bearer Token** en el header `Authorization`
 - El token debe ser validado por el módulo de Usuarios
 - Formato: `Authorization: Bearer <token_jwt>`
 
+
 ---
 
-## 7. Códigos de Error
+## 8. Códigos de Error
 
 | Código HTTP | Código de Error | Significado |
 |-------------|-----------------|-------------|
@@ -446,22 +550,22 @@ Content-Type: application/json
 | 201 | — | Recurso creado exitosamente |
 | 401 | `TOKEN_INVALIDO` | Token JWT inválido o expirado |
 | 404 | `CLIENTE_NO_ENCONTRADO` | No existe cliente con ese documento |
-| 404 | `PERSONA_NO_ENCONTRADA` | No existe persona con ese ID |
+| 404 | `TRABAJADOR_NO_ENCONTRADO` | No existe persona con ese ID |
 | 409 | `IDENTIFICADOR_DUPLICADO` | Ya existe persona con ese identificador |
 | 409 | `TIENE_TAREAS_ACTIVAS` | No se puede inactivar/eliminarr con tareas pendientes |
 | 503 | `SIN_CONEXION` | Servicio no disponible (timeout) |
 
 ---
 
-## 8. Dependencias con Otros Módulos
+## 9. Dependencias
 
-| Módulo Dependiente | Dependencia | Impacto si no se cumple |
+| Dependiente | Dependencia | Impacto si no se cumple |
 |-------------------|-------------|--------------------------|
-| Picking (Módulo 5) | Requiere operarios Activos con rol "Picking y Despacho" disponibles | Sin operarios disponibles, no se puede asignar picking |
-| Despacho (Módulo 6) | Requiere operarios Activos con rol "Picking y Despacho" disponibles | Sin operarios disponibles, no se puede confirmar despacho |
-| Recepción (Módulo 2) | Requiere operarios Activos con rol "Recepción" disponibles | Sin operarios disponibles, no se puede registrar ingresos |
-| Inventario (Módulos 1-4) | Requiere supervisor Activo con rol "Supervisor Inventario" | Sin supervisor, no se puede acceder a gestión de inventario |
-| Pedidos (Módulos 7-10) | Requiere asesores Activos con rol "Asesor Comercial" | Sin asesores, no se pueden realizar pedidos |
+| Picking  | Requiere operarios Activos con rol OPERARIO_PICKING| Sin operarios disponibles, no se puede asignar picking |
+| Despacho  | Requiere operarios Activos con rol OPERARIO_DESPACHO| Sin operarios disponibles, no se puede confirmar despacho |
+| Recepción  |Requiere operarios Activos con rol OPERARIO_RECEPCION | Sin operarios disponibles, no se puede registrar ingresos |
+| Inventario| Requiere supervisor Activo con rol SUPERVISOR_INVENTARIO | Sin supervisor, no se puede acceder a gestión de inventario |
+| Pedidos | Requiere asesores Activos con rol ASESOR_COMERCIAL | Sin asesores, no se pueden realizar pedidos |
 
 ### Efectos en Cascada
 
@@ -470,9 +574,9 @@ Content-Type: application/json
 
 ---
 
-## 9. Qué Proveemos al Módulo de Usuarios (Módulo de Inventario)
+## 10. Qué Provee el Módulo de Gestion de Inventario a Gestion de Personas
 
-### 9.1 Notificación de Excepciones (Inventario → Usuarios)
+### 10.1 Notificación de Excepciones (Inventario → Usuarios)
 
 **Endpoint en Inventario**: `POST /api/v1/excepciones`
 
@@ -487,7 +591,7 @@ Content-Type: application/json
 }
 ```
 
-### 9.2 Notificación de Pedido Creado (Async via RabbitMQ)
+### 10.2 Notificación de Pedido Creado (Async via RabbitMQ)
 
 **Exchange**: `inventario.exchange`  
 **Routing Key**: `pedido.creado`  
@@ -504,7 +608,7 @@ Content-Type: application/json
 
 ---
 
-## 10. Diagrama de Integración
+## 11. Diagrama de Integración
 
 ```
 ┌─────────────────────────┐     REST/HTTP     ┌─────────────────────────┐
@@ -521,7 +625,7 @@ Content-Type: application/json
 
 ---
 
-## 11. Resumen de Endpoints Requeridos
+## 12. Resumen de Endpoints Requeridos a Logística de Personas
 
 | # | Endpoint | Método | Descripción |
 |---|----------|--------|-------------|
@@ -529,14 +633,15 @@ Content-Type: application/json
 | 2 | `/api/v1/personas` | POST | Registrar nueva persona |
 | 3 | `/api/v1/personas/{id}` | GET | Consultar persona por ID |
 | 4 | `/api/v1/personas/{id}/inactivar` | PATCH | Inactivar persona |
-| 5 | `/api/v1/operarios/picking-despacho` | GET | Listar operarios picking y despacho |
-| 6 | `/api/v1/operarios/recepcion` | GET | Listar operarios de recepción |
-| 7 | `/api/v1/operarios/supervisores` | GET | Listar supervisores |
-| 8 | `/api/v1/operarios/asesores` | GET | Listar asesores |
+| 5 | `/api/v1/operarios/picking` | GET | Listar operarios picking |
+| 6 | `/api/v1/operarios/despacho` | GET | Listar operarios de despacho |
+| 7 | `/api/v1/operarios/recepcion` | GET | Listar operarios de recepción |
+| 8 | `/api/v1/operarios/supervisores` | GET | Listar supervisores |
+| 9 | `/api/v1/operarios/asesores` | GET | Listar asesores |
 
 ---
 
-## 12. Success Criteria
+## 13. Success Criteria
 
 - **SC-026**: 100% de personas registradas tienen identificador único
 - **SC-027**: 100% de personas tienen nombre_completo y rol registrados
@@ -546,6 +651,6 @@ Content-Type: application/json
 
 ---
 
-## 13. Contacto
+## 14. Contacto
 
-Para dudas o aclaraciones sobre estos contratos, contactar al equipo de Inventario.
+Para dudas o aclaraciones sobre estos contratos revisa la carpeta docs/casos_de_uso en la rama develop o contactar al equipo de Gestion de Inventario.

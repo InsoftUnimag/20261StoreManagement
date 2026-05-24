@@ -4,7 +4,6 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 /**
  * Domain entity for a Dispatch Record.
@@ -17,13 +16,13 @@ import java.util.UUID;
 public class RegistroDespacho {
 
     @NotNull(message = "El ID del registro de despacho no puede ser nulo")
-    private UUID registroDespachoId;
+    private Long registroDespachoId;
 
     @NotNull(message = "El ID del pedido no puede ser nulo")
-    private UUID pedidoId;
+    private Long pedidoId;
 
     @NotNull(message = "El ID del operario no puede ser nulo")
-    private UUID operarioId;
+    private Long operarioId;
 
     @NotNull(message = "La fecha de despacho no puede ser nula")
     private LocalDateTime fechaDespacho;

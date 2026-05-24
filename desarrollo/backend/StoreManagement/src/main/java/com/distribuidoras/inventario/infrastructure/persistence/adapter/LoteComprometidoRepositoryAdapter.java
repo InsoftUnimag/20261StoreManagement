@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -29,19 +28,19 @@ public class LoteComprometidoRepositoryAdapter implements LoteComprometidoReposi
     }
     
     @Override
-    public Optional<LoteComprometido> findById(UUID compromisoId) {
+    public Optional<LoteComprometido> findById(Long compromisoId) {
         return jpa.findById(Objects.requireNonNull(compromisoId)).map(this::toDomain);
     }
     
     @Override
-    public List<LoteComprometido> findByProductoPedidoId(UUID productoPedidoId) {
+    public List<LoteComprometido> findByProductoPedidoId(Long productoPedidoId) {
         return jpa.findByProductoPedidoId(productoPedidoId).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<LoteComprometido> findByPedidoId(UUID pedidoId) {
+    public List<LoteComprometido> findByPedidoId(Long pedidoId) {
         return jpa.findByProductoPedidoId(pedidoId).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());

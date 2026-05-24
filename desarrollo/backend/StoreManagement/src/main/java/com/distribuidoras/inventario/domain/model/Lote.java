@@ -4,7 +4,7 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.UUID;
+
 import java.math.BigDecimal;
 
 /**
@@ -46,7 +46,7 @@ public class Lote {
     @DecimalMin(value = "0", message = "El costo no puede ser negativo")
     private BigDecimal costoUnitarioProducto;
 
-    private UUID recepcionId;
+    private Long recepcionId;
 
     @NotNull(message = "La fecha de creación no puede ser nula")
     private LocalDateTime creadoEl;

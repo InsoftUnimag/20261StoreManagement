@@ -10,19 +10,18 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-
 @Repository
-public interface PedidoJpaRepository extends JpaRepository<PedidoJpaEntity, UUID>, JpaSpecificationExecutor<PedidoJpaEntity> {
-    
+public interface PedidoJpaRepository
+        extends JpaRepository<PedidoJpaEntity, Long>, JpaSpecificationExecutor<PedidoJpaEntity> {
+
     Optional<PedidoJpaEntity> findByNumeroPedido(String numeroPedido);
-    
+
     /**
      * Find max order number sequence for a given date prefix.
      */
     @Query("SELECT MAX(CAST(SUBSTRING(p.numeroPedido, LENGTH(p.numeroPedido) - 2) AS int)) FROM PedidoJpaEntity p WHERE p.numeroPedido LIKE :prefix%")
     Integer findMaxNumeroPedidoByPrefix(@Param("prefix") String prefix);
-    
+
     /**
      * Find orders by status ordered by creation ASC (FIFO).
      */
@@ -33,7 +32,7 @@ public interface PedidoJpaRepository extends JpaRepository<PedidoJpaEntity, UUID
      */
     List<PedidoJpaEntity> findByEstadoOrderByFechaCompromisoAsc(EstadoPedido estado);
 
-    List<PedidoJpaEntity> findByOperarioPickingId(UUID operarioPickingId);
+    List<PedidoJpaEntity> findByOperarioPickingId(Long operarioPickingId);
 
-    List<PedidoJpaEntity> findByOperarioDespachoId(UUID operarioDespachoId);
+    List<PedidoJpaEntity> findByOperarioDespachoId(Long operarioDespachoId);
 }

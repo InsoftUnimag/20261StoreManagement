@@ -5,7 +5,6 @@ import jakarta.validation.constraints.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.util.UUID;
 
 /**
  * Entidad de dominio: Manifiesto.
@@ -19,7 +18,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Manifiesto {
 
-    private UUID manifiestoId;
+    private Long manifiestoId;
 
     @NotBlank(message = "El número de manifiesto no puede estar vacío")
     @Size(max = 50, message = "El número de manifiesto no puede exceder 50 caracteres")

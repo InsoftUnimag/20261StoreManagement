@@ -3,7 +3,6 @@ package com.distribuidoras.inventario.domain.model;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
-import java.util.UUID;
 
 /**
  * Entidad de dominio: DetalleManifiesto.
@@ -17,10 +16,10 @@ import java.util.UUID;
 @AllArgsConstructor
 public class DetalleManifiesto {
 
-    private UUID detalleId;
+    private Long detalleId;
 
     @NotNull(message = "El ID del manifiesto no puede ser nulo")
-    private UUID manifiestoId;
+    private Long manifiestoId;
 
     @NotBlank(message = "El SKU no puede estar vacío")
     @Size(max = 20, message = "El SKU no puede exceder 20 caracteres")

@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.UUID;
 
 @Component
 public class RegistroPickingRepositoryAdapter implements RegistroPickingRepository {
@@ -26,7 +25,7 @@ public class RegistroPickingRepositoryAdapter implements RegistroPickingReposito
     }
 
     @Override
-    public Optional<RegistroPicking> findByPedidoId(UUID pedidoId) {
+    public Optional<RegistroPicking> findByPedidoId(Long pedidoId) {
         return jpaRepository.findByPedidoId(pedidoId).map(this::toDomain);
     }
 

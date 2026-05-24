@@ -1,6 +1,5 @@
 package com.distribuidoras.inventario.infrastructure.web.dto;
 
-import java.util.UUID;
 import lombok.*;
 
 /**
@@ -11,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OperarioInfoDTO {
-    private UUID id;
+    private Long id;
     private String nombre;
     private String cedula;
     private String rol;

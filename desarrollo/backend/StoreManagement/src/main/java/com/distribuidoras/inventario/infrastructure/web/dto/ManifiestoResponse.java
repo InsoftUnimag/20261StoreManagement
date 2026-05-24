@@ -6,14 +6,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.UUID;
+
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class ManifiestoResponse {
-    private UUID manifiestoId;
+    private Long manifiestoId;
     private String numeroManifiesto;
     private LocalDate fechaEmision;
     private String proveedor;

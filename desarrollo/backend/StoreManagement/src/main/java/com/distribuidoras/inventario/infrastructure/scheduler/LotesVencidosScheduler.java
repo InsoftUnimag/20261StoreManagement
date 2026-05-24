@@ -19,7 +19,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 @Component
 public class LotesVencidosScheduler {
@@ -62,25 +61,23 @@ public class LotesVencidosScheduler {
                 String skuId = lote.getSkuId();
 
                 ExcepcionInventario excepcion = ExcepcionInventario.builder()
-                        .excepcionId(UUID.randomUUID())
                         .tipoExcepcion(TipoExcepcion.VENCIMIENTO)
                         .codigoLote(lote.getCodigoLote())
                         .skuId(skuId)
                         .cantidadAfectada(cantidadBaja)
                         .fechaRegistro(LocalDateTime.now())
-                        .operarioId(UUID.fromString("00000000-0000-0000-0000-000000000000"))
+                        .operarioId(0L)
                         .descripcion("Proceso automático: Lote vencido el " + lote.getFechaVencimiento())
                         .build();
                 excepcionRepository.save(excepcion);
 
                 MovimientoInventario movimiento = MovimientoInventario.builder()
-                        .movimientoId(UUID.randomUUID())
                         .codigoLote(lote.getCodigoLote())
                         .tipoMovimiento(TipoMovimiento.BAJA_VENCIMIENTO)
                         .cantidad(-cantidadBaja)
                         .fechaMovimiento(LocalDateTime.now())
                         .excepcionId(excepcion.getExcepcionId())
-                        .operarioId(UUID.fromString("00000000-0000-0000-0000-000000000000"))
+                        .operarioId(0L)
                         .observaciones("Proceso automático de lotes vencidos")
                         .build();
                 movimientoRepository.save(movimiento);
