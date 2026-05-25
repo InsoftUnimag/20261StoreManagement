@@ -109,7 +109,7 @@ public class ListarManifiestosUseCase {
     private ManifiestoResumenDTO toManifiestoResumenDTO(Manifiesto m, List<DetalleManifiesto> detalles) {
         int total = detalles != null ? detalles.size() : 0;
         int recibidas = detalles != null
-                ? (int) detalles.stream().filter(d -> d.getCantidadRecibida() >= d.getCantidadEsperada()).count()
+                ? (int) detalles.stream().filter(d -> d.getCantidadRecibida() > 0).count()
                 : 0;
 
         return new ManifiestoResumenDTO(
