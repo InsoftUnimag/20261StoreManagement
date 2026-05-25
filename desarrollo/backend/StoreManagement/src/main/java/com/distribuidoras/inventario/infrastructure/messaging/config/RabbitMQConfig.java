@@ -13,22 +13,17 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMQConfig {
 
     // ===== Exchange names =====
-    public static final String INVENTARIO_PEDIDOS_EXCHANGE = "inventario.pedidos";
-    public static final String LOGISTICA_EVENTOS_EXCHANGE = "logistica.eventos";
-    public static final String INVENTARIO_ALERTAS_EXCHANGE = "inventario.alertas";
-
+    public static final String INVENTARIO_PEDIDOS_EXCHANGE = "pedidos.inventario";
+    public static final String SOLICITUD_RUTA_EXCHANGE = "solicitud-ruta.request";
     // ===== Queue names =====
     public static final String RUTA_ASIGNADA_QUEUE = "inventario.ruta-asignada";
     public static final String RUTA_ASIGNADA_DLQ_QUEUE = "inventario.ruta-asignada.dlq";
-    public static final String RUTA_SOLICITAR_QUEUE = "inventario.ruta-solicitar";
+    public static final String RUTA_DESPACHADA_QUEUE = "inventario.ruta-despachada";
     public static final String ENTREGA_CONFIRMADA_QUEUE = "inventario.entrega-confirmada";
     public static final String ENTREGA_CONFIRMADA_DLQ_QUEUE = "inventario.entrega-confirmada.dlq";
 
     // ===== Routing keys =====
-    public static final String RUTA_SOLICITAR_KEY = "ruta.solicitar";
-    public static final String RUTA_ASIGNADA_KEY = "ruta.asignada";
     public static final String PEDIDO_CREADO_KEY = "pedido.creado";
-    public static final String ENTREGA_CONFIRMADA_KEY = "entrega.confirmada";
 
     // ===== Exchanges =====
 
@@ -38,8 +33,8 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public TopicExchange logisticaEventosExchange() {
-        return new TopicExchange(LOGISTICA_EVENTOS_EXCHANGE, true, false);
+    public TopicExchange solicitudRutaExchange() {
+        return new TopicExchange(SOLICITUD_RUTA_EXCHANGE, true, false);
     }
 
     @Bean
@@ -50,11 +45,6 @@ public class RabbitMQConfig {
     @Bean
     public TopicExchange rutaDespachadaEventExchange() {
         return new TopicExchange("ruta-despachada.event", true, false);
-    }
-
-    @Bean
-    public TopicExchange inventarioAlertasExchange() {
-        return new TopicExchange(INVENTARIO_ALERTAS_EXCHANGE, true, false);
     }
 
     // ===== Queues for Consumer (Módulo 2 Logística) =====
@@ -73,10 +63,9 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Queue rutaSolicitarQueue() {
-        return QueueBuilder.durable(RUTA_SOLICITAR_QUEUE).build();
+    public Queue rutaDespachadaQueue() {
+        return QueueBuilder.durable(RUTA_DESPACHADA_QUEUE).build();
     }
-
 
     @Bean
     public Queue entregaConfirmadaQueue() {
@@ -101,16 +90,11 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public Binding rutaSolicitarBinding() {
-        return BindingBuilder.bind(rutaSolicitarQueue())
-                .to(inventarioPedidosExchange())
-                .with(RUTA_SOLICITAR_KEY);
-    }
-
-    @Bean
-    public Binding entregaConfirmadaBinding() {
-        return BindingBuilder.bind(entregaConfirmadaQueue())
+    public Binding rutaDespachadaBinding() {
+        return BindingBuilder.bind(rutaDespachadaQueue())
                 .to(rutaDespachadaEventExchange())
                 .with("#");
     }
+
+    // Binding de entrega-confirmada se agregará cuando se defina el publicador
 }

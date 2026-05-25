@@ -88,7 +88,6 @@ public class ModuloUsuariosAdapter implements ClienteServicePort {
         log.warn("Fallback invocado para cliente CC: {} debido a: {}. Devolviendo cliente simulado.", cedula,
                 ex.getMessage());
 
-        // Sincronizado con ClienteController.java para consistencia en pruebas
         return Optional.of(Cliente.builder()
                 .cedula(cedula)
                 .nombre("Cliente Simulado " + cedula)

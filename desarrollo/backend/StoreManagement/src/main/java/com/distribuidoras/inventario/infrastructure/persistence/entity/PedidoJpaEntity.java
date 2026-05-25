@@ -11,8 +11,9 @@ import java.time.LocalDateTime;
                 @Index(name = "idx_pedido_numero", columnList = "numero_pedido"),
                 @Index(name = "idx_pedido_cliente", columnList = "cliente_cc"),
                 @Index(name = "idx_pedido_estado", columnList = "estado"),
-                @Index(name = "idx_pedido_fecha_creacion", columnList = "fecha_creacion")
-}, uniqueConstraints = {
+                @Index(name = "idx_pedido_fecha_creacion", columnList = "fecha_creacion"),
+                @Index(name = "idx_pedido_ruta", columnList = "ruta_id")
+        }, uniqueConstraints = {
                 @UniqueConstraint(name = "uk_pedido_numero", columnNames = "numero_pedido")
 })
 @Getter
@@ -63,6 +64,9 @@ public class PedidoJpaEntity {
 
         @Column(name = "fecha_entrega")
         private LocalDateTime fechaEntrega;
+
+        @Column(name = "fecha_recogida")
+        private LocalDateTime fechaRecogida;
 
         @Column(name = "observaciones", length = 500)
         private String observaciones;

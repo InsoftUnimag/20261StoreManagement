@@ -17,6 +17,7 @@ public record PedidoResumenDTO(
         Integer totalLineas,
         Integer totalUnidades,
         List<LineaResumenDTO> lineas) {
+
     public static Builder builder() {
         return new Builder();
     }

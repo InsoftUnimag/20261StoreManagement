@@ -11,11 +11,8 @@ import com.distribuidoras.inventario.infrastructure.messaging.config.RabbitMQCon
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository;
-
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,26 +37,16 @@ public class SolicitudRutaProducer {
     private final ProductoRepository productoRepository;
     private final ClienteServicePort clienteServicePort;
 
-    @Value("${rabbitmq.exchange.solicitud-ruta:inventario.logistica}")
-    private String exchange;
-
-    @Value("${rabbitmq.routing-key.solicitud-ruta:solicitud.ruta}")
-    private String routingKey;
-
-    private final StockGlobalSkuJpaRepository stockGlobalSkuRepository;
-
     public SolicitudRutaProducer(RabbitTemplate rabbitTemplate,
             PedidoRepository pedidoRepository,
             ProductoPedidoRepository productoPedidoRepository,
             ProductoRepository productoRepository,
-            ClienteServicePort clienteServicePort,
-            StockGlobalSkuJpaRepository stockGlobalSkuRepository) {
+            ClienteServicePort clienteServicePort) {
         this.rabbitTemplate = rabbitTemplate;
         this.pedidoRepository = pedidoRepository;
         this.productoPedidoRepository = productoPedidoRepository;
         this.productoRepository = productoRepository;
         this.clienteServicePort = clienteServicePort;
-        this.stockGlobalSkuRepository = stockGlobalSkuRepository;
     }
 
     /**
@@ -87,21 +74,6 @@ public class SolicitudRutaProducer {
                 })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Calcular costo total del pedido (total_pedido) usando el precio en
-        // StockGlobalSku
-        BigDecimal precioTotal = lineas.stream()
-                .map(linea -> {
-                    BigDecimal costoUnitario = stockGlobalSkuRepository
-                            .findById(Objects.requireNonNull(linea.getSkuId()))
-                            .map(com.distribuidoras.inventario.infrastructure.persistence.entity.StockGlobalSkuJpaEntity::getPrecio)
-                            .orElse(BigDecimal.ZERO);
-                    if (costoUnitario == null)
-                        costoUnitario = BigDecimal.ZERO;
-
-                    return costoUnitario.multiply(BigDecimal.valueOf(linea.getCantidadSolicitada()));
-                })
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
         // GAP-05: Obtener dirección de entrega del cliente
         String direccionEntrega = "No especificada";
         try {
@@ -113,25 +85,23 @@ public class SolicitudRutaProducer {
             log.warn("No se pudo obtener dirección del cliente {}: {}", pedido.getClienteCc(), e.getMessage());
         }
 
-        // Construir mensaje explícitamente con lo que exige Módulo 2
-        // Spec 13: idPedido, idCliente, totalPedido, direccionEntrega, pesoLogistico
+        // Construir mensaje con lo que exige Módulo 2 (RouteRequestEvent)
+        // Campos: idPedido (Long), idCliente (Long), pesoLogistico (BigDecimal), direccionEntrega (String)
         Map<String, Object> mensaje = new HashMap<>();
-        mensaje.put("idPedido", pedido.getPedidoId().toString());
-        mensaje.put("idCliente", pedido.getClienteCc());
-        mensaje.put("totalPedido", precioTotal.doubleValue());
+        mensaje.put("idPedido", pedido.getPedidoId());
+        mensaje.put("idCliente", Long.parseLong(pedido.getClienteCc().trim()));
+        mensaje.put("pesoLogistico", pesoTotal);
         mensaje.put("direccionEntrega", direccionEntrega);
-        mensaje.put("pesoLogistico", pesoTotal.doubleValue());
 
-        // Enviar a RabbitMQ (fire-and-forget)
+        // Enviar a RabbitMQ exchange que escucha Logística (Spring Cloud Stream)
         try {
-            rabbitTemplate.convertAndSend(RabbitMQConfig.INVENTARIO_PEDIDOS_EXCHANGE,
-                    RabbitMQConfig.RUTA_SOLICITAR_KEY,
+            rabbitTemplate.convertAndSend(RabbitMQConfig.SOLICITUD_RUTA_EXCHANGE,
+                    "#",
                     mensaje);
             log.info("Solicitud de ruta enviada para pedido {}: peso={}kg, lineas={}",
                     pedidoId, pesoTotal, lineas.size());
         } catch (Exception e) {
             log.error("Error enviando solicitud de ruta para pedido {}: {}", pedidoId, e.getMessage());
-            // No lanzar excepción para no bloquear creación de pedido
         }
     }
 }
