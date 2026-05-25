@@ -111,6 +111,13 @@ public class ListarManifiestosUseCase {
         int recibidas = detalles != null
                 ? (int) detalles.stream().filter(d -> d.getCantidadRecibida() > 0).count()
                 : 0;
+        int sumEsperado = detalles != null
+                ? detalles.stream().filter(d -> d.getCantidadEsperada() != null).mapToInt(DetalleManifiesto::getCantidadEsperada).sum()
+                : 0;
+        int sumRecibido = detalles != null
+                ? detalles.stream().filter(d -> d.getCantidadRecibida() != null).mapToInt(DetalleManifiesto::getCantidadRecibida).sum()
+                : 0;
+
 
         return new ManifiestoResumenDTO(
                 m.getManifiestoId().toString(),
@@ -120,7 +127,9 @@ public class ListarManifiestosUseCase {
                 m.getEstado().name(),
                 total,
                 recibidas,
-                m.getCreadoEl());
+                m.getCreadoEl(),
+                sumEsperado,
+                sumRecibido);
     }
 
     private DetalleManifiestoLineaDTO toDetalleLineaDTO(DetalleManifiesto detalle, Producto producto) {
@@ -142,7 +151,9 @@ public class ListarManifiestosUseCase {
             String estado,
             int totalLineas,
             int lineasRecibidas,
-            LocalDateTime creadoEl) {
+            LocalDateTime creadoEl,
+            int sumEsperado,
+            int sumRecibido) {
     }
 
     public record ManifiestoDetalleDTO(
