@@ -77,6 +77,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/excepciones", "/api/v1/excepciones/**", "/api/v1/excepcion/**").hasAnyRole("SUPERVISOR_INVENTARIO", "OPERARIO_PICKING", "OPERARIO_DESPACHO", "OPERARIO_RECEPCION")
                         .requestMatchers("/api/v1/operarios/**").hasRole("SUPERVISOR_INVENTARIO")
 
+                        .requestMatchers("/actuator/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
