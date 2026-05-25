@@ -5,6 +5,8 @@ import com.distribuidoras.inventario.application.usecase.ConfirmarDespachoUseCas
 import com.distribuidoras.inventario.application.usecase.ListarPedidosDespachoUseCase;
 import com.distribuidoras.inventario.application.usecase.ListarPedidosAsignadosUseCase;
 import com.distribuidoras.inventario.infrastructure.web.dto.PedidoAsignadoDTO;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -59,7 +61,7 @@ public class DespachoController {
      */
     @PostMapping("/confirmar")
     public ResponseEntity<Map<String, Object>> confirmarDespacho(
-            @RequestBody ConfirmarDespachoRequestDTO request) {
+            @Valid @RequestBody ConfirmarDespachoRequestDTO request) {
         
         log.info("REST: Confirmando despacho para pedido {}", request.pedidoId());
         
@@ -88,8 +90,8 @@ public class DespachoController {
     public record ConfirmarDespachoRequestDTO(
             Long pedidoId,
             Long operarioId,
-            String transportista,
-            String placaVehiculo,
+            @NotBlank String transportista,
+            @NotBlank String placaVehiculo,
             String observaciones,
             Map<Long, Integer> cantidadesDespachadas
     ) {}
