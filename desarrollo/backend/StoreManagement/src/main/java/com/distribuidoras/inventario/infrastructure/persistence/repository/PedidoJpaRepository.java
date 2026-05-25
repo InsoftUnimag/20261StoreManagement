@@ -32,6 +32,8 @@ public interface PedidoJpaRepository
      */
     List<PedidoJpaEntity> findByEstadoOrderByFechaCompromisoAsc(EstadoPedido estado);
 
+    List<PedidoJpaEntity> findByRutaId(Long rutaId);
+
     List<PedidoJpaEntity> findByOperarioPickingId(Long operarioPickingId);
 
     List<PedidoJpaEntity> findByOperarioDespachoId(Long operarioDespachoId);

@@ -56,6 +56,11 @@ public interface PedidoRepository {
     List<Pedido> findByEstadoWithPickingOrderByFechaPickingAsc(EstadoPedido estado);
 
     /**
+     * Find orders by route ID.
+     */
+    List<Pedido> findByRutaId(Long rutaId);
+
+    /**
      * Find orders assigned to picking operario.
      */
     List<Pedido> findByOperarioPickingId(Long operarioPickingId);

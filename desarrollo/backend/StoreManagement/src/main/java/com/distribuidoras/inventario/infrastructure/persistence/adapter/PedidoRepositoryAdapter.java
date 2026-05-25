@@ -108,6 +108,13 @@ public class PedidoRepositoryAdapter implements PedidoRepository {
     }
 
     @Override
+    public List<Pedido> findByRutaId(Long rutaId) {
+        return jpa.findByRutaId(rutaId).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public List<Pedido> findByOperarioPickingId(Long operarioPickingId) {
         return jpa.findByOperarioPickingId(operarioPickingId).stream()
                 .map(this::toDomain)
@@ -136,6 +143,7 @@ public class PedidoRepositoryAdapter implements PedidoRepository {
                 .operarioPickingId(p.getOperarioPickingId())
                 .operarioDespachoId(p.getOperarioDespachoId())
                 .direccionEntrega(p.getDireccionEntrega())
+                .fechaRecogida(p.getFechaRecogida())
                 .build();
     }
 
@@ -154,6 +162,7 @@ public class PedidoRepositoryAdapter implements PedidoRepository {
                 .operarioPickingId(e.getOperarioPickingId())
                 .operarioDespachoId(e.getOperarioDespachoId())
                 .direccionEntrega(e.getDireccionEntrega())
+                .fechaRecogida(e.getFechaRecogida())
                 .build();
     }
 }

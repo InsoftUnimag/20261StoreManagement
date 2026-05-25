@@ -215,7 +215,7 @@ public class ConsultarMovimientosInventarioUseCase {
                 .lote(loteInfo)
                 .producto(productoInfo)
                 .operarioNombre(mov.getOperarioId() != null ? 
-                        "Operario-" + mov.getOperarioId().toString().substring(0, 8) : null)
+                        "Operario-" + mov.getOperarioId().toString() : null)
                 .pedidoId(mov.getPedidoId() != null ? mov.getPedidoId().toString() : null)
                 .observaciones(mov.getObservaciones())
                 .build();

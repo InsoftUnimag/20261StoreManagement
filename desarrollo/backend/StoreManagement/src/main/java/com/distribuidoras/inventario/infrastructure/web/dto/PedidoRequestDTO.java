@@ -8,8 +8,8 @@ import java.util.List;
 public record PedidoRequestDTO(
         String clienteCc,
         Long asesorId,
-        List<LineaPedidoRequestDTO> lineas
-) {
+        List<LineaPedidoRequestDTO> lineas) {
+
     public static Builder builder() {
         return new Builder();
     }
