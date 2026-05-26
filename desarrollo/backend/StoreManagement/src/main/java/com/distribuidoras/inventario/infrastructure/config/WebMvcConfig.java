@@ -13,13 +13,23 @@ public class WebMvcConfig {
     @Value("${cors.allowed-origins:http://localhost:3000,http://localhost:5173}")
     private String allowedOrigins;
 
+    @Value("${app.modulo.financiero.url:}")
+    private String moduloFinancieroUrl;
+
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(@NonNull CorsRegistry registry) {
+                String[] origins = allowedOrigins.split(",");
+                String[] allOrigins = moduloFinancieroUrl != null && !moduloFinancieroUrl.isBlank()
+                        ? java.util.Arrays.copyOf(origins, origins.length + 1)
+                        : origins;
+                if (moduloFinancieroUrl != null && !moduloFinancieroUrl.isBlank()) {
+                    allOrigins[origins.length] = moduloFinancieroUrl;
+                }
                 registry.addMapping("/api/v1/**")
-                        .allowedOrigins(allowedOrigins.split(","))
+                        .allowedOrigins(allOrigins)
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true)
