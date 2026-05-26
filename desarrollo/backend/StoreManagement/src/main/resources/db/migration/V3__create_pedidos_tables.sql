@@ -14,6 +14,7 @@ CREATE TABLE pedidos (
     operario_picking_id BIGINT,
     operario_despacho_id BIGINT,
     fecha_entrega TIMESTAMP,
+    fecha_recogida TIMESTAMP,
     observaciones VARCHAR(500),
     direccion_entrega VARCHAR(255),
     cliente_nombre VARCHAR(200)
@@ -23,6 +24,7 @@ CREATE INDEX idx_pedidos_numero ON pedidos(numero_pedido);
 CREATE INDEX idx_pedidos_cliente ON pedidos(cliente_cc);
 CREATE INDEX idx_pedidos_estado ON pedidos(estado);
 CREATE INDEX idx_pedidos_fecha ON pedidos(fecha_creacion);
+CREATE INDEX idx_pedidos_ruta ON pedidos(ruta_id);
 CREATE INDEX idx_pedidos_operario_picking ON pedidos(operario_picking_id);
 CREATE INDEX idx_pedidos_operario_despacho ON pedidos(operario_despacho_id);
 CREATE INDEX idx_pedidos_fecha_entrega ON pedidos(fecha_entrega);

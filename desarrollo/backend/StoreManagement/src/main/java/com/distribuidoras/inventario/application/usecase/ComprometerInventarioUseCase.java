@@ -65,7 +65,12 @@ public class ComprometerInventarioUseCase {
      */
     public record ComprometerCommand(
             Long pedidoId,
-            Long rutaId) {
+            Long rutaId,
+            LocalDateTime fechaRecogida) {
+
+        public ComprometerCommand(Long pedidoId, Long rutaId) {
+            this(pedidoId, rutaId, null);
+        }
     }
 
     public record ComprometerResult(
@@ -117,6 +122,9 @@ public class ComprometerInventarioUseCase {
         pedido.setEstado(EstadoPedido.COMPROMETIDO);
         pedido.setRutaId(command.rutaId());
         pedido.setFechaCompromiso(LocalDateTime.now());
+        if (command.fechaRecogida() != null) {
+            pedido.setFechaRecogida(command.fechaRecogida());
+        }
         pedidoRepository.update(pedido);
 
         log.info("Pedido {} comprometido exitosamente. Alertas: {}",

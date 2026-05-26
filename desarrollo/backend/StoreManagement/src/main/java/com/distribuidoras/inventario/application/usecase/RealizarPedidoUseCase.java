@@ -107,6 +107,7 @@ public class RealizarPedidoUseCase {
                                 .numeroPedido(numeroPedido)
                                 .clienteCc(command.clienteCc())
                                 .clienteNombre(cliente.getNombre())
+                                .direccionEntrega(cliente.getDireccion())
                                 .fechaCreacion(LocalDateTime.now())
                                 .estado(EstadoPedido.ESPERANDO_RUTA)
                                 .asesorId(command.asesorId())

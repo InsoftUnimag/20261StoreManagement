@@ -7,8 +7,8 @@ public record ClienteInfoDTO(
         String cedula,
         String nombre,
         String telefono,
-        String direccion
-) {
+        String direccion) {
+
     public static Builder builder() {
         return new Builder();
     }

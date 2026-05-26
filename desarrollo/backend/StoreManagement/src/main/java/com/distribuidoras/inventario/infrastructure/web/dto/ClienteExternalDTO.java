@@ -7,8 +7,8 @@ public record ClienteExternalDTO(
         String cedula,
         String nombre,
         String direccion,
-        String telefono
-) {
+        String telefono) {
+
     public static Builder builder() {
         return new Builder();
     }

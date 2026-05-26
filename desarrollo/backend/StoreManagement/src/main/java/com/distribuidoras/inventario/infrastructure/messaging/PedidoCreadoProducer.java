@@ -46,7 +46,7 @@ public class PedidoCreadoProducer {
         log.info("Publicando evento pedido.creado: {}", numeroPedido);
 
         Map<String, Object> mensaje = new HashMap<>();
-        mensaje.put("idPedido", pedidoId.toString());
+        mensaje.put("idPedido", pedidoId);
 
         try {
             var pedidoOpt = pedidoRepository.findById(pedidoId);
@@ -69,8 +69,8 @@ public class PedidoCreadoProducer {
                         })
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-                mensaje.put("totalPedido", precioTotal.doubleValue());
-                mensaje.put("idCliente", pedido.getClienteCc());
+                mensaje.put("totalPedido", precioTotal.longValue());
+                mensaje.put("idCliente", Long.parseLong(pedido.getClienteCc().trim()));
 
                 String direccionEntrega = "No especificada";
                 try {

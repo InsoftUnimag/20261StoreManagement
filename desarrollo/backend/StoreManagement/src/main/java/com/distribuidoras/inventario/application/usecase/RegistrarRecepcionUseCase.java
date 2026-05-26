@@ -94,7 +94,7 @@ public class RegistrarRecepcionUseCase {
                 .notas(command.notas())
                 .numeroRecepcion(numeroRecepcion)
                 .build();
-        recepcionRepository.save(recepcion);
+        final Recepcion savedRecepcion = recepcionRepository.save(recepcion);
 
         // 3. Cargar detalles del manifiesto si aplica
         Map<String, DetalleManifiesto> detallesPorSku = command.manifiestoId() != null
@@ -133,7 +133,7 @@ public class RegistrarRecepcionUseCase {
                         .costoUnitarioProducto(linea.costoUnitarioProducto())
                         .disponible(true)
                         .flagUrgenciaFefo(esUrgente)
-                        .recepcionId(recepcion.getRecepcionId())
+                        .recepcionId(savedRecepcion.getRecepcionId())
                         .creadoEl(LocalDateTime.now())
                         .build();
             loteRepository.save(lote);
@@ -148,7 +148,7 @@ public class RegistrarRecepcionUseCase {
                     .cantidad(linea.cantidadRecibida())
                     .fechaMovimiento(LocalDateTime.now())
                     .operarioId(command.operarioId())
-                    .observaciones("Recepción: " + recepcion.getRecepcionId())
+                    .observaciones("Recepción: " + savedRecepcion.getRecepcionId())
                     .build();
             movimientoRepository.save(movimiento);
 
@@ -189,15 +189,15 @@ public class RegistrarRecepcionUseCase {
 
         // FR-025: Notificar al supervisor si hay excepciones
         if (!excepcionesGeneradas.isEmpty()) {
-            notificarSupervisorDiscrepancias(recepcion.getNumeroRecepcion(), excepcionesGeneradas);
+            notificarSupervisorDiscrepancias(savedRecepcion.getNumeroRecepcion(), excepcionesGeneradas);
         }
 
         log.info("Recepción registrada: id={}, numero={}, lotes={}, excepciones={}",
-                recepcion.getRecepcionId(), recepcion.getNumeroRecepcion(),
+                savedRecepcion.getRecepcionId(), savedRecepcion.getNumeroRecepcion(),
                 lotesCreados.size(), excepcionesGeneradas.size());
 
-        return new RecepcionResult(recepcion.getRecepcionId(), recepcion.getNumeroRecepcion(),
-                recepcion.getFechaRecepcion(), lotesCreados, excepcionesGeneradas);
+        return new RecepcionResult(savedRecepcion.getRecepcionId(), savedRecepcion.getNumeroRecepcion(),
+                savedRecepcion.getFechaRecepcion(), lotesCreados, excepcionesGeneradas);
     }
 
     private void actualizarEstadoManifiesto(Long manifiestoId) {
