@@ -4,6 +4,7 @@ import com.distribuidoras.inventario.domain.model.enums.EstadoPedido;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -60,12 +61,15 @@ public class Pedido {
     @Size(max = 500, message = "Las observaciones no pueden exceder 500 caracteres")
     private String observaciones;
 
+    private BigDecimal costoTotal;
+
     /**
      * Validates that the order can transition to the next state.
      */
     public boolean puedeTransicionarA(EstadoPedido nuevoEstado) {
         return switch (this.estado) {
-            case ESPERANDO_RUTA -> nuevoEstado == EstadoPedido.COMPROMETIDO;
+            case ESPERANDO_RUTA -> nuevoEstado == EstadoPedido.RUTA_ASIGNADA;
+            case RUTA_ASIGNADA -> nuevoEstado == EstadoPedido.COMPROMETIDO;
             case COMPROMETIDO -> nuevoEstado == EstadoPedido.EN_PICKING;
             case EN_PICKING -> nuevoEstado == EstadoPedido.PICKUP;
             case PICKUP -> nuevoEstado == EstadoPedido.DESPACHADO;

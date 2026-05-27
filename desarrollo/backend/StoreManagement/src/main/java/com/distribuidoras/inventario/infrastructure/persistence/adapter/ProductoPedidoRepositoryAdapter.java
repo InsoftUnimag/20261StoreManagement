@@ -51,6 +51,7 @@ public class ProductoPedidoRepositoryAdapter implements ProductoPedidoRepository
                 .skuId(pp.getSkuId())
                 .cantidadSolicitada(pp.getCantidadSolicitada())
                 .cantidadConfirmada(pp.getCantidadConfirmada())
+                .precioUnitario(pp.getPrecioUnitario())
                 .build();
     }
 
@@ -61,6 +62,7 @@ public class ProductoPedidoRepositoryAdapter implements ProductoPedidoRepository
                 .skuId(e.getSkuId())
                 .cantidadSolicitada(e.getCantidadSolicitada())
                 .cantidadConfirmada(e.getCantidadConfirmada())
+                .precioUnitario(e.getPrecioUnitario())
                 .build();
     }
 }

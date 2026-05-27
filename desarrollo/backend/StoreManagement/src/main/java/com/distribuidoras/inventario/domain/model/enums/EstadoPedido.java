@@ -6,6 +6,7 @@ package com.distribuidoras.inventario.domain.model.enums;
  */
 public enum EstadoPedido {
     ESPERANDO_RUTA,
+    RUTA_ASIGNADA,
     COMPROMETIDO,
     EN_PICKING,
     PICKUP,

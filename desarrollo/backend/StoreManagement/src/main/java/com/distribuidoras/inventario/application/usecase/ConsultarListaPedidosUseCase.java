@@ -125,10 +125,11 @@ public class ConsultarListaPedidosUseCase {
                                 .direccionEntrega(clienteDireccion)
                                 .fechaCreacion(pedido.getFechaCreacion())
                                 .estado(pedido.getEstado().name())
-                                .totalLineas(lineas.size())
-                                .totalUnidades(totalUnidades)
-                                .lineas(lineasResumen)
-                                .build();
+                .totalLineas(lineas.size())
+                .totalUnidades(totalUnidades)
+                .costoTotal(pedido.getCostoTotal())
+                .lineas(lineasResumen)
+                .build();
         }
 
         private LineaResumenDTO toLineaResumenDTO(ProductoPedido linea) {

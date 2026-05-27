@@ -144,6 +144,7 @@ public class PedidoRepositoryAdapter implements PedidoRepository {
                 .operarioDespachoId(p.getOperarioDespachoId())
                 .direccionEntrega(p.getDireccionEntrega())
                 .fechaRecogida(p.getFechaRecogida())
+                .costoTotal(p.getCostoTotal())
                 .build();
     }
 

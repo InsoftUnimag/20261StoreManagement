@@ -66,6 +66,7 @@ public class ConsultarPedidosParaDespachoUseCase {
                 .estado(pedido.getEstado().name())
                 .totalLineas(0)
                 .totalUnidades(0)
+                .costoTotal(pedido.getCostoTotal())
                 .build();
     }
 }
