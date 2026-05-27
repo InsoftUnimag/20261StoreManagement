@@ -57,6 +57,7 @@ public class ExternalPedidosController {
 
         private ProductoEnPedidoDTO toProductoEnPedidoDTO(ProductoPedido linea) {
                 Producto producto = productoRepository.findById(linea.getSkuId()).orElse(null);
+                var stock = stockGlobalRepository.findById(linea.getSkuId()).orElse(null);
 
                 String nombre = producto != null ? producto.getMarca() + " " + producto.getPresentacion() : "N/A";
                 BigDecimal precioUnitario = linea.getPrecioUnitario() != null
