@@ -118,9 +118,10 @@ public class ConsultarDetallePedidoUseCase {
                                 .lineas(lineasDTO)
                                 .totalSolicitado(totalSolicitado)
                                 .totalConfirmado(totalConfirmado)
-                                .pesoLogisticoTotal(pesoLogisticoTotal)
-                                .tipoCumplimiento(tipoCumplimiento)
-                                .build();
+                .pesoLogisticoTotal(pesoLogisticoTotal)
+                .tipoCumplimiento(tipoCumplimiento)
+                .costoTotal(pedido.getCostoTotal())
+                .build();
         }
 
         /**

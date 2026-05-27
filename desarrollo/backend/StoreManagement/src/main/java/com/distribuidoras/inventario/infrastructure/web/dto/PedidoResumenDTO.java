@@ -1,5 +1,6 @@
 package com.distribuidoras.inventario.infrastructure.web.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,6 +17,7 @@ public record PedidoResumenDTO(
         String estado,
         Integer totalLineas,
         Integer totalUnidades,
+        BigDecimal costoTotal,
         List<LineaResumenDTO> lineas) {
 
     public static Builder builder() {
@@ -32,6 +34,7 @@ public record PedidoResumenDTO(
         private String estado;
         private Integer totalLineas;
         private Integer totalUnidades;
+        private BigDecimal costoTotal;
         private List<LineaResumenDTO> lineas;
 
         public Builder pedidoId(Long pedidoId) {
@@ -79,6 +82,11 @@ public record PedidoResumenDTO(
             return this;
         }
 
+        public Builder costoTotal(BigDecimal costoTotal) {
+            this.costoTotal = costoTotal;
+            return this;
+        }
+
         public Builder lineas(List<LineaResumenDTO> lineas) {
             this.lineas = lineas;
             return this;
@@ -95,6 +103,7 @@ public record PedidoResumenDTO(
                     estado,
                     totalLineas,
                     totalUnidades,
+                    costoTotal,
                     lineas);
         }
     }

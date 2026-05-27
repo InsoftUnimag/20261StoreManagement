@@ -3,20 +3,16 @@ package com.distribuidoras.inventario.infrastructure.messaging;
 import com.distribuidoras.inventario.domain.model.Cliente;
 import com.distribuidoras.inventario.domain.repository.ClienteServicePort;
 import com.distribuidoras.inventario.domain.repository.PedidoRepository;
-import com.distribuidoras.inventario.domain.repository.ProductoPedidoRepository;
 import com.distribuidoras.inventario.infrastructure.messaging.config.RabbitMQConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import com.distribuidoras.inventario.infrastructure.persistence.entity.StockGlobalSkuJpaEntity;
-import com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 @Component
 public class PedidoCreadoProducer {
@@ -25,20 +21,14 @@ public class PedidoCreadoProducer {
 
     private final RabbitTemplate rabbitTemplate;
     private final PedidoRepository pedidoRepository;
-    private final ProductoPedidoRepository productoPedidoRepository;
     private final ClienteServicePort clienteServicePort;
-    private final StockGlobalSkuJpaRepository stockGlobalSkuRepository;
 
     public PedidoCreadoProducer(RabbitTemplate rabbitTemplate,
             PedidoRepository pedidoRepository,
-            ProductoPedidoRepository productoPedidoRepository,
-            ClienteServicePort clienteServicePort,
-            com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository stockGlobalSkuRepository) {
+            ClienteServicePort clienteServicePort) {
         this.rabbitTemplate = rabbitTemplate;
         this.pedidoRepository = pedidoRepository;
-        this.productoPedidoRepository = productoPedidoRepository;
         this.clienteServicePort = clienteServicePort;
-        this.stockGlobalSkuRepository = stockGlobalSkuRepository;
     }
 
     @Async
@@ -53,23 +43,10 @@ public class PedidoCreadoProducer {
             if (pedidoOpt.isPresent()) {
                 var pedido = pedidoOpt.get();
 
-                var lineas = productoPedidoRepository.findByPedidoId(pedidoId);
+                BigDecimal costoTotal = pedido.getCostoTotal();
+                if (costoTotal == null) costoTotal = BigDecimal.ZERO;
 
-                BigDecimal precioTotal = lineas.stream()
-                        .map(linea -> {
-                            // Obtener costo directamente del stock global
-                            BigDecimal costoUnitario = stockGlobalSkuRepository
-                                    .findById(Objects.requireNonNull(linea.getSkuId()))
-                                    .map(StockGlobalSkuJpaEntity::getPrecio)
-                                    .orElse(BigDecimal.ZERO);
-                            if (costoUnitario == null)
-                                costoUnitario = BigDecimal.ZERO;
-
-                            return costoUnitario.multiply(BigDecimal.valueOf(linea.getCantidadSolicitada()));
-                        })
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-                mensaje.put("totalPedido", precioTotal.longValue());
+                mensaje.put("totalPedido", costoTotal.longValue());
                 mensaje.put("idCliente", Long.parseLong(pedido.getClienteCc().trim()));
 
                 String direccionEntrega = "No especificada";

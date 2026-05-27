@@ -32,4 +32,5 @@ public class PedidoResponseDTO {
     private Integer totalConfirmado;
     private BigDecimal pesoLogisticoTotal;
     private String tipoCumplimiento;
+    private BigDecimal costoTotal;
 }

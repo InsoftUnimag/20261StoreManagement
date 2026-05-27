@@ -79,6 +79,7 @@ public class ConsultarPedidosParaPickingUseCase {
                 .estado(pedido.getEstado().name())
                 .totalLineas(lineas.size())
                 .totalUnidades(totalUnidades)
+                .costoTotal(pedido.getCostoTotal())
                 .lineas(lineasResumen)
                 .build();
     }

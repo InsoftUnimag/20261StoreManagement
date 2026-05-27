@@ -1,6 +1,7 @@
 package com.distribuidoras.inventario.infrastructure.messaging;
 
 import com.distribuidoras.inventario.domain.model.Pedido;
+import com.distribuidoras.inventario.domain.model.enums.EstadoPedido;
 import com.distribuidoras.inventario.domain.repository.PedidoRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,7 @@ public class RutaAsignadaConsumer {
                     .orElseThrow(() -> new IllegalArgumentException("Pedido no encontrado: " + pedidoId));
 
             pedido.setRutaId(rutaId);
+            pedido.setEstado(EstadoPedido.RUTA_ASIGNADA);
             pedidoRepository.update(pedido);
 
             log.info("Ruta {} asignada al pedido {} (estado: {})", rutaId, pedido.getNumeroPedido(), pedido.getEstado());
