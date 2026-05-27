@@ -109,7 +109,7 @@ public class RealizarPedidoUseCase {
                 List<ProductoPedido> lineas = command.lineas().stream()
                                 .map(linea -> {
                                         BigDecimal precioUnitario = stockGlobalSkuRepository
-                                                        .findById(linea.skuId())
+                                                        .findById(Objects.requireNonNull(linea.skuId()))
                                                         .map(StockGlobalSkuJpaEntity::getPrecio)
                                                         .orElse(BigDecimal.ZERO);
                                         if (precioUnitario == null)

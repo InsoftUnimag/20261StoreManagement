@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import java.util.Objects;
 
 @Configuration
 public class WebMvcConfig {
@@ -29,7 +30,7 @@ public class WebMvcConfig {
                     allOrigins[origins.length] = moduloFinancieroUrl;
                 }
                 registry.addMapping("/api/v1/**")
-                        .allowedOrigins(allOrigins)
+                        .allowedOrigins(Objects.requireNonNull(allOrigins))
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true)
