@@ -1,9 +1,8 @@
 package com.distribuidoras.inventario.infrastructure.web.controller;
 
 import com.distribuidoras.inventario.application.usecase.*;
-import com.distribuidoras.inventario.domain.model.ExcepcionInventario;
-import com.distribuidoras.inventario.domain.model.enums.TipoExcepcion;
 import com.distribuidoras.inventario.infrastructure.config.SecurityConfig;
+import com.distribuidoras.inventario.infrastructure.web.dto.ExcepcionResponseDTO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +48,7 @@ class ExcepcionControllerTest {
                                     "codigoLote": "%s",
                                     "cantidadAfectada": 12,
                                     "descripcion": "Cajas daÃ±adas",
-                                    "operarioId": "%s"
+                                    "operarioId": %s
                                 }
                                 """.formatted("SKU-001", "LOTE-001", 1L))))
                 .andExpect(status().isCreated())
@@ -74,7 +73,7 @@ class ExcepcionControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/excepciones stock insuficiente → 409")
+    @DisplayName("POST /api/v1/excepciones stock insuficiente → 400")
     void registrarExcepcion_stockInsuficiente() throws Exception {
         when(registrarExcepcionUseCase.ejecutar(any()))
                 .thenThrow(new IllegalArgumentException(
@@ -89,7 +88,7 @@ class ExcepcionControllerTest {
                                     "codigoLote": "%s",
                                     "cantidadAfectada": 50,
                                     "descripcion": "Mucho daño",
-                                    "operarioId": "%s"
+                                    "operarioId": %s
                                 }
                                 """.formatted("SKU-001", "LOTE-001", 1L))))
                 .andExpect(status().isBadRequest());
@@ -99,14 +98,16 @@ class ExcepcionControllerTest {
     @DisplayName("GET /api/v1/excepciones → 200")
     void consultarExcepciones_exitoso() throws Exception {
         Long excId = 2L;
-        ExcepcionInventario exc = ExcepcionInventario.builder()
+        ExcepcionResponseDTO exc = ExcepcionResponseDTO.builder()
                 .excepcionId(excId)
-                .tipoExcepcion(TipoExcepcion.AVERIA)
+                .tipoExcepcion("AVERIA")
                 .codigoLote(null)
                 .skuId("SKU-001")
                 .cantidadAfectada(10)
                 .fechaRegistro(LocalDateTime.now())
                 .operarioId(1L)
+                .operarioNombre("Carlos Perez")
+                .operarioCedula("11111111")
                 .descripcion("Daño")
                 .evidenciaUrl(null)
                 .build();
@@ -114,21 +115,25 @@ class ExcepcionControllerTest {
 
         mockMvc.perform(get("/api/v1/excepciones"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].excepcionId").value(excId.toString()));
+                .andExpect(jsonPath("$[0].excepcionId").value(excId.toString()))
+                .andExpect(jsonPath("$[0].operarioNombre").value("Carlos Perez"))
+                .andExpect(jsonPath("$[0].operarioCedula").value("11111111"));
     }
 
     @Test
     @DisplayName("GET /api/v1/excepciones/{id} → 200")
     void consultarDetalle_exitoso() throws Exception {
         Long excId = 3L;
-        ExcepcionInventario exc = ExcepcionInventario.builder()
+        ExcepcionResponseDTO exc = ExcepcionResponseDTO.builder()
                 .excepcionId(excId)
-                .tipoExcepcion(TipoExcepcion.AVERIA)
+                .tipoExcepcion("AVERIA")
                 .codigoLote(null)
                 .skuId("SKU-001")
                 .cantidadAfectada(10)
                 .fechaRegistro(LocalDateTime.now())
                 .operarioId(1L)
+                .operarioNombre("Maria Lopez")
+                .operarioCedula("22222222")
                 .descripcion("Daño")
                 .evidenciaUrl(null)
                 .build();
@@ -136,6 +141,8 @@ class ExcepcionControllerTest {
 
         mockMvc.perform(get("/api/v1/excepciones/{id}", excId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.excepcionId").value(excId.toString()));
+                .andExpect(jsonPath("$.excepcionId").value(excId.toString()))
+                .andExpect(jsonPath("$.operarioNombre").value("Maria Lopez"))
+                .andExpect(jsonPath("$.operarioCedula").value("22222222"));
     }
 }

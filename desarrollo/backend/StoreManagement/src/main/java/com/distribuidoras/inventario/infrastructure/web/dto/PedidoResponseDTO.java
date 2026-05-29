@@ -22,6 +22,7 @@ public class PedidoResponseDTO {
     private LocalDateTime fechaCompromiso;
     private Long rutaId;
     private ClienteInfoDTO cliente;
+    private String clienteCc;
     private String clienteNombre;
     private AsesorInfoDTO asesor;
     private OperarioInfoDTO operarioPicking;
