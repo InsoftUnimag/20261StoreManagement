@@ -14,7 +14,9 @@ public record MovimientoInventarioDTO(
         ProductoInfo producto,
         String operarioNombre,
         String pedidoId,
-        String observaciones
+        String observaciones,
+        String numeroPedido,
+        String numeroRecepcion
 ) {
     public static Builder builder() {
         return new Builder();
@@ -30,6 +32,8 @@ public record MovimientoInventarioDTO(
         private String operarioNombre;
         private String pedidoId;
         private String observaciones;
+        private String numeroPedido;
+        private String numeroRecepcion;
 
         public Builder movimientoId(String movimientoId) {
             this.movimientoId = movimientoId;
@@ -76,6 +80,16 @@ public record MovimientoInventarioDTO(
             return this;
         }
 
+        public Builder numeroPedido(String numeroPedido) {
+            this.numeroPedido = numeroPedido;
+            return this;
+        }
+
+        public Builder numeroRecepcion(String numeroRecepcion) {
+            this.numeroRecepcion = numeroRecepcion;
+            return this;
+        }
+
         public MovimientoInventarioDTO build() {
             return new MovimientoInventarioDTO(
                     movimientoId,
@@ -86,7 +100,9 @@ public record MovimientoInventarioDTO(
                     producto,
                     operarioNombre,
                     pedidoId,
-                    observaciones
+                    observaciones,
+                    numeroPedido,
+                    numeroRecepcion
             );
         }
     }

@@ -85,16 +85,7 @@ public class ModuloUsuariosAdapter implements ClienteServicePort {
     }
 
     public Optional<Cliente> fallbackFindByCedula(String cedula, Exception ex) {
-        log.warn("Fallback invocado para cliente CC: {} debido a: {}. Devolviendo cliente simulado.", cedula,
-                ex.getMessage());
-
-        return Optional.of(Cliente.builder()
-                .cedula(cedula)
-                .nombre("Cliente Simulado " + cedula)
-                .telefono("3001234567")
-                .email("cliente" + cedula + "@simulado.com")
-                .direccion("Calle Falsa 123")
-                .activo(true)
-                .build());
+        log.warn("Módulo de usuarios no disponible para CC: {}. Motivo: {}", cedula, ex.getMessage());
+        return Optional.empty();
     }
 }
