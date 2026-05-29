@@ -2,11 +2,15 @@ package com.distribuidoras.inventario.application.usecase;
 
 import com.distribuidoras.inventario.domain.model.Lote;
 import com.distribuidoras.inventario.domain.model.MovimientoInventario;
+import com.distribuidoras.inventario.domain.model.Pedido;
 import com.distribuidoras.inventario.domain.model.Producto;
+import com.distribuidoras.inventario.domain.model.Recepcion;
 import com.distribuidoras.inventario.domain.model.enums.TipoMovimiento;
 import com.distribuidoras.inventario.domain.repository.LoteRepository;
 import com.distribuidoras.inventario.domain.repository.MovimientoInventarioRepository;
+import com.distribuidoras.inventario.domain.repository.PedidoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoRepository;
+import com.distribuidoras.inventario.domain.repository.RecepcionRepository;
 import com.distribuidoras.inventario.infrastructure.web.dto.MovimientoInventarioDTO;
 import com.distribuidoras.inventario.infrastructure.web.dto.MovimientosInventarioResponseDTO;
 import com.distribuidoras.inventario.infrastructure.web.dto.PaginacionDTO;
@@ -40,13 +44,19 @@ public class ConsultarMovimientosInventarioUseCase {
     private final MovimientoInventarioRepository movimientoRepository;
     private final LoteRepository loteRepository;
     private final ProductoRepository productoRepository;
+    private final PedidoRepository pedidoRepository;
+    private final RecepcionRepository recepcionRepository;
 
     public ConsultarMovimientosInventarioUseCase(MovimientoInventarioRepository movimientoRepository,
                                                   LoteRepository loteRepository,
-                                                  ProductoRepository productoRepository) {
+                                                  ProductoRepository productoRepository,
+                                                  PedidoRepository pedidoRepository,
+                                                  RecepcionRepository recepcionRepository) {
         this.movimientoRepository = movimientoRepository;
         this.loteRepository = loteRepository;
         this.productoRepository = productoRepository;
+        this.pedidoRepository = pedidoRepository;
+        this.recepcionRepository = recepcionRepository;
     }
 
     /**
@@ -189,7 +199,7 @@ public class ConsultarMovimientosInventarioUseCase {
      * Transform a single movement to DTO with context.
      */
     private MovimientoInventarioDTO toMovimientoDTO(MovimientoInventario mov, 
-                                                     Map<String, Producto> productos) {
+                                                      Map<String, Producto> productos) {
         // Get lote context
         Lote lote = loteRepository.findById(mov.getCodigoLote()).orElse(null);
         Producto producto = lote != null ? productos.get(lote.getSkuId()) : null;
@@ -207,6 +217,32 @@ public class ConsultarMovimientosInventarioUseCase {
                         .presentacion(producto.getPresentacion())
                         .build() : null;
 
+        // Resolve numeroPedido if movimiento references a pedido
+        String numeroPedido = null;
+        if (mov.getPedidoId() != null) {
+            try {
+                numeroPedido = pedidoRepository.findById(mov.getPedidoId())
+                        .map(Pedido::getNumeroPedido)
+                        .orElse(null);
+            } catch (Exception e) {
+                log.warn("Could not resolve pedido {} for movimiento {}", mov.getPedidoId(), mov.getMovimientoId());
+            }
+        }
+
+        // Resolve numeroRecepcion from observaciones pattern "Recepción: <id>"
+        String numeroRecepcion = null;
+        if (mov.getObservaciones() != null && mov.getObservaciones().startsWith("Recepción:")) {
+            try {
+                String idStr = mov.getObservaciones().replace("Recepción:", "").trim();
+                Long recepcionId = Long.parseLong(idStr);
+                numeroRecepcion = recepcionRepository.findById(recepcionId)
+                        .map(Recepcion::getNumeroRecepcion)
+                        .orElse(idStr);
+            } catch (Exception e) {
+                log.warn("Could not parse recepcion from observaciones: {}", mov.getObservaciones());
+            }
+        }
+
         return MovimientoInventarioDTO.builder()
                 .movimientoId(mov.getMovimientoId().toString())
                 .tipoMovimiento(mov.getTipoMovimiento().name())
@@ -218,6 +254,8 @@ public class ConsultarMovimientosInventarioUseCase {
                         "Operario-" + mov.getOperarioId().toString() : null)
                 .pedidoId(mov.getPedidoId() != null ? mov.getPedidoId().toString() : null)
                 .observaciones(mov.getObservaciones())
+                .numeroPedido(numeroPedido)
+                .numeroRecepcion(numeroRecepcion)
                 .build();
     }
 }
