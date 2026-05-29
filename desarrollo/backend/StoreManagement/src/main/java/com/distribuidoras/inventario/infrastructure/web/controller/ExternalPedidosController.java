@@ -6,6 +6,7 @@ import com.distribuidoras.inventario.domain.model.ProductoPedido;
 import com.distribuidoras.inventario.domain.repository.PedidoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoPedidoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoRepository;
+import com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository;
 import com.distribuidoras.inventario.infrastructure.web.dto.ProductoEnPedidoDTO;
 import com.distribuidoras.inventario.infrastructure.web.dto.ProductosPedidoResponse;
 import org.slf4j.Logger;
@@ -28,13 +29,16 @@ public class ExternalPedidosController {
         private final PedidoRepository pedidoRepository;
         private final ProductoPedidoRepository productoPedidoRepository;
         private final ProductoRepository productoRepository;
+        private final StockGlobalSkuJpaRepository stockGlobalRepository;
 
         public ExternalPedidosController(PedidoRepository pedidoRepository,
                         ProductoPedidoRepository productoPedidoRepository,
-                        ProductoRepository productoRepository) {
+                        ProductoRepository productoRepository,
+                        StockGlobalSkuJpaRepository stockGlobalRepository) {
                 this.pedidoRepository = pedidoRepository;
                 this.productoPedidoRepository = productoPedidoRepository;
                 this.productoRepository = productoRepository;
+                this.stockGlobalRepository = stockGlobalRepository;
         }
 
         @GetMapping("/{pedidoId}/productos")
