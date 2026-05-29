@@ -1,10 +1,10 @@
 package com.distribuidoras.inventario.infrastructure.web.controller;
 
 import com.distribuidoras.inventario.application.usecase.*;
-import com.distribuidoras.inventario.domain.model.ExcepcionInventario;
 import com.distribuidoras.inventario.domain.model.enums.TipoExcepcion;
+import com.distribuidoras.inventario.infrastructure.web.dto.ExcepcionRequestDTO;
+import com.distribuidoras.inventario.infrastructure.web.dto.ExcepcionResponseDTO;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -38,23 +38,25 @@ public class ExcepcionController {
     /** POST /api/v1/excepciones - Registrar excepción de inventario */
     @PostMapping
     public ResponseEntity<RegistrarExcepcionUseCase.ExcepcionResultado> registrarExcepcion(
-            @Valid @RequestBody ExcepcionRequestDto request) {
-        log.info("POST /api/v1/excepciones - tipo={}, sku={}", request.tipoExcepcion, request.skuId);
+            @Valid @RequestBody ExcepcionRequestDTO request) {
+        log.info("POST /api/v1/excepciones - tipo={}, sku={}", request.getTipoExcepcion(), request.getSkuId());
 
         RegistrarExcepcionUseCase.ExcepcionCommand command = new RegistrarExcepcionUseCase.ExcepcionCommand(
-                TipoExcepcion.valueOf(request.tipoExcepcion),
-                request.skuId, request.codigoLote, request.cantidadAfectada,
-                request.descripcion, request.evidenciaUrl, request.operarioId.toString());
+                TipoExcepcion.valueOf(request.getTipoExcepcion()),
+                request.getSkuId(), request.getCodigoLote(), request.getCantidadAfectada(),
+                request.getDescripcion(), request.getEvidenciaUrl(),
+                request.getOperarioId() != null ? request.getOperarioId().toString() : null);
 
         RegistrarExcepcionUseCase.ExcepcionResultado resultado = registrarExcepcionUseCase.ejecutar(command);
-        
+
         ultimaExcepcionNotificada = LocalDateTime.now();
-        
+
         return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
     }
 
+    /** GET /api/v1/excepciones - Listar con filtros y paginación */
     @GetMapping
-    public ResponseEntity<Page<ExcepcionInventario>> consultarExcepciones(
+    public ResponseEntity<Page<ExcepcionResponseDTO>> consultarExcepciones(
             @RequestParam(required = false) String tipo,
             @RequestParam(required = false) String skuId,
             @RequestParam(defaultValue = "0") int page,
@@ -63,13 +65,13 @@ public class ExcepcionController {
             @RequestParam(required = false) LocalDateTime hasta) {
         log.info("GET /api/v1/excepciones - tipo={}, sku={}, page={}", tipo, skuId, page);
 
-        TipoExcepcion tipoEnum = (tipo != null && !tipo.isBlank()) 
-                ? TipoExcepcion.valueOf(tipo.toUpperCase()) 
+        TipoExcepcion tipoEnum = (tipo != null && !tipo.isBlank())
+                ? TipoExcepcion.valueOf(tipo.toUpperCase())
                 : null;
-        
+
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fechaRegistro"));
 
-        Page<ExcepcionInventario> excepciones = consultarExcepcionesUseCase.ejecutarConPaginacion(
+        Page<ExcepcionResponseDTO> excepciones = consultarExcepcionesUseCase.ejecutarConPaginacion(
                 tipoEnum, skuId, desde, hasta, pageRequest);
 
         return ResponseEntity.ok(excepciones);
@@ -77,60 +79,44 @@ public class ExcepcionController {
 
     /** GET /api/v1/excepciones/ultimas - Excepciones de los últimos N minutos (para polling) */
     @GetMapping("/ultimas")
-    public ResponseEntity<List<ExcepcionInventario>> consultarUltimas(
+    public ResponseEntity<List<ExcepcionResponseDTO>> consultarUltimas(
             @RequestParam(defaultValue = "60") int minutos) {
         log.info("GET /api/v1/excepciones/ultimas - ultimos={} minutos", minutos);
 
-        List<ExcepcionInventario> excepciones = consultarExcepcionesUseCase.ejecutar(minutos);
+        List<ExcepcionResponseDTO> excepciones = consultarExcepcionesUseCase.ejecutar(minutos);
         return ResponseEntity.ok(excepciones);
     }
 
     /** GET /api/v1/excepciones/nuevas - Excepciones nuevas desde última consulta (long polling) */
     @GetMapping("/nuevas")
-    public ResponseEntity<List<ExcepcionInventario>> consultarNuevas(
+    public ResponseEntity<List<ExcepcionResponseDTO>> consultarNuevas(
             @RequestParam(required = false) String desde) {
         log.info("GET /api/v1/excepciones/nuevas - ultimaNotificada={}", ultimaExcepcionNotificada);
 
-        LocalDateTime desdeTiempo = desde != null 
-                ? LocalDateTime.parse(desde) 
+        LocalDateTime desdeTiempo = desde != null
+                ? LocalDateTime.parse(desde)
                 : ultimaExcepcionNotificada;
-        
+
         if (desdeTiempo == null || desdeTiempo.equals(LocalDateTime.MIN)) {
             desdeTiempo = LocalDateTime.now().minusMinutes(5);
         }
-        
-        List<ExcepcionInventario> excepciones = consultarExcepcionesUseCase.ejecutar(desdeTiempo);
-        
+
+        List<ExcepcionResponseDTO> excepciones = consultarExcepcionesUseCase.ejecutar(desdeTiempo);
+
         if (!excepciones.isEmpty()) {
             ultimaExcepcionNotificada = excepciones.stream()
-                    .map(ExcepcionInventario::getFechaRegistro)
+                    .map(ExcepcionResponseDTO::getFechaRegistro)
                     .max(LocalDateTime::compareTo)
                     .orElse(ultimaExcepcionNotificada);
         }
-        
+
         return ResponseEntity.ok(excepciones);
     }
 
     /** GET /api/v1/excepciones/{id} - Ver detalle de excepción */
     @GetMapping("/{id}")
-    public ResponseEntity<ExcepcionInventario> consultarDetalle(@PathVariable Long id) {
+    public ResponseEntity<ExcepcionResponseDTO> consultarDetalle(@PathVariable Long id) {
         log.info("GET /api/v1/excepciones/{}", id);
         return ResponseEntity.ok(consultarDetalleUseCase.ejecutar(id));
-    }
-
-    // --- Request DTOs ---
-
-    public static class ExcepcionRequestDto {
-        @NotBlank(message = "El tipo de excepción es obligatorio")
-        public String tipoExcepcion;
-        @NotBlank(message = "El SKU es obligatorio")
-        public String skuId;
-        public String codigoLote;
-        @Positive(message = "La cantidad afectada debe ser mayor a cero")
-        public int cantidadAfectada;
-        @NotBlank(message = "La descripción es obligatoria")
-        public String descripcion;
-        public String evidenciaUrl;
-        public Long operarioId;
     }
 }

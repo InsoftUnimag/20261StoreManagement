@@ -110,6 +110,7 @@ public class ConsultarDetallePedidoUseCase {
                                 .fechaCompromiso(pedido.getFechaCompromiso())
                                 .rutaId(pedido.getRutaId())
                                 .cliente(clienteInfo)
+                                .clienteCc(pedido.getClienteCc())
                                 .clienteNombre(pedido.getClienteNombre())
                                 .asesor(new AsesorInfoDTO(pedido.getAsesorId(), "Asesor"))
                                 .operarioPicking(mapearOperario(pedido.getOperarioPickingId()))
