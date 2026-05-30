@@ -1,13 +1,15 @@
 package com.distribuidoras.inventario.infrastructure.web.controller;
 
 import com.distribuidoras.inventario.application.usecase.ListarManifiestosUseCase;
-import com.distribuidoras.inventario.application.usecase.ListarManifiestosUseCase.*;
+import com.distribuidoras.inventario.application.usecase.ListarManifiestosUseCase.FiltrosManifiestoDTO;
 import com.distribuidoras.inventario.application.usecase.ListarManifiestosPendientesUseCase;
 import com.distribuidoras.inventario.application.usecase.ListarManifiestosPendientesUseCase.ManifiestoResumen;
 import com.distribuidoras.inventario.application.usecase.ConsultarDetallesManifiestoUseCase;
 import com.distribuidoras.inventario.application.usecase.CrearManifiestoUseCase;
 import com.distribuidoras.inventario.domain.model.Manifiesto;
 import com.distribuidoras.inventario.infrastructure.web.dto.CrearManifiestoRequest;
+import com.distribuidoras.inventario.infrastructure.web.dto.ManifiestoDetalleDTO;
+import com.distribuidoras.inventario.infrastructure.web.dto.ManifiestoResumenDTO;
 import com.distribuidoras.inventario.infrastructure.web.dto.ManifiestoResponse;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
