@@ -3,6 +3,8 @@ package com.distribuidoras.inventario.domain.model;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 /**
  * Domain entity: ProductoPedido (Order line item).
  * Represents a product line in an order.
@@ -34,6 +36,8 @@ public class ProductoPedido {
 
     @Min(value = 0, message = "La cantidad despachada no puede ser negativa")
     private Integer cantidadDespachada;
+
+    private BigDecimal precioUnitario;
 
     /**
      * Validates that confirmed quantity doesn't exceed requested quantity.

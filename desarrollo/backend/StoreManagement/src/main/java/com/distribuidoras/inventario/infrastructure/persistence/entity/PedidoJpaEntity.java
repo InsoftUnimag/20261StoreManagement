@@ -4,6 +4,7 @@ import com.distribuidoras.inventario.domain.model.enums.EstadoPedido;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -68,6 +69,9 @@ public class PedidoJpaEntity {
         @Column(name = "fecha_recogida")
         private LocalDateTime fechaRecogida;
 
-        @Column(name = "observaciones", length = 500)
-        private String observaciones;
+    @Column(name = "observaciones", length = 500)
+    private String observaciones;
+
+    @Column(name = "costo_total", precision = 12, scale = 2)
+    private BigDecimal costoTotal;
 }

@@ -3,6 +3,8 @@ package com.distribuidoras.inventario.infrastructure.persistence.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "productos_pedido", indexes = {
         @Index(name = "idx_producto_pedido_pedido", columnList = "pedido_id"),
@@ -31,4 +33,7 @@ public class ProductoPedidoJpaEntity {
 
     @Column(name = "cantidad_confirmada", nullable = false)
     private Integer cantidadConfirmada;
+
+    @Column(name = "precio_unitario", precision = 12, scale = 2)
+    private BigDecimal precioUnitario;
 }

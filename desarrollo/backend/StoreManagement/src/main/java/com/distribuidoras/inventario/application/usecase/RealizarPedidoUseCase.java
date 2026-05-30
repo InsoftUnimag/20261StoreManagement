@@ -10,6 +10,7 @@ import com.distribuidoras.inventario.domain.repository.ProductoPedidoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoRepository;
 import com.distribuidoras.inventario.infrastructure.messaging.PedidoCreadoProducer;
 import com.distribuidoras.inventario.infrastructure.messaging.SolicitudRutaProducer;
+import com.distribuidoras.inventario.infrastructure.persistence.entity.StockGlobalSkuJpaEntity;
 import com.distribuidoras.inventario.infrastructure.persistence.repository.StockGlobalSkuJpaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,8 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -102,30 +105,46 @@ public class RealizarPedidoUseCase {
                 // 4. Generar número único de pedido (FR-056)
                 String numeroPedido = pedidoRepository.generarNumeroPedido(LocalDate.now());
 
-                // 5. Crear Pedido en estado ESPERANDO_RUTA (FR-057)
+                // 5. Crear líneas de pedido con precio unitario
+                List<ProductoPedido> lineas = command.lineas().stream()
+                                .map(linea -> {
+                                        BigDecimal precioUnitario = stockGlobalSkuRepository
+                                                        .findById(Objects.requireNonNull(linea.skuId()))
+                                                        .map(StockGlobalSkuJpaEntity::getPrecio)
+                                                        .orElse(BigDecimal.ZERO);
+                                        if (precioUnitario == null)
+                                                precioUnitario = BigDecimal.ZERO;
+                                        return ProductoPedido.builder()
+                                                        .skuId(linea.skuId())
+                                                        .cantidadSolicitada(linea.cantidadSolicitada())
+                                                        .cantidadConfirmada(linea.cantidadSolicitada())
+                                                        .precioUnitario(precioUnitario)
+                                                        .build();
+                                })
+                                .toList();
+
+                // 6. Calcular costo total del pedido
+                BigDecimal costoTotal = lineas.stream()
+                                .map(l -> l.getPrecioUnitario()
+                                                .multiply(BigDecimal.valueOf(l.getCantidadSolicitada())))
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                // 7. Crear Pedido en estado ESPERANDO_RUTA (FR-057) con costo total
                 Pedido pedido = Pedido.builder()
                                 .numeroPedido(numeroPedido)
                                 .clienteCc(command.clienteCc())
                                 .clienteNombre(cliente.getNombre())
                                 .direccionEntrega(cliente.getDireccion())
-                                .fechaCreacion(LocalDateTime.now())
+                                .fechaCreacion(LocalDateTime.now(ZoneId.of("America/Bogota")))
                                 .estado(EstadoPedido.ESPERANDO_RUTA)
                                 .asesorId(command.asesorId())
+                                .costoTotal(costoTotal)
                                 .build();
 
                 Pedido pedidoGuardado = pedidoRepository.save(pedido);
 
-                // 6. Crear líneas de pedido
-                List<ProductoPedido> lineas = command.lineas().stream()
-                                .map(linea -> ProductoPedido.builder()
-                .pedidoId(pedidoGuardado.getPedidoId())
-                                                .skuId(linea.skuId())
-                                                .cantidadSolicitada(linea.cantidadSolicitada())
-                                                .cantidadConfirmada(linea.cantidadSolicitada()) // Inicialmente igual a
-                                                                                                // solicitada
-                                                .build())
-                                .toList();
-
+                // 8. Asignar ID de pedido a las líneas y guardar
+                lineas.forEach(l -> l.setPedidoId(pedidoGuardado.getPedidoId()));
                 productoPedidoRepository.saveAll(lineas);
 
                 // Descontar stock disponible al crear pedido

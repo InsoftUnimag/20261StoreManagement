@@ -102,9 +102,9 @@ public class ComprometerInventarioUseCase {
         }
 
         // 3. Validar estado
-        if (pedido.getEstado() != EstadoPedido.ESPERANDO_RUTA) {
+        if (pedido.getEstado() != EstadoPedido.RUTA_ASIGNADA) {
             throw new IllegalStateException(
-                    "Pedido %s no está en ESPERANDO_RUTA, está en %s"
+                    "Pedido %s no está en RUTA_ASIGNADA, está en %s"
                             .formatted(pedido.getNumeroPedido(), pedido.getEstado()));
         }
 

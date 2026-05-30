@@ -110,6 +110,7 @@ public class ConsultarDetallePedidoUseCase {
                                 .fechaCompromiso(pedido.getFechaCompromiso())
                                 .rutaId(pedido.getRutaId())
                                 .cliente(clienteInfo)
+                                .clienteCc(pedido.getClienteCc())
                                 .clienteNombre(pedido.getClienteNombre())
                                 .asesor(new AsesorInfoDTO(pedido.getAsesorId(), "Asesor"))
                                 .operarioPicking(mapearOperario(pedido.getOperarioPickingId()))
@@ -118,9 +119,10 @@ public class ConsultarDetallePedidoUseCase {
                                 .lineas(lineasDTO)
                                 .totalSolicitado(totalSolicitado)
                                 .totalConfirmado(totalConfirmado)
-                                .pesoLogisticoTotal(pesoLogisticoTotal)
-                                .tipoCumplimiento(tipoCumplimiento)
-                                .build();
+                .pesoLogisticoTotal(pesoLogisticoTotal)
+                .tipoCumplimiento(tipoCumplimiento)
+                .costoTotal(pedido.getCostoTotal())
+                .build();
         }
 
         /**
