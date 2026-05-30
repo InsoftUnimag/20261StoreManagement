@@ -57,8 +57,9 @@ public class RutaDespachadaConsumer {
         List<Pedido> pedidos = pedidoRepository.findByRutaId(rutaId);
 
         if (pedidos.isEmpty()) {
-            log.warn("No se encontraron pedidos para la ruta {}", rutaId);
-            return;
+            log.warn("No se encontraron pedidos para la ruta {}. Reintentando...", rutaId);
+            throw new IllegalStateException(
+                "Pedidos no encontrados para ruta " + rutaId + ". Posible race condition - se reintentará.");
         }
 
         for (Pedido pedido : pedidos) {
