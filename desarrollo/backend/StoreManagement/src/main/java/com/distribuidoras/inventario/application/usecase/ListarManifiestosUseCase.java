@@ -6,13 +6,15 @@ import com.distribuidoras.inventario.domain.model.Producto;
 import com.distribuidoras.inventario.domain.repository.DetalleManifiestoRepository;
 import com.distribuidoras.inventario.domain.repository.ManifiestoRepository;
 import com.distribuidoras.inventario.domain.repository.ProductoRepository;
+import com.distribuidoras.inventario.infrastructure.web.dto.DetalleManifiestoLineaDTO;
+import com.distribuidoras.inventario.infrastructure.web.dto.ManifiestoDetalleDTO;
+import com.distribuidoras.inventario.infrastructure.web.dto.ManifiestoResumenDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -138,133 +140,10 @@ public class ListarManifiestosUseCase {
                 .skuId(detalle.getSkuId())
                 .marca(producto != null ? producto.getMarca() : "N/A")
                 .presentacion(producto != null ? producto.getPresentacion() : "N/A")
+                .contenidoMl(producto != null ? producto.getContenidoMl() : null)
                 .cantidadEsperada(detalle.getCantidadEsperada())
                 .cantidadRecibida(detalle.getCantidadRecibida())
                 .build();
     }
 
-    public record ManifiestoResumenDTO(
-            String manifiestoId,
-            String numeroManifiesto,
-            LocalDateTime fechaEmision,
-            String proveedor,
-            String estado,
-            int totalLineas,
-            int lineasRecibidas,
-            LocalDateTime creadoEl,
-            int sumEsperado,
-            int sumRecibido) {
-    }
-
-    public record ManifiestoDetalleDTO(
-            String manifiestoId,
-            String numeroManifiesto,
-            LocalDateTime fechaEmision,
-            String proveedor,
-            String estado,
-            List<DetalleManifiestoLineaDTO> lineas) {
-        public static Builder builder() {
-            return new Builder();
-        }
-
-        public static class Builder {
-            private String manifiestoId;
-            private String numeroManifiesto;
-            private LocalDateTime fechaEmision;
-            private String proveedor;
-            private String estado;
-            private List<DetalleManifiestoLineaDTO> lineas;
-
-            public Builder manifiestoId(String id) {
-                this.manifiestoId = id;
-                return this;
-            }
-
-            public Builder numeroManifiesto(String n) {
-                this.numeroManifiesto = n;
-                return this;
-            }
-
-            public Builder fechaEmision(LocalDateTime f) {
-                this.fechaEmision = f;
-                return this;
-            }
-
-            public Builder proveedor(String p) {
-                this.proveedor = p;
-                return this;
-            }
-
-            public Builder estado(String e) {
-                this.estado = e;
-                return this;
-            }
-
-            public Builder lineas(List<DetalleManifiestoLineaDTO> l) {
-                this.lineas = l;
-                return this;
-            }
-
-            public ManifiestoDetalleDTO build() {
-                return new ManifiestoDetalleDTO(manifiestoId, numeroManifiesto, fechaEmision, proveedor, estado,
-                        lineas);
-            }
-        }
-    }
-
-    public record DetalleManifiestoLineaDTO(
-            String detalleId,
-            String skuId,
-            String marca,
-            String presentacion,
-            Integer cantidadEsperada,
-            Integer cantidadRecibida) {
-        public static Builder builder() {
-            return new Builder();
-        }
-
-        public static class Builder {
-            private String detalleId;
-            private String skuId;
-            private String marca;
-            private String presentacion;
-            private Integer cantidadEsperada;
-            private Integer cantidadRecibida;
-
-            public Builder detalleId(String id) {
-                this.detalleId = id;
-                return this;
-            }
-
-            public Builder skuId(String s) {
-                this.skuId = s;
-                return this;
-            }
-
-            public Builder marca(String m) {
-                this.marca = m;
-                return this;
-            }
-
-            public Builder presentacion(String p) {
-                this.presentacion = p;
-                return this;
-            }
-
-            public Builder cantidadEsperada(Integer c) {
-                this.cantidadEsperada = c;
-                return this;
-            }
-
-            public Builder cantidadRecibida(Integer c) {
-                this.cantidadRecibida = c;
-                return this;
-            }
-
-            public DetalleManifiestoLineaDTO build() {
-                return new DetalleManifiestoLineaDTO(detalleId, skuId, marca, presentacion, cantidadEsperada,
-                        cantidadRecibida);
-            }
-        }
-    }
 }

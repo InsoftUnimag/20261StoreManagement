@@ -3,6 +3,7 @@ package com.distribuidoras.inventario.infrastructure.web.controller;
 import com.distribuidoras.inventario.application.usecase.RegistrarRecepcionUseCase;
 import com.distribuidoras.inventario.application.usecase.RegistrarRecepcionUseCase.*;
 import com.distribuidoras.inventario.application.usecase.ListarRecepcionesUseCase;
+import com.distribuidoras.inventario.infrastructure.web.dto.RecepcionResponseDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.slf4j.Logger;
@@ -30,7 +31,7 @@ public class RecepcionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<com.distribuidoras.inventario.domain.model.Recepcion>> listarRecepciones() {
+    public ResponseEntity<List<RecepcionResponseDTO>> listarRecepciones() {
         return ResponseEntity.ok(listarRecepcionesUseCase.ejecutar());
     }
 
